@@ -1,0 +1,64 @@
+import { createClient } from '@/utils/supabase/server'
+import { NextResponse } from 'next/server'
+
+export const revalidate = 0
+
+const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3001';
+
+export async function GET() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return NextResponse.json({ lobbies: [] })
+    }
+
+    try {
+        // 1. Get User's Guilds
+        const discordId = user.identities?.find(i => i.provider === 'discord')?.id
+        let allowedGuilds: string[] = []
+
+        if (discordId) {
+            try {
+                const res = await fetch(`${BOT_API_URL}/user/${discordId}/guilds`, { cache: 'no-store' })
+                if (res.ok) {
+                    const data = await res.json()
+                    allowedGuilds = data.guilds || []
+                }
+            } catch (e) {
+                console.error('Failed to fetch user guilds:', e)
+            }
+        }
+
+        // 2. Fetch Lobbies (Global + Guild Specific)
+        console.log("Querying Lobbies with Join (API)...");
+        const { data: lobbies, error } = await supabase
+            .from('lobbies')
+            .select('*, game_modes(*, games(name, icon_url)), creator:creator_id(uuid_link, username, avatar_url), lobby_players(*)')
+            .neq('status', 'finished')
+            .or(`guild_id.is.null,guild_id.in.(${allowedGuilds.length ? allowedGuilds.join(',') : '000'})`)
+            .order('created_at', { ascending: false })
+
+        if (error) {
+            console.dir(error, { depth: null });
+            console.error('Lobby Fetch Error:', error)
+            return NextResponse.json({ lobbies: [] })
+        }
+
+        // Transform data
+        const safeLobbies = (lobbies || []).map(lobby => ({
+            ...lobby,
+            // creator is already populated by alias
+            players: undefined,
+            player_count: lobby.lobby_players?.length || 0,
+            displayProtocol: lobby.game_modes?.games?.name || 'Unknown Protocol', // Flattened for UI
+            game_name: lobby.game_modes?.games?.name || 'Unknown Protocol',
+            game_icon: lobby.game_modes?.games?.icon_url || null
+        }))
+
+        return NextResponse.json({ lobbies: safeLobbies })
+    } catch (error) {
+        console.error('Lobby API Internal Error:', error)
+        return NextResponse.json({ lobbies: [] })
+    }
+}

@@ -1,0 +1,274 @@
+@import "tailwindcss";
+
+/* 
+   Tailwind v4 Setup
+   - Using @import "tailwindcss"; instead of @tailwind directives.
+   - Standard Tailwind colors (red-500, etc.) are included by default.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+  }
+
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: transparent !important;
+    /* Critical for fixed background */
+    color: white;
+    /* Font variables are set in layout.tsx, ensuring they work here */
+    font-family: var(--font-rajdhani), sans-serif;
+  }
+}
+
+@layer utilities {
+  /* 
+     Explicit Animation Definitions 
+     (Bypassing potential Tailwind Config issues)
+  */
+
+  /* Keyframes */
+  @keyframes beam-h {
+    0% {
+      left: -10%;
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 1;
+    }
+
+    90% {
+      opacity: 1;
+    }
+
+    100% {
+      left: 110%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes beam-v {
+    0% {
+      top: -10%;
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 1;
+    }
+
+    90% {
+      opacity: 1;
+    }
+
+    100% {
+      top: 110%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes glitch {
+    0% {
+      transform: translate(0);
+    }
+
+    20% {
+      transform: translate(-2px, 2px);
+    }
+
+    40% {
+      transform: translate(-2px, -2px);
+    }
+
+    60% {
+      transform: translate(2px, 2px);
+    }
+
+    80% {
+      transform: translate(2px, -2px);
+    }
+
+    100% {
+      transform: translate(0);
+    }
+  }
+
+  /* Utility Classes */
+  .animate-beam-h-slow {
+    animation: beam-h 8s linear infinite;
+  }
+
+  .animate-beam-h-fast {
+    animation: beam-h 4s linear infinite;
+  }
+
+  .animate-beam-v-slow {
+    animation: beam-v 8s linear infinite;
+  }
+
+  .animate-beam-v-fast {
+    animation: beam-v 4s linear infinite;
+  }
+
+  /* 
+    Enhanced Glitch Animations 
+    Includes: RGB Split, Clip-path Slicing, and Shake
+  */
+
+  @keyframes glitch-anim-1 {
+    0% {
+      clip-path: polygon(0 2%, 100% 2%, 100% 5%, 0 5%);
+      transform: translate(0);
+    }
+
+    10% {
+      clip-path: polygon(0 15%, 100% 15%, 100% 15%, 0 15%);
+      transform: translate(-5px, -5px);
+    }
+
+    20% {
+      clip-path: polygon(0 10%, 100% 10%, 100% 20%, 0 20%);
+      transform: translate(5px, 5px);
+    }
+
+    30% {
+      clip-path: polygon(0 1%, 100% 1%, 100% 2%, 0 2%);
+      transform: translate(-5px, 5px);
+    }
+
+    40% {
+      clip-path: polygon(0 33%, 100% 33%, 100% 33%, 0 33%);
+      transform: translate(0);
+    }
+
+    50% {
+      clip-path: polygon(0 44%, 100% 44%, 100% 44%, 0 44%);
+      transform: translate(5px, -5px);
+    }
+
+    60% {
+      clip-path: polygon(0 50%, 100% 50%, 100% 20%, 0 20%);
+      transform: translate(-5px, 0);
+    }
+
+    70% {
+      clip-path: polygon(0 70%, 100% 70%, 100% 70%, 0 70%);
+      transform: translate(5px, 5px);
+    }
+
+    80% {
+      clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%);
+      transform: translate(-5px, -5px);
+    }
+
+    90% {
+      clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%);
+      transform: translate(0);
+    }
+
+    100% {
+      clip-path: polygon(0 60%, 100% 60%, 100% 70%, 0 70%);
+      transform: translate(5px, -5px);
+    }
+  }
+
+  @keyframes glitch-anim-2 {
+    0% {
+      clip-path: polygon(0 25%, 100% 25%, 100% 30%, 0 30%);
+      transform: translate(0);
+    }
+
+    15% {
+      clip-path: polygon(0 3%, 100% 3%, 100% 3%, 0 3%);
+      transform: translate(5px, 5px);
+    }
+
+    30% {
+      clip-path: polygon(0 5%, 100% 5%, 100% 20%, 0 20%);
+      transform: translate(-5px, -5px);
+    }
+
+    45% {
+      clip-path: polygon(0 20%, 100% 20%, 100% 20%, 0 20%);
+      transform: translate(5px, -5px);
+    }
+
+    60% {
+      clip-path: polygon(0 40%, 100% 40%, 100% 40%, 0 40%);
+      transform: translate(-5px, 5px);
+    }
+
+    75% {
+      clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%);
+      transform: translate(5px, 5px);
+    }
+
+    100% {
+      clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%);
+      transform: translate(-5px, -5px);
+    }
+  }
+
+  /* Flash */
+  @keyframes glitch-flash {
+    0% {
+      opacity: 0.8;
+    }
+
+    50% {
+      opacity: 0.2;
+    }
+
+    100% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-glitch-1 {
+    animation: glitch-anim-1 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+  }
+
+  .animate-glitch-2 {
+    animation: glitch-anim-2 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+  }
+
+  /* Overlay Entrance Animation */
+  @keyframes overlay-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-overlay-in {
+    animation: overlay-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Admin Hub Float Animation */
+  @keyframes bobbing {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  .animate-bob {
+    animation: bobbing 3s ease-in-out infinite;
+  }
+}

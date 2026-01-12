@@ -1,0 +1,113 @@
+1. Core Foundations (Completed/In Progress)
+Aesthetics: High-contrast Sci-Fi theme (Deep Black/Blue #020205) with Neon Cyan, Purple, and Pink accents.
+
+Background: Custom CircuitBoardBackground with animated "Comet" beams and a subtle X-Grid.
+
+Typography: Orbitron for headers and Rajdhani or Share Tech Mono for data/monospaced text.
+
+The "Glass" Standard: All UI elements use Frosted Glass (backdrop-blur-xl) with "thick" layering (double borders).
+
+2. The Arena (Matchmaking & Lobbies)
+Unified Lobby System: One system for both automated "Queues" and player-hosted "Lobbies."
+
+Triple-Tier Layout: 1. Tournament Row: Official events (Neon Red). 2. My Operations: Lobbies you are hosting (Electric Purple). 3. Open Grid: All available joinable games (Neon Cyan).
+
+Guild-Locked Visibility: Players only see lobbies for Discord servers they are actually in.
+
+Sector Keys (Private Lobbies): 4-digit Hex-code passphrases (e.g., A7-F2) for locked sessions.
+
+Match Found "Ready Check": A 10-second countdown overlay with "Accept/Decline" before a match starts.
+
+Map Veto System: A tactical "Ban/Pick" phase for mission locations (e.g., Valorant maps).
+
+3. The Dossier (Player Career)
+Public/Private Views: A single profile page that hides sensitive info/controls when viewed by others.
+
+Shared Sectors: Displays mutual Discord servers between you and the player you are viewing.
+
+Recent Operatives: A compact list of the last 5 players you played with, integrated directly into the profile.
+
+Unified Trophy Case: A grid for both Global Achievements (public) and Secret Organization Medals (hidden unless earned).
+
+Reputation Meter: A neon bar fueled by player commendations (e.g., "Good Leader," "Clutch Factor").
+
+Game-Specific Stats: Dedicated data tabs for the "Big 5" (LoL, Valorant, Rocket League, FIFA, CS2).
+
+4. Admin & Systems (The "Command Center")
+Floating Admin Hub: A persistent, bobbing red notification bubble visible only to admins, showing pending reports.
+
+Lightweight Inbox: A text-only report system for match approvals.
+
+Discord-Linked Evidence: No image hosting; players upload screenshots to Discord logs, and the site links to those threads for verification.
+
+Official Mode Registry: A master list of "Official" vs. "Community" game modes.
+
+Ghost Lobby Cleanup: Automated "Reaper" script that removes lobbies if the host goes offline or is inactive for 2 hours.
+
+5. Planned / Provisions
+Automatic Rank Sync: Pulling Discord roles to update Dossier stats automatically.
+
+Tournament Architect: Admin tools to set Round Robin or Gauntlet bracket styles.
+
+Reputation Decay: Stats slowly dropping during inactivity to encourage consistent play.
+
+Mode Promotion: A way for popular "Community" modes to be upgraded to "Official" status by admins.
+
+This is a great idea. We’ve covered a lot of ground, moving from a simple dashboard to a fully realized Cyberpunk eSports Hub. Consolidating now will ensure Antigravity (and you) have a clear "Master Plan" to reference.
+
+Here is the full feature map of Nexus, categorized by their current status.
+
+1. Core Foundations (Completed/In Progress)
+Aesthetics: High-contrast Sci-Fi theme (Deep Black/Blue #020205) with Neon Cyan, Purple, and Pink accents.
+
+Background: Custom CircuitBoardBackground with animated "Comet" beams and a subtle X-Grid.
+
+Typography: Orbitron for headers and Rajdhani or Share Tech Mono for data/monospaced text.
+
+The "Glass" Standard: All UI elements use Frosted Glass (backdrop-blur-xl) with "thick" layering (double borders).
+
+2. The Arena (Matchmaking & Lobbies)
+Unified Lobby System: One system for both automated "Queues" and player-hosted "Lobbies."
+
+Triple-Tier Layout: 1. Tournament Row: Official events (Neon Red). 2. My Operations: Lobbies you are hosting (Electric Purple). 3. Open Grid: All available joinable games (Neon Cyan).
+
+Guild-Locked Visibility: Players only see lobbies for Discord servers they are actually in.
+
+Sector Keys (Private Lobbies): 4-digit Hex-code passphrases (e.g., A7-F2) for locked sessions.
+
+Match Found "Ready Check": A 10-second countdown overlay with "Accept/Decline" before a match starts.
+
+Map Veto System: A tactical "Ban/Pick" phase for mission locations (e.g., Valorant maps).
+
+3. The Dossier (Player Career)
+Public/Private Views: A single profile page that hides sensitive info/controls when viewed by others.
+
+Shared Sectors: Displays mutual Discord servers between you and the player you are viewing.
+
+Recent Operatives: A compact list of the last 5 players you played with, integrated directly into the profile.
+
+Unified Trophy Case: A grid for both Global Achievements (public) and Secret Organization Medals (hidden unless earned).
+
+Reputation Meter: A neon bar fueled by player commendations (e.g., "Good Leader," "Clutch Factor").
+
+Game-Specific Stats: Dedicated data tabs for the "Big 5" (LoL, Valorant, Rocket League, FIFA, CS2).
+
+4. Admin & Systems (The "Command Center")
+Floating Admin Hub: A persistent, bobbing red notification bubble visible only to admins, showing pending reports.
+
+Lightweight Inbox: A text-only report system for match approvals.
+
+Discord-Linked Evidence: No image hosting; players upload screenshots to Discord logs, and the site links to those threads for verification.
+
+Official Mode Registry: A master list of "Official" vs. "Community" game modes.
+
+Ghost Lobby Cleanup: Automated "Reaper" script that removes lobbies if the host goes offline or is inactive for 2 hours.
+
+5. Planned / Provisions
+Automatic Rank Sync: Pulling Discord roles to update Dossier stats automatically.
+
+Tournament Architect: Admin tools to set Round Robin or Gauntlet bracket styles.
+
+Reputation Decay: Stats slowly dropping during inactivity to encourage consistent play.
+
+Mode Promotion: A way for popular "Community" modes to be upgraded to "Official" status by admins.
