@@ -31,7 +31,7 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
 
     // 3. Call RPC (Transaction)
     const { data, error } = await supabase.rpc('submit_match_report', {
-        match_id_input: matchId,
+        match_id_input: matchId, // Pass as string; RPC handles text/uuid conversion safely
         reporter_id_input: user.id,
         my_score_input: myScore,
         opponent_score_input: opponentScore
@@ -67,7 +67,7 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
 
     revalidatePath(`/dashboard/play/match/${matchId}`);
     revalidatePath('/dashboard/play'); // Refresh Arena list
-    return { success: true };
+    return { success: true, ...(data as object) };
 }
 
 export async function createLobby(formData: {

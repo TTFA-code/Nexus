@@ -1,34 +1,40 @@
 import { UserOverseer } from "@/components/admin/UserOverseer"
 import { createClient } from "@/utils/supabase/server"
 
+import { createAdminClient } from "@/utils/supabase/admin"
+
 async function getMembersData(guildId: string) {
     const supabase = await createClient()
+    const adminDb = createAdminClient()
 
-    // Fetch members (Using a view or table, assuming 'guild_members' or similar exists, or just players for now)
-    // Since we don't know the exact schema for members relation here, 
-    // and UserOverseer expects players. 
-    // We'll fetch players who have interacted with the guild? 
-    // Or just all players for MVP if the guild relation isn't clear.
-    // Let's assume we want to show players linked to this guild.
-    // Ideally: supabase.from('guild_members').select('*').eq('guild_id', guildId)
-    // But let's check 'match_players' or similar to get "Active Operatives".
+    // 1. Get member UUIDs from server_members (Users who have logged into the app and are in this guild)
+    // Use adminDb to bypass potential RLS policies that hide other members
+    const { data: members } = await (adminDb || supabase as any)
+        .from('server_members')
+        .select('user_id')
+        .eq('guild_id', guildId)
 
-    // For now, let's fetch 'players' - limit 30 for performance
+    const memberUuids = members?.map((m: any) => m.user_id) || []
+
+    if (memberUuids.length === 0) {
+        return { players: [], bannedIds: [] }
+    }
+
+    // 2. Get player details using UUIDs
+    // players table is public read, so standard client is fine
     const { data: players } = await supabase
         .from('players')
         .select('*')
-        .limit(30)
+        .in('uuid_link', memberUuids)
 
-    // Fetch banned users
-    // Assuming there is a bans table? Or 'guild_bans'
-    // toggleGuildBan action uses 'guild_bans' table presumably.
-    // Let's check `manageBans` action logic if possible, but for now I'll guess 'guild_bans'.
-    const { data: bans } = await supabase
+    // 3. Fetch banned users for this guild
+    // Use adminDb for bans as well to ensure visibility
+    const { data: bans } = await (adminDb || supabase as any)
         .from('guild_bans')
         .select('user_id')
         .eq('guild_id', guildId)
 
-    const bannedIds = bans?.map(b => b.user_id) || []
+    const bannedIds = bans?.map((b: any) => b.user_id) || []
 
     return { players: players || [], bannedIds }
 }

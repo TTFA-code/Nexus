@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/table';
 import { useParams } from 'next/navigation';
 import { SharedSectors } from '@/components/profile/SharedSectors';
-import { RecentSquad } from '@/components/profile/RecentSquad';
 import { getUserProfileData, ProfileStats, MatchHistoryItem } from '@/actions/profileActions';
+import { MMRHistoryGraph } from '@/components/profile/MMRHistoryGraph';
 
 export default function ProfilePage() {
     const params = useParams();
@@ -127,123 +127,141 @@ export default function ProfilePage() {
                             <div className="text-sm font-mono text-[#ccff00] mb-2 tracking-[0.2em] uppercase">
                                 {isOwnProfile ? 'System Identity' : 'Target Identified'}
                             </div>
-                            <h1 className="text-5xl font-black text-white mb-4 tracking-tight font-display">{displayName}</h1>
+                            <h1 className="text-5xl font-black text-white mb-2 tracking-tight font-display">{displayName}</h1>
+
+                            {/* MMR Tag(s) */}
+                            <div className="flex flex-wrap items-center gap-3 mb-6">
+                                {stats?.mmrList && stats.mmrList.length > 0 ? (
+                                    stats.mmrList.map((m, idx) => (
+                                        <span key={idx} className="inline-flex items-center gap-2 px-3 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono font-bold text-sm">
+                                            <Swords className="w-3 h-3" />
+                                            <span className="text-zinc-400 uppercase text-xs">{m.gameName}</span>
+                                            <span className="text-lg">{m.value}</span>
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-zinc-500/10 border border-zinc-500/20 text-zinc-500 font-mono font-bold text-sm">
+                                        UNRANKED
+                                    </span>
+                                )}
+                            </div>
 
                             {/* Achievement / Title Slot */}
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
-                                <Trophy className="w-3 h-3 text-yellow-500" />
-                                <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Apex Champion 2024</span>
-                            </div>
+                            {/* Shared Sectors Bridge */}
+                            <SharedSectors userId={sectorsUserId} />
                         </div>
-
-                        {/* Shared Sectors Bridge */}
-                        <SharedSectors userId={sectorsUserId} />
                     </div>
+
+                    {/* BG Deco */}
+                    <div className="absolute -right-20 -top-20 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+                    <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
                 </div>
 
-                {/* Bottom Row: Recent Squad */}
-                <RecentSquad />
+                {/* MMR Graph */}
+                {stats?.mmrTrend && stats.mmrTrend.length > 1 && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+                        <MMRHistoryGraph data={stats.mmrTrend} />
+                    </div>
+                )}
 
-                {/* BG Deco */}
-                <div className="absolute -right-20 -top-20 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
-            </div>
+                {/* Grid Layout: Trophy Case & History */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            {/* Grid Layout: Trophy Case & History */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Trophy Case */}
+                    <div className="lg:col-span-1 space-y-6">
+                        <Card className="bg-black/20 backdrop-blur-xl border-white/10 text-white shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-widest text-zinc-400">
+                                    <Trophy className="w-4 h-4 text-yellow-500" />
+                                    Achievements
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-4 gap-3">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                                        <div key={i} className="aspect-square rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden">
+                                            <Medal className="w-5 h-5 text-zinc-800 group-hover:text-yellow-500/50 transition-colors" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                {/* Trophy Case */}
-                <div className="lg:col-span-1 space-y-6">
-                    <Card className="bg-black/20 backdrop-blur-xl border-white/10 text-white shadow-lg">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-widest text-zinc-400">
-                                <Trophy className="w-4 h-4 text-yellow-500" />
-                                Achievements
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-4 gap-3">
-                                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                                    <div key={i} className="aspect-square rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden">
-                                        <Medal className="w-5 h-5 text-zinc-800 group-hover:text-yellow-500/50 transition-colors" />
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
+                        {/* Quick Stats */}
+                        <Card className="bg-black/20 backdrop-blur-xl border-white/10 text-white shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-widest text-zinc-400">
+                                    <FileText className="w-4 h-4 text-blue-400" />
+                                    Service Record
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <span className="text-zinc-500 text-sm">Matches</span>
+                                    <span className="font-mono font-bold">{stats?.totalMatches || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <span className="text-zinc-500 text-sm">Win Rate</span>
+                                    <span className="font-mono font-bold text-white">{stats?.winRate || 0}%</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <span className="text-zinc-500 text-sm">Reputation</span>
+                                    <span className="font-mono font-bold text-[#ccff00]">{stats?.reputation || 'Neutral'}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
 
-                    {/* Quick Stats */}
-                    <Card className="bg-black/20 backdrop-blur-xl border-white/10 text-white shadow-lg">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 font-mono text-sm uppercase tracking-widest text-zinc-400">
-                                <FileText className="w-4 h-4 text-blue-400" />
-                                Service Record
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between items-center py-2 border-b border-white/5">
-                                <span className="text-zinc-500 text-sm">Matches</span>
-                                <span className="font-mono font-bold">{stats?.totalMatches || 0}</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-white/5">
-                                <span className="text-zinc-500 text-sm">Win Rate</span>
-                                <span className="font-mono font-bold text-white">{stats?.winRate || 0}%</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-white/5">
-                                <span className="text-zinc-500 text-sm">Reputation</span>
-                                <span className="font-mono font-bold text-[#ccff00]">{stats?.reputation || 'Neutral'}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Match History */}
-                <div className="lg:col-span-2">
-                    <Card className="h-full bg-black/20 backdrop-blur-xl border-white/10 text-white shadow-lg">
-                        <CardHeader>
-                            <CardTitle className="font-mono text-sm uppercase tracking-widest text-zinc-400">Recent Deployments</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="border-white/10 hover:bg-white/5">
-                                        <TableHead className="text-zinc-500 font-mono text-xs uppercase">Operation</TableHead>
-                                        <TableHead className="text-zinc-500 font-mono text-xs uppercase">Protocol</TableHead>
-                                        <TableHead className="text-zinc-500 font-mono text-xs uppercase">Result</TableHead>
-                                        <TableHead className="text-zinc-500 font-mono text-xs uppercase text-right">Time</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {history.length > 0 ? (
-                                        history.map((match) => (
-                                            <TableRow key={match.id} className="border-white/10 hover:bg-white/5 transition-colors cursor-pointer group">
-                                                <TableCell className="font-mono text-xs text-zinc-400 group-hover:text-white">#{match.id.substring(0, 8)}</TableCell>
-                                                <TableCell className="font-medium">
-                                                    <div>{match.gameName}</div>
-                                                    <div className="text-xs text-zinc-500">{match.modeName}</div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${match.result === 'Victory' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                                            match.result === 'Defeat' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                                                'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
-                                                        }`}>
-                                                        {match.result}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-right text-zinc-500 text-xs font-mono">{match.timeAgo}</TableCell>
+                    {/* Match History */}
+                    <div className="lg:col-span-2">
+                        <Card className="h-full bg-black/20 backdrop-blur-xl border-white/10 text-white shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="font-mono text-sm uppercase tracking-widest text-zinc-400">Recent Deployments</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0"> {/* Remove padding from content to allow scroll to hit edges */}
+                                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                                    <Table>
+                                        <TableHeader className="sticky top-0 bg-[#09090b] z-10 shadow-sm">
+                                            <TableRow className="border-white/10 hover:bg-white/5">
+                                                <TableHead className="text-zinc-500 font-mono text-xs uppercase pl-6">Operation</TableHead>
+                                                <TableHead className="text-zinc-500 font-mono text-xs uppercase">Protocol</TableHead>
+                                                <TableHead className="text-zinc-500 font-mono text-xs uppercase">Result</TableHead>
+                                                <TableHead className="text-zinc-500 font-mono text-xs uppercase text-right pr-6">Time</TableHead>
                                             </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="text-center py-8 text-zinc-500 font-mono">
-                                                NO DEPLOYMENT DATA FOUND
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {history.length > 0 ? (
+                                                history.map((match) => (
+                                                    <TableRow key={match.id} className="border-white/10 hover:bg-white/5 transition-colors cursor-pointer group">
+                                                        <TableCell className="font-mono text-xs text-zinc-400 group-hover:text-white pl-6">#{match.id.substring(0, 8)}</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            <div>{match.gameName}</div>
+                                                            <div className="text-xs text-zinc-500">{match.modeName}</div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${match.result === 'Victory' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                                                match.result === 'Defeat' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                                                    'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                                                                }`}>
+                                                                {match.result}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="text-right text-zinc-500 text-xs font-mono pr-6">{match.timeAgo}</TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="text-center py-8 text-zinc-500 font-mono">
+                                                        NO DEPLOYMENT DATA FOUND
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </div>

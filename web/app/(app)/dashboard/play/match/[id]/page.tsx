@@ -66,15 +66,18 @@ export default async function MatchReportPage(props: MatchPageProps) {
             .from("mmr_history")
             .select("change")
             .eq("match_id", matchId)
-            .eq("user_id", user.id)
-            .single();
+            .eq("player_uuid", user.id)
+            .limit(1)
+            .maybeSingle();
 
         if (history) {
             mmrChange = history.change;
+        } else {
+            console.error("MatchReportPage: No MMR History found for user", user.id, "match", matchId);
         }
     }
 
-    const mmrChangeText = mmrChange !== null ? `(${mmrChange >= 0 ? "+" : ""}${mmrChange} MMR)` : "";
+    const mmrChangeText = mmrChange !== null ? `${mmrChange >= 0 ? "+" : ""}${mmrChange}` : "";
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-4 max-w-4xl mx-auto space-y-12">
@@ -150,7 +153,12 @@ export default async function MatchReportPage(props: MatchPageProps) {
 
             {/* REPORTING FORM (Client Component) */}
             {!isFinished ? (
-                <MatchReportForm matchId={matchId} />
+                <MatchReportForm
+                    matchId={matchId}
+                    myStats={myStats?.score !== undefined ? { score: myStats.score } : undefined}
+                    opponentStats={opponentStats?.score !== undefined ? { score: opponentStats.score } : undefined}
+                    userId={user.id}
+                />
             ) : (
                 /* RETURN BUTTON */
                 <div className="pt-10">

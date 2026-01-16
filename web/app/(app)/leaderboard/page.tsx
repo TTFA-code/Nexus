@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { GameModeFilter } from "@/components/leaderboard/GameModeFilter"
-import { redirect } from 'next/navigation'
+import { GameFilter } from "@/components/leaderboard/GameFilter"
 import { PageHeader } from "@/components/ui/PageHeader"
 
 // ... existing imports
@@ -18,100 +17,111 @@ import { PageHeader } from "@/components/ui/PageHeader"
 export const revalidate = 0
 
 interface LeaderboardPageProps {
-    searchParams: Promise<{ mode?: string }>
+    searchParams: Promise<{ game?: string }>
 }
 
 export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
     const supabase = await createClient()
-    const { mode } = await searchParams
+    const { game } = await searchParams
 
-    // Fetch Game Modes for Filter
-    const { data: gameModes } = await supabase
-        .from('game_modes')
+    // Fetch Games for Filter
+    const { data: games, error: gamesError } = await supabase
+        .from('games')
         .select('id, name')
-        .eq('is_active', true)
+        .order('name', { ascending: true })
+
+    if (gamesError) {
+        console.error("Error fetching games:", gamesError)
+    } else {
+        console.log("Fetched games:", games)
+    }
 
     // Build Query
+    // We are querying player_mmr now.
     let query = supabase
-        .from('player_ratings')
+        .from('player_mmr' as any)
         .select(`
-            *,
+            mmr,
             players (username, avatar_url),
-            game_modes (name)
+            games (name)
         `)
         .order('mmr', { ascending: false })
         .limit(50)
 
-    if (mode && mode !== 'all') {
-        query = query.eq('game_mode_id', parseInt(mode))
+    if (game && game !== 'all') {
+        query = query.eq('game_id', game)
     }
 
     const { data: ratings } = await query
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f]/50 backdrop-blur-md text-white">
-            <PageHeader title="Leaderboard" subtitle="GLOBAL RANKINGS">
-                <div className="flex items-center justify-end border-b border-white/10 pb-4">
-                    <GameModeFilter modes={gameModes || []} />
-                </div>
-            </PageHeader>
+        <div className="min-h-screen bg-[#020205] text-white selection:bg-cyan-500/30">
+            {/* Background Effects */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,243,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,243,255,0.03)_1px,transparent_1px)] bg-[size:30px_30px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]" />
+            </div>
 
-            <div className="p-8">
-                <div className="rounded-md border border-white/10 bg-black/20 backdrop-blur-sm">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="border-white/10 hover:bg-white/5">
-                                <TableHead className="w-[100px] text-zinc-400">Rank</TableHead>
-                                <TableHead className="text-zinc-400">Player</TableHead>
-                                <TableHead className="text-zinc-400">Game Mode</TableHead>
-                                <TableHead className="text-right text-zinc-400">MMR</TableHead>
-                                <TableHead className="text-right text-zinc-400">W/L</TableHead>
-                                <TableHead className="text-right text-zinc-400">Win Rate</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {ratings?.map((rating, index) => {
-                                const totalGames = rating.wins + rating.losses
-                                const winRate = totalGames > 0 ? Math.round((rating.wins / totalGames) * 100) : 0
+            <div className="relative z-10">
+                <PageHeader title="LEADERBOARD" subtitle="GLOBAL RANKINGS">
+                    <div className="flex items-center justify-end border-b border-white/10 pb-4">
+                        <GameFilter games={games || []} />
+                    </div>
+                </PageHeader>
 
-                                return (
-                                    <TableRow key={rating.id} className="border-white/10 hover:bg-white/5">
-                                        <TableCell className="font-medium text-white">
-                                            #{index + 1}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-8 w-8 ring-1 ring-white/10">
-                                                    <AvatarImage src={rating.players?.avatar_url || ''} />
-                                                    <AvatarFallback className="bg-zinc-900 text-zinc-400">{rating.players?.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                                <span className="font-medium text-white">{rating.players?.username}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10">{rating.game_modes?.name}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold text-blue-400">
-                                            {rating.mmr}
-                                        </TableCell>
-                                        <TableCell className="text-right text-muted-foreground">
-                                            <span className="text-green-500">{rating.wins}W</span> - <span className="text-red-500">{rating.losses}L</span>
-                                        </TableCell>
-                                        <TableCell className="text-right text-zinc-300">
-                                            {winRate}%
+                <div className="p-8">
+                    <div className="rounded-xl border border-white/10 bg-black/30 backdrop-blur-xl shadow-2xl overflow-hidden relative group">
+                        {/* Card highlight effect */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+
+                        <Table>
+                            <TableHeader className="bg-white/5">
+                                <TableRow className="border-white/10 hover:bg-white/5">
+                                    <TableHead className="w-[100px] text-cyan-400 font-bold uppercase tracking-wider font-mono">Rank</TableHead>
+                                    <TableHead className="text-zinc-400 uppercase tracking-wider font-mono">Player</TableHead>
+                                    <TableHead className="text-zinc-400 uppercase tracking-wider font-mono">Game</TableHead>
+                                    <TableHead className="text-right text-purple-400 font-bold uppercase tracking-wider font-mono">MMR</TableHead>
+                                    {/* Win Rate temporarily removed as it requires expensive calculation per row */}
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {ratings?.map((rating: any, index: number) => {
+                                    return (
+                                        <TableRow key={`${rating.players?.username}-${index}`} className="border-white/10 hover:bg-white/5 transition-colors duration-200 group/row">
+                                            <TableCell className="font-medium text-white font-mono">
+                                                <span className={index < 3 ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" : "text-zinc-500"}>
+                                                    #{index + 1}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-10 w-10 ring-2 ring-white/10 group-hover/row:ring-cyan-500/50 transition-all duration-300">
+                                                        <AvatarImage src={rating.players?.avatar_url || ''} />
+                                                        <AvatarFallback className="bg-zinc-900 text-zinc-400 font-bold">{rating.players?.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-bold text-zinc-100 tracking-wide group-hover/row:text-white transition-colors">{rating.players?.username}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="border-white/10 bg-white/5 text-zinc-400 hover:bg-purple-500/10 hover:text-purple-300 hover:border-purple-500/30 transition-all duration-300 uppercase tracking-wider text-[10px]">
+                                                    {rating.games?.name}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold text-2xl text-white font-mono tracking-tighter tabular-nums drop-shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                                {rating.mmr}
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
+                                {(!ratings || ratings.length === 0) && (
+                                    <TableRow className="border-white/10 hover:bg-transparent">
+                                        <TableCell colSpan={4} className="h-32 text-center text-zinc-500 font-mono uppercase tracking-widest">
+                                            No ranked players found.
                                         </TableCell>
                                     </TableRow>
-                                )
-                            })}
-                            {(!ratings || ratings.length === 0) && (
-                                <TableRow className="border-white/10 hover:bg-transparent">
-                                    <TableCell colSpan={6} className="h-24 text-center text-zinc-500">
-                                        No players found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
             </div>
         </div>

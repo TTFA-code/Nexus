@@ -7,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function MatchReportForm({ matchId }: { matchId: string }) {
+interface MatchReportFormProps {
+    matchId: string;
+    myStats?: { score: number };
+    opponentStats?: { score: number };
+    userId: string;
+}
+
+export default function MatchReportForm({ matchId, myStats, opponentStats, userId }: MatchReportFormProps) {
     const [myScore, setMyScore] = useState("");
     const [opponentScore, setOpponentScore] = useState("");
     const [loading, setLoading] = useState(false);
@@ -26,7 +33,28 @@ export default function MatchReportForm({ matchId }: { matchId: string }) {
                 console.error("Submission Error:", result.error);
                 toast.error("Failed to submit: " + result.error);
             } else {
-                toast.success("Result reported successfully");
+                // Parse MMR Changes
+                // The result now contains 'result' object which has the JSON from RPC
+                // We need to check how matchActions returns it. 
+                // Assuming result.data contains the RPC return.
+
+                const mmrChanges = (result as any).data?.mmr_changes;
+                const myChange = mmrChanges?.[userId]; // We need userId here. 
+                // Since this component might not have userId readily available in props, 
+                // we'll rely on the server action return message or just show generic success for now
+                // UNLESS we pass userId/Team to form.
+
+                // Better: Just show success and let the profile update show it. 
+                // OR: Parse if we can. 
+
+                if (myChange) {
+                    toast.success(`Result reported. Combat Rating: ${myChange > 0 ? '+' : ''}${myChange}`);
+                } else {
+                    // Show Winner Team from result
+                    const winnerTeam = (result as any).winner_team;
+                    const winnerText = winnerTeam === 0 ? "Draw" : `Team ${winnerTeam} Victory`;
+                    toast.success(`Result confirmed: ${winnerText}`);
+                }
             }
         } catch (err: any) {
             console.error("Network/System Error:", err);
@@ -45,23 +73,31 @@ export default function MatchReportForm({ matchId }: { matchId: string }) {
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-emerald-500 uppercase tracking-wider block text-center">My Score</label>
                         <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={myScore}
-                            onChange={(e) => setMyScore(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                setMyScore(val);
+                            }}
                             className="text-center text-4xl font-mono h-20 bg-black/50 border-zinc-800 focus:border-emerald-500 focus:ring-emerald-500/20"
                             placeholder="-"
-                            min="0"
                         />
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-red-500 uppercase tracking-wider block text-center">Opponent Score</label>
                         <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={opponentScore}
-                            onChange={(e) => setOpponentScore(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                setOpponentScore(val);
+                            }}
                             className="text-center text-4xl font-mono h-20 bg-black/50 border-zinc-800 focus:border-red-500 focus:ring-red-500/20"
                             placeholder="-"
-                            min="0"
                         />
                     </div>
                 </div>

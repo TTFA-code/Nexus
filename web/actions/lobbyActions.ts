@@ -44,6 +44,16 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
             throw new Error('Lobby not found or signal lost.')
         }
 
+        // 1.5 Active Session Check (Sector Validation)
+        // @ts-ignore - RPC not yet typed
+        const { data: isActiveSession, error: rpcError } = await supabase.rpc('check_active_session', {
+            p_user_id: userId
+        });
+
+        if (isActiveSession) {
+            throw new Error('Sector Warning: You are already deployed in an active match. Finish your current session before joining another.');
+        }
+
         // 2.1 Password Check (Private Sector Protection)
         // If lobby has a sector_key, it is PRIVATE.
         if (lobby.sector_key) {
@@ -73,7 +83,7 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
         const discordIdentity = user.identities?.find(i => i.provider === 'discord')
         const discordId = discordIdentity?.id
 
-        if (discordId) {
+        if (discordId && lobby.guild_id) {
             const { data: ban } = await supabase
                 .from('guild_bans')
                 .select('id')
@@ -87,10 +97,15 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
         }
 
         // 2.5 Voice Guard Check
-        if (lobby.require_vc && discordId) {
-            const isInVoice = await verifyUserVoice(lobby.guild_id, discordId)
-            if (!isInVoice) {
-                throw new Error('Access Denied: Voice Comms Required. Join a voice channel first.')
+        if (lobby.voice_required && discordId) {
+            if (!lobby.guild_id) {
+                // Should technically not happen for voice lobbies but strictness required
+                console.warn('Voice check skipped: No Guild ID in lobby');
+            } else {
+                const isInVoice = await verifyUserVoice(lobby.guild_id, discordId)
+                if (!isInVoice) {
+                    throw new Error('Access Denied: Voice Comms Required. Join a voice channel first.')
+                }
             }
         }
 
@@ -229,7 +244,7 @@ export async function submitReadyState(lobbyId: string, isReady: boolean): Promi
         const status = isReady ? 'ACCEPTED' : 'DECLINED'
 
         const { error } = await supabase
-            .from('ready_checks')
+            .from('ready_checks' as any)
             .upsert({
                 lobby_id: lobbyId,
                 user_id: userUuid, // Using UUID per schema
@@ -418,6 +433,7 @@ export async function acceptMatchHandshake(lobbyId: string): Promise<ActionRespo
             .single()
 
         if (!lobby) throw new Error('Lobby vanished.')
+        if (!lobby.game_mode_id) throw new Error('Lobby Game Mode Invalid');
 
         // RACE CONDITION GUARD: Check if match already exists
         if (lobby.match_id) {
@@ -435,13 +451,12 @@ export async function acceptMatchHandshake(lobbyId: string): Promise<ActionRespo
         const { data: newMatch, error: matchError } = await supabase
             .from('matches')
             .insert({
-                game_mode_id: lobby.game_mode_id,
+                game_mode_id: lobby.game_mode_id!, // Asserting non-null as verified by lobby integrity logic or required logic
                 region: lobby.region,
                 status: 'active', // or 'live' depending on schema, usually 'active' for matches
                 guild_id: lobby.guild_id,
                 metadata: {
-                    source_lobby_id: lobbyId,
-                    type: lobby.type
+                    source_lobby_id: lobbyId
                 }
             })
             .select('id')

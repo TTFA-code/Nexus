@@ -63,3 +63,75 @@ export async function approveAllMatchesAction(guildId: string) {
     revalidatePath('/dashboard/admin')
     return { success: true, count: (data as any)?.processed_count }
 }
+
+export async function getGuildMatchHistory(guildId: string) {
+    const supabase = await createClient()
+
+    // Query matches linked to game_modes for this guild
+    // Limitations: This primarily finds matches from Custom Game Modes created by this guild.
+    // Global games might not be captured if they aren't linked to a guild-specific mode.
+    const { data: matches, error } = await supabase
+        .from('matches')
+        .select(`
+            id,
+            status,
+            created_at: started_at,
+            finished_at,
+            winner_team,
+            game_modes!matches_game_mode_id_fkey!inner (
+                name,
+                guild_id,
+                games (
+                    name,
+                    icon_url
+                )
+            )
+        `)
+        .eq('game_modes.guild_id', guildId)
+        .order('started_at', { ascending: false })
+        .limit(50) // Cap for performance for now
+
+    if (error) {
+        console.error('Error fetching guild match history:', error)
+        return []
+    }
+
+    // Map to a cleaner format
+    return matches.map((m: any) => ({
+        id: m.id,
+        status: m.status,
+        date: m.created_at || m.finished_at,
+        gameName: m.game_modes?.games?.name || 'Unknown',
+        modeName: m.game_modes?.name || 'Unknown',
+        winner: m.winner_team,
+        icon: m.game_modes?.games?.icon_url
+    }))
+}
+
+export async function getGuildMemberActivity(guildId: string) {
+    const supabase = await createClient()
+
+    // Cast to any to bypass strict RPC typing until types are regenerated
+    const { data, error } = await (supabase.rpc as any)('get_guild_member_matches', { p_guild_id: guildId })
+
+    if (error) {
+        console.error('Error fetching guild member activity:', error)
+        return []
+    }
+
+    const matches = (data || []) as any[]
+
+    // Map to a cleaner format
+    return matches.map((m: any) => ({
+        id: m.id,
+        status: m.status,
+        date: m.created_at || m.finished_at,
+        gameName: m.game_name || 'Unknown',
+        modeName: m.mode_name || 'Unknown',
+        winner: m.winner_team,
+        icon: m.game_icon,
+        // RPC returns player details too, we could show "Played by [User]"
+        playedBy: m.player_username,
+        playerAvatar: m.player_avatar
+    }))
+}

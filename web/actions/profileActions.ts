@@ -7,6 +7,8 @@ export interface ProfileStats {
     wins: number;
     winRate: number;
     reputation: string;
+    mmrList?: { gameName: string; value: number }[];
+    mmrTrend?: { date: string; mmr: number; change: number; gameName: string }[];
 }
 
 export interface MatchHistoryItem {
@@ -110,11 +112,75 @@ export async function getUserProfileData(userId: string) {
         // 3. Calculate Win Rate
         const winRate = totalMatches > 0 ? ((wins / totalMatches) * 100) : 0;
 
+        // 4. Fetch MMRs (Combat Ratings)
+        const { data: mmrData } = await supabase
+            .from('player_mmr' as any)
+            .select(`
+                mmr,
+                game_id,
+                games (
+                    name
+                )
+            `)
+            .eq('user_id', userId);
+
+        // Map to a cleaner structure
+        const mmrs = (mmrData as any[])?.map((m: any) => ({
+            gameName: m.games?.name || 'Unknown Game',
+            value: m.mmr
+        })) || [];
+
+        // For backwards compatibility/simplicity, we can still expose a "primary" mmr if needed,
+        // but it's better to expose the list.
+        // Let's attach the list to stats.
+
+        // 5. Fetch MMR History trend
+        // 5. Fetch MMR History trend
+        const { data: rawTrendData } = await supabase
+            .from('mmr_history')
+            .select('new_mmr, created_at, match_id, change')
+            .eq('player_uuid', userId)
+            .order('created_at', { ascending: true });
+
+        // Enrich with Game Names manually to avoid deep join issues
+        let mmrHistoryGraph: { date: string; mmr: number; change: number; gameName: string }[] = [];
+        if (rawTrendData && rawTrendData.length > 0) {
+            const matchIds = rawTrendData.map(t => t.match_id).filter((id): id is string => !!id); // filter nulls and ensure string type
+
+            // Fetch game info for these matches
+            const { data: matchGameData } = await supabase
+                .from('matches')
+                .select(`
+                    id, 
+                    game_modes!fk_game_mode (
+                        games (
+                            name
+                        )
+                    )
+                `)
+                .in('id', matchIds);
+
+            // Create a lookup map
+            const matchGameMap = new Map();
+            matchGameData?.forEach((m: any) => {
+                matchGameMap.set(m.id, m.game_modes?.games?.name || 'Unknown Game');
+            });
+
+            mmrHistoryGraph = rawTrendData.map(t => ({
+                date: t.created_at || new Date().toISOString(),
+                mmr: t.new_mmr ?? 0,
+                change: t.change ?? 0,
+                gameName: matchGameMap.get(t.match_id) || 'Unknown Game'
+            }));
+        }
+
         const stats: ProfileStats = {
             totalMatches,
             wins,
             winRate: parseFloat(winRate.toFixed(1)),
-            reputation: 'Exemplary' // Placeholder logic
+            reputation: 'Exemplary', // Placeholder logic
+            mmrList: mmrs,
+            mmrTrend: mmrHistoryGraph
         };
 
         return { stats, history };

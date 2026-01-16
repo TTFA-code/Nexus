@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toggleGuildBan } from '@/actions/manageBans'
-import { RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { RefreshCw, ShieldAlert, ShieldCheck, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
     Tooltip,
@@ -25,6 +25,12 @@ interface UserOverseerProps {
 
 export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerProps) {
     const [isLoading, setIsLoading] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
+
+    const filteredPlayers = players.filter(player =>
+        (player.username?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
+        player.user_id.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
     const handleBanToggle = async (userId: string) => {
         setIsLoading(userId)
@@ -40,7 +46,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
     return (
         <div className="h-full flex flex-col bg-black/40 border border-white/10 backdrop-blur-md rounded-lg overflow-hidden">
             {/* Header */}
-            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5 gap-4">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-red-500/10 rounded border border-red-500/20">
                         <ShieldAlert className="w-5 h-5 text-red-500" />
@@ -54,11 +60,25 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                         </p>
                     </div>
                 </div>
+
+                {/* Search Bar */}
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-zinc-500" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="SEARCH OPERATIVES..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-black/20 border border-white/10 rounded-md py-2 pl-9 pr-4 text-xs font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 w-64 transition-all"
+                    />
+                </div>
             </div>
 
             {/* User List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {players.map((player) => {
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                {filteredPlayers.map((player) => {
                     const isBanned = bannedUserIds.includes(player.user_id)
                     const isProcessing = isLoading === player.user_id
 
@@ -143,9 +163,10 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                     )
                 })}
 
-                {players.length === 0 && (
-                    <div className="text-center py-12 text-zinc-500 font-mono text-xs uppercase tracking-widest">
-                        No operatives found in sector database.
+                {filteredPlayers.length === 0 && (
+                    <div className="text-center py-12 text-zinc-500 font-mono text-xs uppercase tracking-widest flex flex-col items-center gap-2">
+                        <ShieldAlert className="w-8 h-8 text-zinc-700" />
+                        <span>No operatives match search criteria.</span>
                     </div>
                 )}
             </div>

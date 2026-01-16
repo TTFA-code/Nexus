@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Swords, FileText, Trophy } from 'lucide-react';
+import { Swords, FileText } from 'lucide-react';
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function DashboardLayout({
@@ -14,7 +14,6 @@ export default function DashboardLayout({
 
     const tabs = [
         { name: 'The Arena', href: '/dashboard/play', icon: Swords },
-        { name: 'Report Match', href: '/dashboard/submit-report', icon: Trophy },
         { name: 'Dossier', href: '/dashboard/profile/me', icon: FileText },
     ];
 
