@@ -8,9 +8,9 @@ if (DRY_RUN) {
 }
 
 // --- CONFIGURATION ---
-// OLD Project (Source)
-const OLD_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rkiplzdlprguefewxcil.supabase.co';
-const OLD_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // Must be in .env.local
+// OLD Project (Source) - Hardcoded to ensure we migrate FROM the old one even if env changes
+const OLD_URL = 'https://rkiplzdlprguefewxcil.supabase.co';
+const OLD_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // Must be in .env.local (Old Key)
 
 // NEW Project (Target)
 const NEW_URL = 'https://wuluaotvnbvliysghepp.supabase.co';
