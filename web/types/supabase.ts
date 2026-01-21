@@ -10,32 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -75,7 +50,7 @@ export type Database = {
         Insert: {
           game_id?: string | null
           guild_id?: string | null
-          id?: string
+          id: string
           is_active?: boolean | null
           name: string
           team_size: number
@@ -88,15 +63,7 @@ export type Database = {
           name?: string
           team_size?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "game_modes_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       games: {
         Row: {
@@ -107,7 +74,7 @@ export type Database = {
         }
         Insert: {
           icon_url?: string | null
-          id?: string
+          id: string
           name: string
           slug: string
         }
@@ -135,29 +102,31 @@ export type Database = {
           guild_id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "guild_bans_guild_id_fkey"
-            columns: ["guild_id"]
-            isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["guild_id"]
-          },
-          {
-            foreignKeyName: "guild_bans_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "guild_bans_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["discord_id"]
-          },
-        ]
+        Relationships: []
+      }
+      guilds: {
+        Row: {
+          announcement_channel_id: string | null
+          created_at: string | null
+          guild_id: string
+          name: string | null
+          premium_tier: number | null
+        }
+        Insert: {
+          announcement_channel_id?: string | null
+          created_at?: string | null
+          guild_id: string
+          name?: string | null
+          premium_tier?: number | null
+        }
+        Update: {
+          announcement_channel_id?: string | null
+          created_at?: string | null
+          guild_id?: string
+          name?: string | null
+          premium_tier?: number | null
+        }
+        Relationships: []
       }
       lobbies: {
         Row: {
@@ -183,7 +152,7 @@ export type Database = {
           game_id?: string | null
           game_mode_id?: string | null
           guild_id?: string | null
-          id?: string
+          id: string
           is_private?: boolean | null
           is_tournament?: boolean | null
           match_id?: string | null
@@ -211,57 +180,7 @@ export type Database = {
           status?: string | null
           voice_required?: boolean | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "lobbies_creator_id_fkey"
-            columns: ["creator_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "lobbies_creator_id_fkey"
-            columns: ["creator_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-          {
-            foreignKeyName: "lobbies_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lobbies_game_mode_id_fkey"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lobbies_guild_id_fkey"
-            columns: ["guild_id"]
-            isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["guild_id"]
-          },
-          {
-            foreignKeyName: "lobbies_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "admin_match_review"
-            referencedColumns: ["match_id"]
-          },
-          {
-            foreignKeyName: "lobbies_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       lobby_players: {
         Row: {
@@ -274,7 +193,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          id?: string
+          id: string
           is_ready?: boolean | null
           joined_at?: string | null
           lobby_id?: string | null
@@ -291,43 +210,7 @@ export type Database = {
           team?: number | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "lobby_players_lobby_id_fkey"
-            columns: ["lobby_id"]
-            isOneToOne: false
-            referencedRelation: "lobbies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lobby_players_players_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "lobby_players_players_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-          {
-            foreignKeyName: "lobby_players_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "lobby_players_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-        ]
+        Relationships: []
       }
       match_players: {
         Row: {
@@ -338,7 +221,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          id?: string
+          id: string
           match_id?: string | null
           stats?: Json | null
           team: number
@@ -351,36 +234,7 @@ export type Database = {
           team?: number
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "match_players_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "admin_match_review"
-            referencedColumns: ["match_id"]
-          },
-          {
-            foreignKeyName: "match_players_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_players_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "match_players_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-        ]
+        Relationships: []
       }
       match_reports: {
         Row: {
@@ -393,7 +247,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          id?: string
+          id: string
           match_id?: string | null
           reporter_id?: string | null
           result_data?: Json | null
@@ -407,36 +261,7 @@ export type Database = {
           result_data?: Json | null
           status?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "match_reports_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "admin_match_review"
-            referencedColumns: ["match_id"]
-          },
-          {
-            foreignKeyName: "match_reports_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "match_reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-        ]
+        Relationships: []
       }
       matches: {
         Row: {
@@ -457,7 +282,7 @@ export type Database = {
           finished_at?: string | null
           game_mode_id: string
           guild_id?: string | null
-          id?: string
+          id: string
           metadata?: Json | null
           mvp_user_id?: string | null
           region?: string | null
@@ -478,57 +303,7 @@ export type Database = {
           status?: string | null
           winner_team?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_game_mode"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_creator_id_fkey"
-            columns: ["creator_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "matches_creator_id_fkey"
-            columns: ["creator_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-          {
-            foreignKeyName: "matches_game_mode_id_fkey"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_guild_id_fkey"
-            columns: ["guild_id"]
-            isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["guild_id"]
-          },
-          {
-            foreignKeyName: "matches_mvp_user_id_fkey"
-            columns: ["mvp_user_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "matches_mvp_user_id_fkey"
-            columns: ["mvp_user_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-        ]
+        Relationships: []
       }
       mmr_history: {
         Row: {
@@ -543,7 +318,7 @@ export type Database = {
         Insert: {
           change?: number | null
           created_at?: string | null
-          id?: string
+          id: string
           match_id?: string | null
           new_mmr?: number | null
           old_mmr?: number | null
@@ -558,40 +333,33 @@ export type Database = {
           old_mmr?: number | null
           player_uuid?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "mmr_history_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "admin_match_review"
-            referencedColumns: ["match_id"]
-          },
-          {
-            foreignKeyName: "mmr_history_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mmr_history_player_uuid_fkey"
-            columns: ["player_uuid"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "mmr_history_player_uuid_fkey"
-            columns: ["player_uuid"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-        ]
+        Relationships: []
+      }
+      player_mmr: {
+        Row: {
+          game_id: string
+          mmr: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          mmr: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          game_id?: string
+          mmr?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       players: {
         Row: {
           avatar_url: string | null
+          is_banned: boolean | null
           mmr: number | null
           user_id: string
           username: string | null
@@ -599,6 +367,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          is_banned?: boolean | null
           mmr?: number | null
           user_id: string
           username?: string | null
@@ -606,10 +375,35 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          is_banned?: boolean | null
           mmr?: number | null
           user_id?: string
           username?: string | null
           uuid_link?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -622,7 +416,7 @@ export type Database = {
         }
         Insert: {
           game_mode_id?: string | null
-          id?: string
+          id: string
           joined_at?: string | null
           user_id?: string | null
         }
@@ -632,29 +426,7 @@ export type Database = {
           joined_at?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "queues_game_mode_id_fkey"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "queues_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["uuid_link"]
-          },
-          {
-            foreignKeyName: "queues_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["supabase_id"]
-          },
-        ]
+        Relationships: []
       }
       reports: {
         Row: {
@@ -665,17 +437,17 @@ export type Database = {
           reason: string
           reported_id: string | null
           reporter_id: string | null
-          status: Database["public"]["Enums"]["report_status"] | null
+          status: string | null
         }
         Insert: {
           created_at?: string | null
           details?: string | null
           guild_id: string
-          id?: string
+          id: string
           reason: string
           reported_id?: string | null
           reporter_id?: string | null
-          status?: Database["public"]["Enums"]["report_status"] | null
+          status?: string | null
         }
         Update: {
           created_at?: string | null
@@ -685,38 +457,33 @@ export type Database = {
           reason?: string
           reported_id?: string | null
           reporter_id?: string | null
-          status?: Database["public"]["Enums"]["report_status"] | null
+          status?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "reports_reported_id_fkey"
-            columns: ["reported_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "reports_reported_id_fkey"
-            columns: ["reported_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["discord_id"]
-          },
-          {
-            foreignKeyName: "reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            isOneToOne: false
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["discord_id"]
-          },
-        ]
+        Relationships: []
+      }
+      server_members: {
+        Row: {
+          guild_id: string
+          id: string
+          joined_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          guild_id: string
+          id: string
+          joined_at?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          guild_id?: string
+          id?: string
+          joined_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       ttfa_config: {
         Row: {
@@ -770,116 +537,17 @@ export type Database = {
           medal_4?: boolean | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "ttfa_player_stats_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "players"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "ttfa_player_stats_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "v_discord_sync"
-            referencedColumns: ["discord_id"]
-          },
-        ]
-      }
-    }
-    Views: {
-      admin_match_review: {
-        Row: {
-          finished_at: string | null
-          game_mode_id: string | null
-          game_mode_name: string | null
-          guild_id: string | null
-          match_id: string | null
-          reporter_name: string | null
-          status: string | null
-          winner_team: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_game_mode"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_game_mode_id_fkey"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_guild_id_fkey"
-            columns: ["guild_id"]
-            isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["guild_id"]
-          },
-        ]
-      }
-      lobby_stats: {
-        Row: {
-          lobby_id: string | null
-          player_count: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lobby_players_lobby_id_fkey"
-            columns: ["lobby_id"]
-            isOneToOne: false
-            referencedRelation: "lobbies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      v_discord_sync: {
-        Row: {
-          discord_id: string | null
-          supabase_id: string | null
-        }
-        Insert: {
-          discord_id?: string | null
-          supabase_id?: string | null
-        }
-        Update: {
-          discord_id?: string | null
-          supabase_id?: string | null
-        }
         Relationships: []
       }
     }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      approve_all_server_matches: {
-        Args: { target_guild_id: string }
-        Returns: Json
-      }
-      approve_match: { Args: { match_id_input: string }; Returns: Json }
-      get_column_names: {
-        Args: { table_name: string }
-        Returns: {
-          column_name: string
-        }[]
-      }
-      purge_old_nexus_data: { Args: never; Returns: undefined }
-      submit_match_report: {
-        Args: {
-          match_id_input: string
-          my_score_input: number
-          opponent_score_input: number
-          reporter_id_input: string
-        }
-        Returns: Json
-      }
+      [_ in never]: never
     }
     Enums: {
-      report_status: "PENDING" | "RESOLVED" | "DISMISSED"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1005,12 +673,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
-    Enums: {
-      report_status: ["PENDING", "RESOLVED", "DISMISSED"],
-    },
+    Enums: {},
   },
 } as const
