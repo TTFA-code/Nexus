@@ -333,6 +333,13 @@ export type Database = {
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_mmr_history_player"
+            columns: ["player_uuid"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       player_mmr: {
