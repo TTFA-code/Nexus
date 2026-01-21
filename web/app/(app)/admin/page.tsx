@@ -12,14 +12,14 @@ export default async function AdminPage() {
         redirect('/login')
     }
 
-    const { data: clubs } = await supabase
+    const { data: guilds } = await supabase
         .from('guilds')
         .select('guild_id')
         .order('created_at', { ascending: false })
         .limit(1)
 
-    if (clubs && clubs.length > 0) {
-        return <DashboardRedirect to={`/admin/${clubs[0].guild_id}`} />
+    if (guilds && guilds.length > 0) {
+        return <DashboardRedirect to={`/admin/${guilds[0].guild_id}`} />
     }
 
     return (

@@ -33,16 +33,40 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
             throw new Error(`CRITICAL: Invalid ID format received (${lobbyId}). Expected UUID.`);
         }
 
-        const { data: lobby, error: lobbyError } = await supabase
+        interface LobbyJoinResult {
+            id: string
+            sector_key: string | null
+            voice_required: boolean
+            guild_id: string | null
+            game_modes: {
+                id: string
+                team_size: number
+                name: string
+            } | {
+                id: string
+                team_size: number
+                name: string
+            }[] | null // Supabase can return array or object depending on relationship (often object for .single() but relation might be array) 
+            // Actually, game_modes is a foreign key relation. If it is Many-to-One (lobby has one game mode), it returns single object if not using array syntax.
+            // But usually .select('*, game_modes(*)') returns object if it's One-to-One or Many-to-One.
+            // Let's assume object as it was used as `lobby.game_modes[0]` or `lobby.game_modes` in logic.
+            lobby_players: {
+                user_id: string
+            }[]
+        }
+
+        const { data: lobbyData, error: lobbyError } = await supabase
             .from('lobbies')
             .select('*, game_modes(*), lobby_players(*)')
             .eq('id', lobbyId)
             .single()
 
-        if (lobbyError || !lobby) {
+        if (lobbyError || !lobbyData) {
             console.error("Lobby Lookup Error", lobbyError);
             throw new Error('Lobby not found or signal lost.')
         }
+
+        const lobby = lobbyData as unknown as LobbyJoinResult;
 
         // 1.5 Active Session Check (Lobby Validation)
         // @ts-ignore - RPC not yet typed
@@ -426,18 +450,34 @@ export async function acceptMatchHandshake(lobbyId: string): Promise<ActionRespo
 
         // 4. ALL READY -> CREATE MATCH
         // A. Get Lobby Details (game_mode, region, etc.)
-        const { data: lobby } = await supabase
+        interface LobbyHandshakeResult {
+            id: string
+            game_mode_id: string | null
+            region: string | null
+            guild_id: string | null
+            match_id: string | null
+            game_modes: {
+                id: string
+                name: string
+                team_size: number
+            } | null
+        }
+
+        const { data: lobbyData } = await supabase
             .from('lobbies')
             .select('*, game_modes(*)') // Fetch game_modes to check team_size/name
             .eq('id', lobbyId)
             .single()
 
-        if (!lobby) throw new Error('Lobby vanished.')
+        if (!lobbyData) throw new Error('Lobby vanished.')
+
+        const lobby = lobbyData as unknown as LobbyHandshakeResult;
+
         if (!lobby.game_mode_id) throw new Error('Lobby Game Mode Invalid');
 
         // Validation: Enforce 3v3 Standard to have exactly 6 players
-        // We use the fetched game_modes data, casting to any until types are regenerated
-        const gameMode: any = lobby.game_modes;
+        // We use the fetched game_modes data
+        const gameMode = lobby.game_modes;
         if (gameMode && gameMode.name === '3v3 Standard' && allPlayers.length !== 6) {
             throw new Error('Match Start Failed: 3v3 Standard requires exactly 6 players.');
         }

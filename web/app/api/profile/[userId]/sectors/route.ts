@@ -60,12 +60,12 @@ export async function GET(
         return NextResponse.json({ sectors: [] });
     }
 
-    // 2. Fetch Nexus Guilds (Clubs)
-    const { data: clubs } = await supabase
+    // 2. Fetch Nexus Guilds (Guilds)
+    const { data: guilds } = await supabase
         .from('guilds')
         .select('guild_id, name');
 
-    if (!clubs || clubs.length === 0) {
+    if (!guilds || guilds.length === 0) {
         return NextResponse.json({ sectors: [] });
     }
 
@@ -90,10 +90,10 @@ export async function GET(
     const sectors = [];
 
     // We can run these in parallel
-    const checks = clubs.map(async (club) => {
+    const checks = guilds.map(async (guild) => {
         try {
             // Check Target Membership
-            const targetRes = await fetch(`https://discord.com/api/v10/guilds/${club.guild_id}/members/${targetDiscordId}`, {
+            const targetRes = await fetch(`https://discord.com/api/v10/guilds/${guild.guild_id}/members/${targetDiscordId}`, {
                 headers: { Authorization: `Bot ${botToken}` }
             });
 
@@ -108,7 +108,7 @@ export async function GET(
                 if (targetUuid === viewer.id) {
                     isViewerMember = true; // Viewing own profile
                 } else {
-                    const viewerRes = await fetch(`https://discord.com/api/v10/guilds/${club.guild_id}/members/${viewerDiscordId}`, {
+                    const viewerRes = await fetch(`https://discord.com/api/v10/guilds/${guild.guild_id}/members/${viewerDiscordId}`, {
                         headers: { Authorization: `Bot ${botToken}` }
                     });
                     isViewerMember = viewerRes.status === 200;
@@ -116,8 +116,8 @@ export async function GET(
             }
 
             return {
-                id: club.guild_id,
-                name: club.name || 'Unknown Server',
+                id: guild.guild_id,
+                name: guild.name || 'Unknown Server',
                 icon: null, // icon_url removed from schema
                 isMember: isViewerMember,
                 inviteUrl: null // invite_url removed from schema

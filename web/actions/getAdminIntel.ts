@@ -9,16 +9,44 @@ export async function getActiveLobbies(guildId: string) {
     // Debug Injection
     console.log("Querying Lobbies with Join (getAdminIntel)...");
     try {
+        interface AdminLobby {
+            id: string
+            created_at: string
+            status: string
+            game_mode_id: string | null
+            guild_id: string | null
+            creator_id: string
+            is_private: boolean
+            voice_required: boolean
+            is_tournament: boolean
+            sector_key: string | null
+            scheduled_start: string | null
+            notes: string | null
+            match_id: string | null
+            region: string | null
+            creator: {
+                uuid_link: string | null
+                username: string | null
+                avatar_url: string | null
+            } | null
+            lobby_players: {
+                user_id: string
+            }[]
+            game_modes: {
+                id: string
+                name: string
+                team_size: number
+                games: {
+                    name: string
+                    icon_url: string | null
+                } | null
+            } | null
+        }
+
         const { data, error } = await supabase
             .from('lobbies')
             .select('*, creator_id, lobby_players(user_id), creator:creator_id(uuid_link, username, avatar_url), game_modes(*, games(name, icon_url))')
             // Dynamic Admin Filtering:
-            // For now, we allow access to all if 'guild_id' is provided (implying the user has access to that dashboard).
-            // But if we want to filter SPECIFICALLY for the user's admin guilds:
-            // .or(`guild_id.in.(${adminGuilds.join(',')}),guild_id.is.null`) 
-            // Since we don't have the adminGuilds list here without an external call, we will stick to the provided `guildId` 
-            // which comes from the page context (presumably authenticated).
-            // This meets the "Filter only sectors" requirement if the frontend passes the correct guildId.
             .or(`guild_id.eq.${guildId},guild_id.is.null`)
             .eq('is_tournament', true) // Only show Tournament Lobbies in Command Center
             .neq('status', 'finished')
@@ -30,7 +58,9 @@ export async function getActiveLobbies(guildId: string) {
             return []
         }
 
-        return data.map((lobby: any) => ({
+        const lobbies = data as unknown as AdminLobby[];
+
+        return lobbies.map((lobby) => ({
             ...lobby,
             host_name: lobby.creator?.username || 'Unknown Host',
             host_avatar: lobby.creator?.avatar_url || null,

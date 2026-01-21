@@ -11,21 +11,21 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-interface Club {
+interface Guild {
     guild_id: string
     name: string | null
     premium_tier: number | null
 }
 
 interface SidebarServerSelectorProps {
-    clubs: Club[] | null
+    guilds: Guild[] | null
 }
 
-export function SidebarServerSelector({ clubs }: SidebarServerSelectorProps) {
+export function SidebarServerSelector({ guilds }: SidebarServerSelectorProps) {
     const params = useParams()
     const activeGuildId = params.guildId as string
 
-    if (!clubs || clubs.length === 0) return null
+    if (!guilds || guilds.length === 0) return null
 
     return (
         <div className="flex flex-col py-4 w-20 hover:w-64 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/40 border-r border-white/5 h-screen sticky top-0 backdrop-blur-md z-50 group overflow-hidden">
@@ -54,17 +54,17 @@ export function SidebarServerSelector({ clubs }: SidebarServerSelectorProps) {
                 <div className="my-2 mx-auto w-10 h-px bg-white/10 group-hover:w-full group-hover:px-4 transition-all" />
 
                 <div className="flex flex-col gap-3 w-full px-4 items-center group-hover:items-stretch">
-                    {clubs.map((club) => {
-                        const isActive = activeGuildId === club.guild_id
-                        const initials = club.name
-                            ? club.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+                    {guilds.map((guild) => {
+                        const isActive = activeGuildId === guild.guild_id
+                        const initials = guild.name
+                            ? guild.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
                             : 'S'
 
                         return (
-                            <Tooltip key={club.guild_id}>
+                            <Tooltip key={guild.guild_id}>
                                 <TooltipTrigger asChild>
                                     <Link
-                                        href={`/dashboard/${club.guild_id}/admin`}
+                                        href={`/dashboard/${guild.guild_id}/admin`}
                                         className="relative flex items-center gap-3 group/item"
                                     >
                                         {/* Active Indicator Strip (Collapsed) */}
@@ -92,7 +92,7 @@ export function SidebarServerSelector({ clubs }: SidebarServerSelectorProps) {
                                                 "text-sm font-medium truncate w-[140px]",
                                                 isActive ? "text-white" : "text-zinc-400 group-hover/item:text-white"
                                             )}>
-                                                {club.name || `Server ${club.guild_id}`}
+                                                {guild.name || `Server ${guild.guild_id}`}
                                             </span>
                                             {isActive && (
                                                 <span className="text-[10px] text-pink-500 flex items-center gap-1">
@@ -104,7 +104,7 @@ export function SidebarServerSelector({ clubs }: SidebarServerSelectorProps) {
                                     </Link>
                                 </TooltipTrigger>
                                 <TooltipContent side="right" className="bg-black/90 border-white/10 group-hover:hidden">
-                                    <p>{club.name || `Server ${club.guild_id}`}</p>
+                                    <p>{guild.name || `Server ${guild.guild_id}`}</p>
                                     {isActive && <span className="text-pink-500 text-xs">Active Workspace</span>}
                                 </TooltipContent>
                             </Tooltip>

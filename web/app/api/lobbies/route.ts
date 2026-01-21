@@ -32,7 +32,45 @@ export async function GET() {
 
         // 2. Fetch Lobbies (Global + Guild Specific)
         console.log("Querying Lobbies with Join (API)...");
-        const { data: lobbies, error } = await supabase
+
+        interface LobbyWithRelations {
+            id: string
+            created_at: string
+            status: string
+            game_mode_id: string | null
+            guild_id: string | null
+            creator_id: string
+            is_private: boolean
+            voice_required: boolean
+            is_tournament: boolean
+            sector_key: string | null
+            scheduled_start: string | null
+            notes: string | null
+            match_id: string | null
+            region: string | null
+            game_modes: {
+                id: string
+                name: string
+                team_size: number
+                games: {
+                    name: string
+                    icon_url: string | null
+                } | null
+            } | null
+            creator: {
+                uuid_link: string | null
+                username: string | null
+                avatar_url: string | null
+            } | null
+            lobby_players: {
+                user_id: string
+                status: string
+                is_ready: boolean
+                team: number | null
+            }[]
+        }
+
+        const { data: lobbiesData, error } = await supabase
             .from('lobbies')
             .select('*, game_modes(*, games(name, icon_url)), creator:creator_id(uuid_link, username, avatar_url), lobby_players(*)')
             .neq('status', 'finished')
@@ -45,8 +83,10 @@ export async function GET() {
             return NextResponse.json({ lobbies: [] })
         }
 
+        const lobbies = lobbiesData as unknown as LobbyWithRelations[];
+
         // Transform data
-        const safeLobbies = (lobbies || []).map(lobby => ({
+        const safeLobbies = lobbies.map(lobby => ({
             ...lobby,
             // creator is already populated by alias
             players: undefined,

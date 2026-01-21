@@ -25,7 +25,7 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    let clubs: any[] = [];
+    let guilds: any[] = [];
     if (user) {
         const { data: members } = await (supabase as any)
             .from('server_members')
@@ -35,17 +35,17 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
 
         if (members && members.length > 0) {
             const guildIds = members.map((m: any) => m.guild_id);
-            const { data: clubsData } = await supabase
+            const { data: guildsData } = await supabase
                 .from('guilds')
                 .select('guild_id, name, premium_tier')
                 .in('guild_id', guildIds);
-            clubs = clubsData || [];
+            guilds = guildsData || [];
         }
     }
 
     return (
         <div className="flex h-full min-h-[calc(100vh-100px)]">
-            <SidebarServerSelector clubs={clubs} />
+            <SidebarServerSelector guilds={guilds} />
             <AdminSidebar guildId={guildId} />
             <div className="flex-1 p-6 overflow-y-auto">
                 {children}
