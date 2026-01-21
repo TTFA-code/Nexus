@@ -636,6 +636,7 @@ export type Database = {
       }
     }
     Functions: {
+      approve_match: { Args: { match_id_input: string }; Returns: undefined }
       submit_match_report: {
         Args: {
           match_id_input: string

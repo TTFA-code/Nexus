@@ -18,6 +18,11 @@ export async function approveMatchAction(matchId: string) {
     console.log(`[ADMIN_ACTION] Approving Match ${matchId} by ${user.id}`);
 
     // 2. Call RPC
+    // Ensure matchId is a string
+    if (typeof matchId !== 'string') {
+        return { error: 'Invalid match ID format' }
+    }
+
     const { data, error } = await supabase.rpc('approve_match', {
         match_id_input: matchId
     })
@@ -37,7 +42,8 @@ export async function approveMatchAction(matchId: string) {
     }
 
     // 3. Revalidate
-    revalidatePath('/dashboard/admin')
+    revalidatePath('/dashboard/admin') // Keep existing
+    revalidatePath('/admin/operations') // Add requested path
 
     return {
         success: true,
@@ -54,7 +60,7 @@ export async function approveAllMatchesAction(guildId: string) {
 
     console.log(`[ADMIN_ACTION] Approving ALL Pending Matches for Guild ${guildId}`);
 
-    const { data, error } = await supabase.rpc('approve_all_server_matches', {
+    const { data, error } = await (supabase.rpc as any)('approve_all_server_matches', {
         target_guild_id: guildId
     })
 
