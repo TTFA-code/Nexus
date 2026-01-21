@@ -14,30 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      clubs: {
-        Row: {
-          announcement_channel_id: string | null
-          created_at: string | null
-          guild_id: string
-          name: string | null
-          premium_tier: number | null
-        }
-        Insert: {
-          announcement_channel_id?: string | null
-          created_at?: string | null
-          guild_id: string
-          name?: string | null
-          premium_tier?: number | null
-        }
-        Update: {
-          announcement_channel_id?: string | null
-          created_at?: string | null
-          guild_id?: string
-          name?: string | null
-          premium_tier?: number | null
-        }
-        Relationships: []
-      }
       game_modes: {
         Row: {
           game_id: string | null
@@ -50,7 +26,7 @@ export type Database = {
         Insert: {
           game_id?: string | null
           guild_id?: string | null
-          id: string
+          id?: string
           is_active?: boolean | null
           name: string
           team_size: number
@@ -74,7 +50,7 @@ export type Database = {
         }
         Insert: {
           icon_url?: string | null
-          id: string
+          id?: string
           name: string
           slug: string
         }
@@ -152,7 +128,7 @@ export type Database = {
           game_id?: string | null
           game_mode_id?: string | null
           guild_id?: string | null
-          id: string
+          id?: string
           is_private?: boolean | null
           is_tournament?: boolean | null
           match_id?: string | null
@@ -193,7 +169,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          id: string
+          id?: string
           is_ready?: boolean | null
           joined_at?: string | null
           lobby_id?: string | null
@@ -221,7 +197,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          id: string
+          id?: string
           match_id?: string | null
           stats?: Json | null
           team: number
@@ -247,7 +223,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          id: string
+          id?: string
           match_id?: string | null
           reporter_id?: string | null
           result_data?: Json | null
@@ -282,7 +258,7 @@ export type Database = {
           finished_at?: string | null
           game_mode_id: string
           guild_id?: string | null
-          id: string
+          id?: string
           metadata?: Json | null
           mvp_user_id?: string | null
           region?: string | null
@@ -318,7 +294,7 @@ export type Database = {
         Insert: {
           change?: number | null
           created_at?: string | null
-          id: string
+          id?: string
           match_id?: string | null
           new_mmr?: number | null
           old_mmr?: number | null
@@ -416,7 +392,7 @@ export type Database = {
         }
         Insert: {
           game_mode_id?: string | null
-          id: string
+          id?: string
           joined_at?: string | null
           user_id?: string | null
         }
@@ -443,7 +419,7 @@ export type Database = {
           created_at?: string | null
           details?: string | null
           guild_id: string
-          id: string
+          id?: string
           reason: string
           reported_id?: string | null
           reporter_id?: string | null
@@ -471,7 +447,7 @@ export type Database = {
         }
         Insert: {
           guild_id: string
-          id: string
+          id?: string
           joined_at?: string | null
           role: string
           user_id: string
