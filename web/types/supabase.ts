@@ -544,7 +544,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      approve_match: { Args: { match_id_input: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
