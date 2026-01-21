@@ -58,7 +58,6 @@ export async function GET() {
                 } | null
             } | null
             creator: {
-                uuid_link: string | null
                 username: string | null
                 avatar_url: string | null
             } | null
@@ -72,7 +71,7 @@ export async function GET() {
 
         const { data: lobbiesData, error } = await supabase
             .from('lobbies')
-            .select('*, game_modes(*, games(name, icon_url)), creator:creator_id(uuid_link, username, avatar_url), lobby_players(*)')
+            .select('*, game_modes(*, games(name, icon_url)), creator:creator_id(username, avatar_url), lobby_players(*)')
             .neq('status', 'finished')
             .or(`guild_id.is.null,guild_id.in.(${allowedGuilds.length ? allowedGuilds.join(',') : '000'})`)
             .order('created_at', { ascending: false })

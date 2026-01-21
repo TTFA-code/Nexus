@@ -55,8 +55,7 @@ export async function POST(request: Request) {
             // NOTE: If PK is user_id and it is varchar, this works. 
             // If PK is UUID, we need to handle that. Assuming user_id is PK and is varchar based on context.
             username: user.user_metadata.full_name || 'Unknown',
-            avatar_url: user.user_metadata.avatar_url,
-            uuid_link: user.id // IMPORTANT: Link the Auth UUID
+            avatar_url: user.user_metadata.avatar_url
         }, { onConflict: 'user_id' })
 
         // Determine Status

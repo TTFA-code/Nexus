@@ -25,7 +25,7 @@ async function getMembersData(guildId: string) {
     const { data: players } = await supabase
         .from('players')
         .select('*')
-        .in('uuid_link', memberUuids)
+        .in('user_id', memberUuids)
 
     // 3. Fetch banned users for this guild
     // Use adminDb for bans as well to ensure visibility

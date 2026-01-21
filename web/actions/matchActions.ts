@@ -127,8 +127,7 @@ export async function createLobby(formData: {
         await supabase.from('players').upsert({
             user_id: hostId,
             username: user.user_metadata.full_name || 'Unknown',
-            avatar_url: user.user_metadata.avatar_url,
-            uuid_link: user.id
+            avatar_url: user.user_metadata.avatar_url
         }, { onConflict: 'user_id' });
 
         // Determine Status

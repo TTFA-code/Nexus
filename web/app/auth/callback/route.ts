@@ -34,9 +34,8 @@ export async function GET(request: Request) {
                     .upsert({
                         user_id: discordId, // PK (Discord ID)
                         username: user.user_metadata.full_name || 'Unknown',
-                        avatar_url: user.user_metadata.avatar_url,
-                        uuid_link: user.id // Sync Supabase UUID
-                    }, { onConflict: 'uuid_link' })
+                        avatar_url: user.user_metadata.avatar_url
+                    }, { onConflict: 'user_id' })
 
                 if (syncError) {
                     console.error('Auth Sync Error:', syncError)
