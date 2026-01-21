@@ -14,7 +14,7 @@ export default function DashboardLayout({
 
     const tabs = [
         { name: 'The Arena', href: '/dashboard/play', icon: Swords },
-        { name: 'Dossier', href: '/dashboard/profile/me', icon: FileText },
+        { name: 'Profile', href: '/dashboard/profile/me', icon: FileText },
     ];
 
     const showHeader = !pathname.includes('/admin') && !pathname.includes('/leaderboard') && !pathname.includes('/discovery');
@@ -25,7 +25,7 @@ export default function DashboardLayout({
             {showHeader && (
                 <PageHeader
                     title="Dashboard"
-                    subtitle="OPERATOR CONTROLS"
+                    subtitle="PLAYER CONTROLS"
                 >
                     {/* Navigation Tabs */}
                     <div className="flex items-center gap-4 border-b border-white/10">

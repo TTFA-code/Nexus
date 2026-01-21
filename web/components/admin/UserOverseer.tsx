@@ -53,7 +53,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-white font-orbitron tracking-wide">
-                            SECTOR OVERSEER
+                            LOBBY OVERSEER
                         </h3>
                         <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest">
                             PERSONNEL MANAGEMENT TERMINAL
@@ -68,7 +68,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                     </div>
                     <input
                         type="text"
-                        placeholder="SEARCH OPERATIVES..."
+                        placeholder="SEARCH PLAYERS..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="bg-black/20 border border-white/10 rounded-md py-2 pl-9 pr-4 text-xs font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 w-64 transition-all"
@@ -106,7 +106,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                                 </div>
                                 <div>
                                     <div className="text-sm font-bold text-white font-orbitron tracking-wide">
-                                        {player.username || 'Unknown Operative'}
+                                        {player.username || 'Unknown Player'}
                                     </div>
                                     <div className="text-[10px] text-zinc-500 font-mono uppercase">
                                         ID: {player.user_id}
@@ -123,7 +123,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                                         ? "bg-red-500/20 text-red-400 border-red-500/50"
                                         : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                                 )}>
-                                    {isBanned ? "DISAVOWED" : "OPERATIONAL"}
+                                    {isBanned ? "BANNED" : "ACTIVE"}
                                 </div>
 
                                 {/* Ban Button */}
@@ -146,14 +146,14 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                                                 ) : isBanned ? (
                                                     "REINSTATE"
                                                 ) : (
-                                                    "SECTOR BAN"
+                                                    "LOBBY BAN"
                                                 )}
                                             </button>
                                         </TooltipTrigger>
                                         <TooltipContent side="left" className="bg-black/90 border-red-500/50 text-red-500 text-xs font-mono">
                                             {isBanned
-                                                ? "Restores operative access to this sector."
-                                                : "Warning: This will mark the operative's permanent dossier."
+                                                ? "Restores player access to this lobby."
+                                                : "Warning: This will mark the player's permanent record."
                                             }
                                         </TooltipContent>
                                     </Tooltip>
@@ -166,7 +166,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                 {filteredPlayers.length === 0 && (
                     <div className="text-center py-12 text-zinc-500 font-mono text-xs uppercase tracking-widest flex flex-col items-center gap-2">
                         <ShieldAlert className="w-8 h-8 text-zinc-700" />
-                        <span>No operatives match search criteria.</span>
+                        <span>No players match search criteria.</span>
                     </div>
                 )}
             </div>

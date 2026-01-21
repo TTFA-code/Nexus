@@ -154,7 +154,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
     const handleCopyKey = () => {
         if (lobby?.sector_key) {
             navigator.clipboard.writeText(lobby.sector_key);
-            toast.success("Sector Key copied");
+            toast.success("Password copied");
         }
     };
 
@@ -247,7 +247,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                     <div>
                         <div className={`flex items-center gap-2 text-${themeColor}-400 mb-1 font-mono text-xs uppercase tracking-widest`}>
                             <Shield className="w-4 h-4" />
-                            SECURE WORKSPACE // {lobby.region} <span className="text-zinc-600">|</span> <span className={connectionStatus === 'Connected' ? 'text-green-500' : 'text-yellow-500 animate-pulse'}>{connectionStatus}</span>
+                            SECURE LOBBY // {lobby.region} <span className="text-zinc-600">|</span> <span className={connectionStatus === 'Connected' ? 'text-green-500' : 'text-yellow-500 animate-pulse'}>{connectionStatus}</span>
                         </div>
                         <h1 className="text-3xl font-heading font-bold text-white uppercase tracking-wider">{lobby.game_modes?.name || "Unknown Operation"}</h1>
                         <div className="flex items-center gap-4 mt-4">
@@ -262,7 +262,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                     onClick={handleCopyKey}
                                 >
                                     <Copy className="w-3 h-3 mr-2" />
-                                    KEY: {lobby.sector_key}
+                                    PASSWORD: {lobby.sector_key}
                                 </Button>
                             )}
                         </div>
@@ -331,7 +331,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                             onClick={handleJoin}
                                             className={`h-12 px-8 font-bold font-orbitron tracking-widest border bg-${themeColor}-500 text-black hover:bg-${themeColor}-400 border-${themeColor}-400`}
                                         >
-                                            JOIN OPERATION
+                                            JOIN LOBBY
                                         </Button>
                                     );
                                 }
@@ -352,23 +352,23 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                     isOpen={showDissolveConfirm}
                     onOpenChange={setShowDissolveConfirm}
                     title="WARNING: SIGNAL TERMINATION"
-                    description="Confirm Sector Dissolution? This cannot be undone."
+                    description="Confirm Lobby Dissolution? This cannot be undone."
                     onConfirm={handleDissolve}
                     onCancel={() => setShowDissolveConfirm(false)}
                     isDestructive={true}
-                    confirmText="DISSOLVE SECTOR"
+                    confirmText="DISSOLVE LOBBY"
                     cancelText="ABORT"
                 />
 
                 <ConfirmModal
                     isOpen={showLeaveConfirm}
                     onOpenChange={setShowLeaveConfirm}
-                    title="WARNING: ABORT MISSION"
-                    description="Are you sure you want to leave this operation? You will be disconnected from the sector."
+                    title="WARNING: LEAVE LOBBY"
+                    description="Are you sure you want to leave this lobby? You will be disconnected from the lobby."
                     onConfirm={executeLeave}
                     onCancel={() => setShowLeaveConfirm(false)}
                     isDestructive={true}
-                    confirmText="ABORT OPERATION"
+                    confirmText="LEAVE LOBBY"
                     cancelText="STAY"
                 />
 
@@ -419,8 +419,8 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                             <CheckCircle className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="text-green-400 font-bold font-orbitron tracking-widest text-lg">MISSION READY</h3>
-                            <p className="text-green-500/70 text-sm font-mono">All operatives are standing by. Deployment authorized.</p>
+                            <h3 className="text-green-400 font-bold font-orbitron tracking-widest text-lg">MATCH READY</h3>
+                            <p className="text-green-500/70 text-sm font-mono">All players are standing by. Deployment authorized.</p>
                         </div>
                     </div>
 
@@ -450,7 +450,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                         <div className="flex items-center gap-2 mb-6">
                             <Users className={`w-5 h-5 text-${themeColor}-500`} />
                             <h3 className="text-lg font-bold text-white">Active Roster</h3>
-                            <span className="ml-auto text-xs font-mono text-zinc-500">{players.length} / {maxPlayers} OPERATIVES</span>
+                            <span className="ml-auto text-xs font-mono text-zinc-500">{players.length} / {maxPlayers} PLAYERS</span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -474,7 +474,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className={`text-sm font-bold truncate ${p.is_ready ? 'text-green-400' : 'text-white'}`}>
-                                            {p.player?.username || "Unknown Operative"}
+                                            {p.player?.username || "Unknown Player"}
                                         </div>
                                         <div className={`text-[10px] uppercase font-mono ${p.is_ready ? 'text-green-500/70' : 'text-zinc-500'}`}>
                                             {p.is_ready ? 'READY FOR DEPLOYMENT' : 'PREPARING...'}
@@ -521,7 +521,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                     <>
                                         {'>'} ESTABLISHING SECURE CONNECTION... [OK]<br />
                                         {'>'} WAITING FOR HOST DEPLOYMENT...<br />
-                                        {lobby.sector_key && <> {'>'} SECTOR IS ENCRYPTED. KEY REQUIRED.<br /></>}
+                                        {lobby.sector_key && <> {'>'} LOBBY IS ENCRYPTED. PASSWORD REQUIRED.<br /></>}
                                         {allReady && <span className="text-green-500">{'>'} SQUADRON READY. AWAITING LAUNCH COMMAND.<br /></span>}
                                         <span className="animate-pulse">_</span>
                                     </>

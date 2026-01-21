@@ -185,17 +185,17 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                     <DialogHeader>
                         <DialogTitle className={`${createdLobby.sectorKey ? 'text-orange-500' : 'text-green-400'} flex items-center gap-2 font-orbitron tracking-widest`}>
                             <CheckCircle className="w-5 h-5" />
-                            {createdLobby.sectorKey ? 'SECTOR SIGNAL ESTABLISHED' : 'DEPLOYMENT SUCCESSFUL'}
+                            {createdLobby.sectorKey ? 'LOBBY SIGNAL ESTABLISHED' : 'DEPLOYMENT SUCCESSFUL'}
                         </DialogTitle>
                         <DialogDescription className="text-zinc-400">
-                            {createdLobby.sectorKey ? "ENCRYPTED SIGNAL: PRIVATE ACCESS ONLY" : "BROADCASTING TO PUBLIC TACTICAL FEED"}
+                            {createdLobby.sectorKey ? "ENCRYPTED LOBBY: PASSWORD PROTECTED" : "BROADCASTING TO PUBLIC TACTICAL FEED"}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="py-8 flex flex-col items-center justify-center space-y-6">
                         {createdLobby.sectorKey ? (
                             <div className="text-center w-full space-y-3">
-                                <Label className="text-orange-500 uppercase tracking-widest text-[10px] font-bold">Secure Access Key</Label>
+                                <Label className="text-orange-500 uppercase tracking-widest text-[10px] font-bold">Secure Password</Label>
                                 <div className="flex items-center gap-2 w-full">
                                     <div className="flex-1 bg-black border border-orange-500/30 p-4 rounded-lg flex items-center justify-center font-mono text-2xl font-bold text-orange-400 tracking-[0.2em]">
                                         {createdLobby.sectorKey}
@@ -203,12 +203,12 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                                     <Button
                                         onClick={() => {
                                             navigator.clipboard.writeText(createdLobby.sectorKey!);
-                                            toast.success("Sector Key copied");
+                                            toast.success("Password copied");
                                         }}
                                         className="h-full bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/50 text-orange-500 font-bold uppercase tracking-wider"
                                     >
                                         <Copy className="w-4 h-4 mr-2" />
-                                        COPY KEY
+                                        COPY PASSWORD
                                     </Button>
                                 </div>
                                 <p className="text-[10px] text-zinc-500 mt-2">
@@ -295,7 +295,7 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                                                     <>
                                                         <SelectSeparator className="bg-white/10" />
                                                         <SelectGroup>
-                                                            <SelectLabel className="text-cyan-400 px-2 py-1.5 text-xs font-semibold">Sector Customs</SelectLabel>
+                                                            <SelectLabel className="text-cyan-400 px-2 py-1.5 text-xs font-semibold">Lobby Customs</SelectLabel>
                                                             {customGames.map((name) => (
                                                                 <SelectItem key={name} value={name}>
                                                                     🏠 {name}
@@ -392,7 +392,7 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                                     <div className={`p-2 rounded-full ${isPrivate ? 'bg-[#ccff00]/20 text-[#ccff00]' : 'bg-black/40 text-zinc-400 group-hover/toggle:text-white'}`}>
                                         <Lock className="w-4 h-4" />
                                     </div>
-                                    <span className={`text-sm font-bold cursor-pointer pointer-events-none ${isPrivate ? 'text-[#ccff00]' : 'text-zinc-300 group-hover/toggle:text-white'}`}>Private Sector</span>
+                                    <span className={`text-sm font-bold cursor-pointer pointer-events-none ${isPrivate ? 'text-[#ccff00]' : 'text-zinc-300 group-hover/toggle:text-white'}`}>Private Lobby</span>
                                 </div>
                                 {/* Visual-only Switch */}
                                 <div className={`h-6 w-11 shrink-0 rounded-full border-2 transition-colors duration-200 flex items-center ${isPrivate ? 'bg-[#ccff00] border-transparent shadow-[0_0_10px_#ccff00]' : 'bg-black/60 border-zinc-700'}`}>
@@ -408,7 +408,7 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                     {/* Custom Sector Key Input */}
                     {isPrivate && (
                         <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                            <Label className="text-[#ccff00] text-xs uppercase tracking-widest font-bold">Custom Sector Key</Label>
+                            <Label className="text-[#ccff00] text-xs uppercase tracking-widest font-bold">Custom Password</Label>
                             <div className="relative">
                                 <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ccff00]" />
                                 <Input
@@ -435,7 +435,7 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
 
                     {/* Description */}
                     <div className="grid gap-2">
-                        <Label htmlFor="description" className="text-zinc-400">Mission Notes</Label>
+                        <Label htmlFor="description" className="text-zinc-400">Match Notes</Label>
                         <Input
                             id="description"
                             value={description}

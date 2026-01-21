@@ -56,7 +56,7 @@ export function RecentSquad() {
 
                             <Link href={`/dashboard/profile/${op.username}`} className="w-full block">
                                 <Button variant="secondary" size="sm" className="w-full h-8 text-xs bg-white/10 hover:bg-white/20 text-white border border-white/5">
-                                    VIEW DOSSIER
+                                    VIEW PROFILE
                                 </Button>
                             </Link>
                         </HoverCardContent>

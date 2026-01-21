@@ -89,7 +89,7 @@ export default function ProfilePage() {
 
     return (
         <div className="p-8 space-y-8 animate-in fade-in duration-500">
-            {/* Header / Dossier Glass Card */}
+            {/* Header / Profile Glass Card */}
             <div className="relative rounded-3xl bg-black/60 backdrop-blur-2xl border border-white/10 p-8 overflow-hidden shadow-2xl">
 
                 <div className="relative z-10 flex flex-col md:flex-row gap-8">
@@ -216,7 +216,7 @@ export default function ProfilePage() {
                     <div className="lg:col-span-2">
                         <Card className="h-full bg-black/20 backdrop-blur-xl border-white/10 text-white shadow-lg">
                             <CardHeader>
-                                <CardTitle className="font-mono text-sm uppercase tracking-widest text-zinc-400">Recent Deployments</CardTitle>
+                                <CardTitle className="font-mono text-sm uppercase tracking-widest text-zinc-400">Recent Matches</CardTitle>
                             </CardHeader>
                             <CardContent className="p-0"> {/* Remove padding from content to allow scroll to hit edges */}
                                 <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
@@ -252,7 +252,7 @@ export default function ProfilePage() {
                                             ) : (
                                                 <TableRow>
                                                     <TableCell colSpan={4} className="text-center py-8 text-zinc-500 font-mono">
-                                                        NO DEPLOYMENT DATA FOUND
+                                                        NO MATCH DATA FOUND
                                                     </TableCell>
                                                 </TableRow>
                                             )}

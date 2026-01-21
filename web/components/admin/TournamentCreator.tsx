@@ -69,7 +69,7 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
 
     const handleCreateLobby = async () => {
         if (!selectedMode) {
-            toast.error("Protocol Error", { description: "Select a mission parameter." })
+            toast.error("Protocol Error", { description: "Select a match parameter." })
             return
         }
 
@@ -92,10 +92,10 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
             const data = await res.json()
 
             if (!res.ok) {
-                throw new Error(data.error || 'Failed to initialize operation.')
+                throw new Error(data.error || 'Failed to initialize lobby.')
             }
 
-            toast.success("Operation Initialized", {
+            toast.success("Lobby Initialized", {
                 description: "Tournament lobby established. Redirecting...",
             })
 
@@ -204,7 +204,7 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-white font-orbitron tracking-wide">
-                            TACTICAL OPERATIONS
+                            TOURNAMENT LOBBIES
                         </h2>
                         <p className="text-sm text-zinc-400 font-mono uppercase tracking-widest">
                             Tournament Initialization Interface
@@ -266,8 +266,8 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
                             {/* Privacy Toggle */}
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
-                                    <div className="text-xs font-bold text-zinc-200 uppercase font-mono">Private Sector</div>
-                                    <div className="text-[10px] text-zinc-500">Require sector key for entry</div>
+                                    <div className="text-xs font-bold text-zinc-200 uppercase font-mono">Private Lobby</div>
+                                    <div className="text-[10px] text-zinc-500">Require password for entry</div>
                                 </div>
                                 <button
                                     onClick={() => setIsPrivate(!isPrivate)}
@@ -305,7 +305,7 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
                             <div className="space-y-2 pt-2 border-t border-white/5">
                                 <div className="text-xs font-bold text-zinc-200 uppercase font-mono flex items-center gap-2">
                                     <Calendar className="w-3 h-3" />
-                                    Scheduled Deployment
+                                    Scheduled Match
                                 </div>
                                 <input
                                     type="datetime-local"
@@ -318,7 +318,7 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
                             {/* Briefing */}
                             <div className="space-y-2 pt-2 border-t border-white/5">
                                 <div className="text-xs font-bold text-zinc-200 uppercase font-mono">
-                                    Mission Briefing
+                                    Match Briefing
                                 </div>
                                 <textarea
                                     value={notes}
@@ -339,7 +339,7 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
                                     : "bg-pink-600 hover:bg-pink-500 text-white border-pink-400 hover:border-pink-300 shadow-[0_0_15px_rgba(219,39,119,0.3)] hover:shadow-[0_0_25px_rgba(219,39,119,0.5)] scale-100 hover:scale-[1.02] active:scale-[0.98]"
                             )}
                         >
-                            {isLoading ? "INITIALIZING..." : (<> <Rocket className="w-4 h-4" /> LAUNCH OPERATION </>)}
+                            {isLoading ? "INITIALIZING..." : (<> <Rocket className="w-4 h-4" /> LAUNCH LOBBY </>)}
                         </button>
                     </div>
                 </div>

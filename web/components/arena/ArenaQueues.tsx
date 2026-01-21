@@ -182,7 +182,7 @@ export function ArenaQueues() {
                                         disabled={loading}
                                         className="w-full py-4 rounded-xl bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 border border-red-500/20 hover:border-red-500 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
-                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>ABORT MISSION</span>}
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>CANCEL MATCH</span>}
                                     </button>
                                 ) : (
                                     <button
@@ -223,7 +223,7 @@ export function ArenaQueues() {
                             <div className="space-y-2">
                                 <h3 className="text-2xl font-bold text-white tracking-widest font-mono">SYSTEMS IDLE</h3>
                                 <p className="text-zinc-500">
-                                    No active operations detected in your sector.
+                                    No active matches detected in your lobby.
                                     You must be a member of a Nexus-enabled unit to deploy.
                                 </p>
                             </div>
@@ -241,7 +241,7 @@ export function ArenaQueues() {
                                 <Swords className="w-8 h-8 text-zinc-600" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-zinc-400">No Operations Found</h3>
+                                <h3 className="text-xl font-bold text-zinc-400">No Matches Found</h3>
                                 <p className="text-zinc-600">Adjust your filters or standard protocols.</p>
                             </div>
                         </div>

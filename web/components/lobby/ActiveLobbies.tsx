@@ -65,7 +65,7 @@ export function ActiveLobbies({
     // 2. Active Command: Hosted details
     const hostedGames = lobbies.filter(l => currentUserId && l.creator_id === currentUserId && !l.is_tournament);
 
-    // 3. Sector Signals: Everyone else
+    // 3. Lobby Signals: Everyone else
     // 3. Sector Signals: Everyone else
     const sectorSignals = lobbies.filter(l => (!currentUserId || l.creator_id !== currentUserId) && !l.is_tournament);
 
@@ -119,14 +119,14 @@ export function ActiveLobbies({
                 </section>
             )}
 
-            {/* TIER 2: ACTIVE COMMAND (Hosted Games) */}
+            {/* TIER 2: YOUR LOBBY (Hosted Games) */}
             {hostedGames.length > 0 && (
                 <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center gap-3 mb-6">
                         <User className="w-6 h-6 text-sky-400" />
                         <div>
-                            <h3 className="text-2xl font-bold text-white font-orbitron">ACTIVE COMMAND</h3>
-                            <p className="text-sm text-zinc-400">Your deployed operations</p>
+                            <h3 className="text-2xl font-bold text-white font-orbitron">YOUR LOBBY</h3>
+                            <p className="text-sm text-zinc-400">Your deployed lobbies</p>
                         </div>
                         <div className="h-px bg-gradient-to-r from-sky-500/50 to-transparent flex-1 ml-4" />
                     </div>
@@ -137,13 +137,13 @@ export function ActiveLobbies({
                 </section>
             )}
 
-            {/* TIER 3: SECTOR SIGNALS (Public/Private Lobbies) */}
+            {/* TIER 3: LOBBY SIGNALS (Public/Private Lobbies) */}
             <section>
                 <div className="flex items-center gap-3 mb-6">
                     <Radio className="w-6 h-6 text-[#ccff00] animate-pulse" />
                     <div>
-                        <h3 className="text-2xl font-bold text-white font-orbitron">SECTOR SIGNALS</h3>
-                        <p className="text-sm text-zinc-400">Live feed from other operators</p>
+                        <h3 className="text-2xl font-bold text-white font-orbitron">LOBBY SIGNALS</h3>
+                        <p className="text-sm text-zinc-400">Live feed from other players</p>
                     </div>
                 </div>
 
@@ -155,7 +155,7 @@ export function ActiveLobbies({
                     <Input
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="[ RADAR SCAN: ENTER SECTOR KEY OR GAME MODE ]"
+                        placeholder="[ RADAR SCAN: ENTER PASSWORD OR GAME MODE ]"
                         className="w-full bg-black/40 border-cyan-500/30 focus:border-cyan-400 text-cyan-400 pl-10 h-12 font-mono tracking-wider placeholder:text-cyan-500/30 rounded-xl backdrop-blur-sm transition-all"
                     />
                 </div>
@@ -176,10 +176,10 @@ export function ActiveLobbies({
 
                         <div className="space-y-2">
                             <h3 className="text-2xl font-bold text-white font-orbitron tracking-wider">
-                                {searchTerm ? "NO SIGNALS MATCHING CRITERIA" : "NO ACTIVE SECTOR SIGNALS CLASSIFIED"}
+                                {searchTerm ? "NO SIGNALS MATCHING CRITERIA" : "NO ACTIVE LOBBY SIGNALS CLASSIFIED"}
                             </h3>
                             <p className="text-zinc-500 max-w-md mx-auto">
-                                {searchTerm ? "Adjust radar parameters and rescan." : "The sector is currently silent. No external operations are broadcasting within detection range."}
+                                {searchTerm ? "Adjust radar parameters and rescan." : "The lobby feed is currently silent. No external operations are broadcasting within detection range."}
                             </p>
                         </div>
 
@@ -194,7 +194,7 @@ export function ActiveLobbies({
                 isOpen={!!confirmDeleteId}
                 onOpenChange={(open) => !open && setConfirmDeleteId(null)}
                 title="WARNING: SIGNAL TERMINATION"
-                description="YOU ARE ABOUT TO TERMINATE THIS SECTOR SIGNAL. PROCEED?"
+                description="YOU ARE ABOUT TO TERMINATE THIS LOBBY SIGNAL. PROCEED?"
                 onConfirm={executeDissolve}
                 onCancel={() => setConfirmDeleteId(null)}
                 isDestructive={true}

@@ -44,21 +44,21 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
             throw new Error('Lobby not found or signal lost.')
         }
 
-        // 1.5 Active Session Check (Sector Validation)
+        // 1.5 Active Session Check (Lobby Validation)
         // @ts-ignore - RPC not yet typed
         const { data: isActiveSession, error: rpcError } = await supabase.rpc('check_active_session', {
             p_user_id: userId
         });
 
         if (isActiveSession) {
-            throw new Error('Sector Warning: You are already deployed in an active match. Finish your current session before joining another.');
+            throw new Error('Lobby Warning: You are already deployed in an active match. Finish your current session before joining another.');
         }
 
         // 2.1 Password Check (Private Sector Protection)
         // If lobby has a sector_key, it is PRIVATE.
         if (lobby.sector_key) {
             if (lobby.sector_key !== password) {
-                throw new Error("Invalid Sector Key: Access Denied.")
+                throw new Error("Invalid Password: Access Denied.")
             }
         }
 
@@ -92,7 +92,7 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
                 .single()
 
             if (ban) {
-                throw new Error('Access Denied: You are blacklisted in this sector.')
+                throw new Error('Access Denied: You are blacklisted in this lobby.')
             }
         }
 
@@ -150,11 +150,11 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
             console.error('Join Error:', joinError);
 
             if (joinError.code === 'PGRST204') {
-                throw new Error('Sector Protocol Mismatch. Please run Schema Sentinel in the Command Center.');
+                throw new Error('Lobby Protocol Mismatch. Please run Schema Sentinel in the Command Center.');
             }
             // Catch 22P02 specifically to give better error
             if (joinError.code === '22P02') {
-                throw new Error('Identity Protocol Error: UUID Mismatch. The system rejected the operative ID format.');
+                throw new Error('Identity Protocol Error: UUID Mismatch. The system rejected the player ID format.');
             }
 
             throw new Error('Failed to join lobby database record.')

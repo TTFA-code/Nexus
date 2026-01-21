@@ -55,7 +55,7 @@ export function JoinButton({ lobbyId, currentPlayers, maxPlayers, isUserJoined, 
                 }
 
                 toast.success(isUserJoined ? "Left Lobby" : "Joined Lobby", {
-                    description: isUserJoined ? "You have aborted the mission." : "You have joined the operation.",
+                    description: isUserJoined ? "You have left the lobby." : "You have joined the lobby.",
                 })
 
                 if (!isUserJoined && onJoin) {
@@ -83,7 +83,7 @@ export function JoinButton({ lobbyId, currentPlayers, maxPlayers, isUserJoined, 
                             </DialogTitle>
                         </DialogHeader>
                         <div className="py-4 text-zinc-400">
-                            Authentication required to join operations. Please log in to proceed.
+                            Authentication required to join lobbies. Please log in to proceed.
                         </div>
                         <DialogFooter>
                             <Button onClick={() => setShowLoginDialog(false)} variant="ghost" className="text-zinc-500 hover:text-white">
@@ -105,7 +105,7 @@ export function JoinButton({ lobbyId, currentPlayers, maxPlayers, isUserJoined, 
                     className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-orbitron font-bold tracking-wider transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] border border-emerald-500/20"
                 >
                     <UserPlus className="w-4 h-4" />
-                    <span>ENTER SECTOR</span>
+                    <span>ENTER LOBBY</span>
                 </Button>
             </Dialog>
         )
@@ -119,7 +119,7 @@ export function JoinButton({ lobbyId, currentPlayers, maxPlayers, isUserJoined, 
                 className="w-full bg-transparent border-2 border-red-500 text-red-500 hover:bg-red-500/10 font-bold transition-all flex items-center justify-center gap-2"
             >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
-                <span>{isPending ? 'PROCESSING...' : 'ABORT / LEAVE'}</span>
+                <span>{isPending ? 'PROCESSING...' : 'LEAVE LOBBY'}</span>
             </Button>
         )
     }
@@ -148,7 +148,7 @@ export function JoinButton({ lobbyId, currentPlayers, maxPlayers, isUserJoined, 
                     </DialogHeader>
                     <div className="py-6 text-zinc-400 font-mono text-sm leading-relaxed">
                         <p className="mb-2 text-white font-bold">UNAUTHORIZED ACCESS ATTEMPT DETECTED.</p>
-                        <p>You must establish a secure uplink (Login) before joining tactical operations.</p>
+                        <p>You must establish a secure uplink (Login) before joining lobbies.</p>
                     </div>
                     <DialogFooter className="flex gap-2 sm:justify-end">
                         <Button onClick={() => setShowLoginDialog(false)} variant="ghost" className="text-zinc-500 hover:text-white font-mono text-xs">
@@ -170,7 +170,7 @@ export function JoinButton({ lobbyId, currentPlayers, maxPlayers, isUserJoined, 
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-orbitron font-bold tracking-wider transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] border border-blue-500/20"
             >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                <span>{isPending ? 'CONNECTING...' : 'ENTER SECTOR'}</span>
+                <span>{isPending ? 'CONNECTING...' : 'ENTER LOBBY'}</span>
             </Button>
         </>
     )

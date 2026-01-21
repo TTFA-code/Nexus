@@ -66,7 +66,7 @@ export function ReportUserDialog({ reportedId, reportedName, guildId }: ReportUs
             <DialogTrigger asChild>
                 <button
                     className="p-2 rounded-full hover:bg-red-500/10 text-zinc-600 hover:text-red-500 transition-colors"
-                    title="Report Operator"
+                    title="Report Player"
                 >
                     <AlertTriangle size={16} />
                 </button>

@@ -50,7 +50,7 @@ export function SharedSectors({ userId }: { userId: string }) {
 
     return (
         <div className="space-y-3 pt-4 border-t border-white/10">
-            <h3 className="text-sm font-mono text-zinc-500 uppercase tracking-widest">Shared Sectors</h3>
+            <h3 className="text-sm font-mono text-zinc-500 uppercase tracking-widest">Shared Lobbies</h3>
             <div className="flex flex-wrap gap-3">
                 <TooltipProvider>
                     {sectors.map((sector) => (

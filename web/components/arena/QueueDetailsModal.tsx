@@ -33,7 +33,7 @@ export function QueueDetailsModal({ isOpen, onClose, queueData }: QueueDetailsMo
                         </Badge>
                     </div>
                     <DialogDescription className="text-zinc-400">
-                        Current operators in queue for this protocol.
+                        Current players in queue for this protocol.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -47,12 +47,12 @@ export function QueueDetailsModal({ isOpen, onClose, queueData }: QueueDetailsMo
                     <div>
                         <h4 className="text-sm font-bold text-zinc-400 mb-3 flex items-center gap-2">
                             <Users className="w-4 h-4" />
-                            Active Operators
+                            Active Players
                         </h4>
                         <div className="grid gap-2">
                             {players.length === 0 ? (
                                 <div className="text-center py-8 text-zinc-600 italic">
-                                    No operators currently in queue.
+                                    No players currently in queue.
                                 </div>
                             ) : (
                                 players.map((player: any) => (
@@ -67,7 +67,7 @@ export function QueueDetailsModal({ isOpen, onClose, queueData }: QueueDetailsMo
                                         </Avatar>
                                         <div className="text-sm font-medium text-white">
                                             {/* Logic to show name would go here. For now, showing masked ID */}
-                                            Operator {player.user_id.slice(0, 4)}
+                                            Player {player.user_id.slice(0, 4)}
                                         </div>
                                     </div>
                                 ))

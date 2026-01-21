@@ -43,7 +43,7 @@ export function MatchFoundOverlay({ onAccept }: MatchFoundOverlayProps) {
             }
         } catch (error) {
             console.error("Accept Error:", error);
-            toast.error("Failed to accept mission.");
+            toast.error("Failed to accept match.");
         } finally {
             setIsAccepting(false);
         }
@@ -88,7 +88,7 @@ export function MatchFoundOverlay({ onAccept }: MatchFoundOverlayProps) {
                                     CONFIRMING...
                                 </>
                             ) : (
-                                "ACCEPT MISSION"
+                                "ACCEPT MATCH"
                             )}
                         </Button>
                     ) : (
@@ -101,7 +101,7 @@ export function MatchFoundOverlay({ onAccept }: MatchFoundOverlayProps) {
                 </div>
 
                 <div className="text-xs font-mono text-zinc-600 uppercase tracking-widest">
-                    Sector ID: [ENCRYPTED] // Region: EU-WEST
+                    Lobby ID: [ENCRYPTED] // Region: EU-WEST
                 </div>
             </div>
         </div>

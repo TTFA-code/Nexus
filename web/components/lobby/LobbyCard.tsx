@@ -99,20 +99,20 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
         badgeColor = 'border-fuchsia-500/30 text-fuchsia-400 bg-fuchsia-500/10'
         glowShadow = 'shadow-[0_0_15px_rgba(217,70,239,0.1)]'
     } else if (variant === 'hosted') {
-        // Active Command (Sky Blue)
+        // Your Lobby (Sky Blue)
         borderColor = 'border-sky-500/40'
         hoverColor = 'hover:border-sky-400'
         bgGradient = 'from-sky-500/20'
         badgeColor = 'border-sky-500/30 text-sky-400 bg-sky-500/10'
     } else if (lobby.is_private) {
-        // Private Sector (Neon Orange)
+        // Private Lobby (Neon Orange)
         borderColor = 'border-orange-500/50'
         hoverColor = 'hover:border-orange-400'
         bgGradient = 'from-orange-500/20'
         badgeColor = 'border-orange-500/30 text-orange-400 bg-orange-500/10'
         glowShadow = 'shadow-[0_0_20px_rgba(249,115,22,0.2)]'
     } else {
-        // Public Sector (Cyberpunk Green)
+        // Public Lobby (Cyberpunk Green)
         borderColor = 'border-[#adff2f]/20'
         hoverColor = 'hover:border-[#adff2f]'
         bgGradient = 'from-[#adff2f]/5'
@@ -173,7 +173,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                     <div className="mt-4 p-3 rounded-xl bg-black/20 border border-white/5 space-y-1">
                         <h4 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Tactical Briefing</h4>
                         <p className="text-zinc-300 text-xs italic line-clamp-2">
-                            "{lobby.notes || lobby.description || 'No mission intel available.'}"
+                            "{lobby.notes || lobby.description || 'No match info available.'}"
                         </p>
                     </div>
                 </div>
@@ -194,7 +194,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                     {/* Sector Key (Host Only) */}
                     {isCommander && lobby.sector_key && (
                         <div className="flex flex-col items-end">
-                            <span className="text-[10px] text-zinc-500 uppercase tracking-widest">Sector Key</span>
+                            <span className="text-[10px] text-zinc-500 uppercase tracking-widest">Password</span>
                             <div className="flex items-center gap-2 text-orange-400 font-mono font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors"
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -212,8 +212,8 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                 {/* Occupancy Bar */}
                 <div className="mb-4">
                     <div className="flex justify-between items-end mb-1">
-                        <span className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest">Sector Capacity</span>
-                        <span className="text-[10px] text-cyan-400 font-mono font-bold">{currentPlayers} / {maxPlayers} OPERATIVES</span>
+                        <span className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest">Lobby Capacity</span>
+                        <span className="text-[10px] text-cyan-400 font-mono font-bold">{currentPlayers} / {maxPlayers} PLAYERS</span>
                     </div>
                     <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                         <div
@@ -238,7 +238,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                                     className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-mono font-bold tracking-widest text-xs uppercase flex items-center justify-center gap-2 border border-blue-500/20 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] transition-all"
                                 >
                                     <Swords className="w-4 h-4" />
-                                    ENTER SECTOR
+                                    ENTER LOBBY
                                 </button>
                             );
                         }
@@ -279,7 +279,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                         <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest mb-2 block">Authentication Required</label>
                         <input
                             type="password"
-                            placeholder={isShakeError ? "ACCESS DENIED" : "Enter Sector Key"}
+                            placeholder={isShakeError ? "ACCESS DENIED" : "Enter Password"}
                             value={passwordInput}
                             onChange={(e) => setPasswordInput(e.target.value)}
                             className={`w-full bg-zinc-900 border text-white px-3 py-2 rounded outline-none font-mono transition-all duration-200
@@ -322,7 +322,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
 
     async function handlePrivateJoin() {
         if (!passwordInput) {
-            toast.error("Password Required", { description: "Please enter the Sector Key." });
+            toast.error("Password Required", { description: "Please enter the Password." });
             return;
         }
 
@@ -352,7 +352,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                 setPasswordInput(""); // Reset for retry
             }, 600);
 
-            toast.error("Access Denied", { description: error.message || "Invalid Sector Key." });
+            toast.error("Access Denied", { description: error.message || "Invalid Password." });
         } finally {
             setIsJoining(false);
         }
