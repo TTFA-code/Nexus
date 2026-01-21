@@ -544,6 +544,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_all_server_matches: {
+        Args: { target_guild_id: string }
+        Returns: undefined
+      }
       approve_match: { Args: { match_id_input: string }; Returns: undefined }
     }
     Enums: {
