@@ -19,27 +19,39 @@ export type Database = {
           game_id: string | null
           guild_id: string | null
           id: string
-          is_active: boolean | null
           name: string
-          team_size: number
+          team_size: number | null
         }
         Insert: {
           game_id?: string | null
           guild_id?: string | null
           id?: string
-          is_active?: boolean | null
           name: string
-          team_size: number
+          team_size?: number | null
         }
         Update: {
           game_id?: string | null
           guild_id?: string | null
           id?: string
-          is_active?: boolean | null
           name?: string
-          team_size?: number
+          team_size?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "game_modes_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_modes_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
+        ]
       }
       games: {
         Row: {
@@ -78,29 +90,38 @@ export type Database = {
           guild_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "guild_bans_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
+          {
+            foreignKeyName: "guild_bans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       guilds: {
         Row: {
-          announcement_channel_id: string | null
           created_at: string | null
           guild_id: string
           name: string | null
-          premium_tier: number | null
         }
         Insert: {
-          announcement_channel_id?: string | null
           created_at?: string | null
           guild_id: string
           name?: string | null
-          premium_tier?: number | null
         }
         Update: {
-          announcement_channel_id?: string | null
           created_at?: string | null
           guild_id?: string
           name?: string | null
-          premium_tier?: number | null
         }
         Relationships: []
       }
@@ -156,7 +177,43 @@ export type Database = {
           status?: string | null
           voice_required?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lobbies_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lobbies_game_mode_id_fkey"
+            columns: ["game_mode_id"]
+            isOneToOne: false
+            referencedRelation: "game_modes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lobbies_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
+          {
+            foreignKeyName: "lobbies_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "admin_match_review"
+            referencedColumns: ["match_id"]
+          },
+          {
+            foreignKeyName: "lobbies_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lobby_players: {
         Row: {
@@ -166,7 +223,7 @@ export type Database = {
           lobby_id: string | null
           status: string | null
           team: number | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           id?: string
@@ -175,7 +232,7 @@ export type Database = {
           lobby_id?: string | null
           status?: string | null
           team?: number | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           id?: string
@@ -184,47 +241,62 @@ export type Database = {
           lobby_id?: string | null
           status?: string | null
           team?: number | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fk_lobby_players_lobby"
+            foreignKeyName: "lobby_players_lobby_id_fkey"
             columns: ["lobby_id"]
             isOneToOne: false
             referencedRelation: "lobbies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "lobby_players_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       match_players: {
         Row: {
-          id: string
-          match_id: string | null
-          stats: Json | null
-          team: number
-          user_id: string | null
+          match_id: string
+          team: number | null
+          user_id: string
         }
         Insert: {
-          id?: string
-          match_id?: string | null
-          stats?: Json | null
-          team: number
-          user_id?: string | null
+          match_id: string
+          team?: number | null
+          user_id: string
         }
         Update: {
-          id?: string
-          match_id?: string | null
-          stats?: Json | null
-          team?: number
-          user_id?: string | null
+          match_id?: string
+          team?: number | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fk_match_players_match"
+            foreignKeyName: "match_players_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "admin_match_review"
+            referencedColumns: ["match_id"]
+          },
+          {
+            foreignKeyName: "match_players_match_id_fkey"
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_players_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -253,49 +325,84 @@ export type Database = {
           result_data?: Json | null
           status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "match_reports_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "admin_match_review"
+            referencedColumns: ["match_id"]
+          },
+          {
+            foreignKeyName: "match_reports_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       matches: {
         Row: {
+          created_at: string | null
           creator_id: string | null
           finished_at: string | null
-          game_mode_id: string
+          game_mode_id: string | null
           guild_id: string | null
           id: string
-          metadata: Json | null
-          mvp_user_id: string | null
-          region: string | null
-          started_at: string | null
           status: string | null
           winner_team: number | null
         }
         Insert: {
+          created_at?: string | null
           creator_id?: string | null
           finished_at?: string | null
-          game_mode_id: string
+          game_mode_id?: string | null
           guild_id?: string | null
           id?: string
-          metadata?: Json | null
-          mvp_user_id?: string | null
-          region?: string | null
-          started_at?: string | null
           status?: string | null
           winner_team?: number | null
         }
         Update: {
+          created_at?: string | null
           creator_id?: string | null
           finished_at?: string | null
-          game_mode_id?: string
+          game_mode_id?: string | null
           guild_id?: string | null
           id?: string
-          metadata?: Json | null
-          mvp_user_id?: string | null
-          region?: string | null
-          started_at?: string | null
           status?: string | null
           winner_team?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matches_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "matches_game_mode_id_fkey"
+            columns: ["game_mode_id"]
+            isOneToOne: false
+            referencedRelation: "game_modes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
+        ]
       }
       mmr_history: {
         Row: {
@@ -327,14 +434,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_mmr_history_match"
+            foreignKeyName: "mmr_history_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "admin_match_review"
+            referencedColumns: ["match_id"]
+          },
+          {
+            foreignKeyName: "mmr_history_match_id_fkey"
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_mmr_history_player"
+            foreignKeyName: "mmr_history_player_uuid_fkey"
             columns: ["player_uuid"]
             isOneToOne: false
             referencedRelation: "players"
@@ -345,71 +459,56 @@ export type Database = {
       player_mmr: {
         Row: {
           game_id: string
-          mmr: number
+          mmr: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           game_id: string
-          mmr: number
+          mmr?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           game_id?: string
-          mmr?: number
+          mmr?: number | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "player_mmr_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_mmr_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       players: {
         Row: {
-          avatar_url: string | null
           is_banned: boolean | null
           mmr: number | null
           user_id: string
           username: string | null
-          uuid_link: string | null
         }
         Insert: {
-          avatar_url?: string | null
           is_banned?: boolean | null
           mmr?: number | null
           user_id: string
           username?: string | null
-          uuid_link?: string | null
         }
         Update: {
-          avatar_url?: string | null
           is_banned?: boolean | null
           mmr?: number | null
           user_id?: string
-          username?: string | null
-          uuid_link?: string | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          full_name: string | null
-          id: string
-          updated_at: string | null
-          username: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          full_name?: string | null
-          id: string
-          updated_at?: string | null
-          username?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          full_name?: string | null
-          id?: string
-          updated_at?: string | null
           username?: string | null
         }
         Relationships: []
@@ -433,13 +532,28 @@ export type Database = {
           joined_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "queues_game_mode_id_fkey"
+            columns: ["game_mode_id"]
+            isOneToOne: false
+            referencedRelation: "game_modes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       reports: {
         Row: {
           created_at: string | null
           details: string | null
-          guild_id: string
+          guild_id: string | null
           id: string
           reason: string
           reported_id: string | null
@@ -449,7 +563,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           details?: string | null
-          guild_id: string
+          guild_id?: string | null
           id?: string
           reason: string
           reported_id?: string | null
@@ -459,103 +573,69 @@ export type Database = {
         Update: {
           created_at?: string | null
           details?: string | null
-          guild_id?: string
+          guild_id?: string | null
           id?: string
           reason?: string
           reported_id?: string | null
           reporter_id?: string | null
           status?: string | null
         }
-        Relationships: []
-      }
-      server_members: {
-        Row: {
-          guild_id: string
-          id: string
-          joined_at: string | null
-          role: string
-          user_id: string
-        }
-        Insert: {
-          guild_id: string
-          id?: string
-          joined_at?: string | null
-          role: string
-          user_id: string
-        }
-        Update: {
-          guild_id?: string
-          id?: string
-          joined_at?: string | null
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ttfa_config: {
-        Row: {
-          key: string
-          value: string | null
-        }
-        Insert: {
-          key: string
-          value?: string | null
-        }
-        Update: {
-          key?: string
-          value?: string | null
-        }
-        Relationships: []
-      }
-      ttfa_player_stats: {
-        Row: {
-          challenges_lost: number | null
-          challenges_won: number | null
-          current_streak: number | null
-          fifa_gg_id: string | null
-          immunity_expires_at: string | null
-          medal_1: boolean | null
-          medal_2: boolean | null
-          medal_3: boolean | null
-          medal_4: boolean | null
-          user_id: string
-        }
-        Insert: {
-          challenges_lost?: number | null
-          challenges_won?: number | null
-          current_streak?: number | null
-          fifa_gg_id?: string | null
-          immunity_expires_at?: string | null
-          medal_1?: boolean | null
-          medal_2?: boolean | null
-          medal_3?: boolean | null
-          medal_4?: boolean | null
-          user_id: string
-        }
-        Update: {
-          challenges_lost?: number | null
-          challenges_won?: number | null
-          current_streak?: number | null
-          fifa_gg_id?: string | null
-          immunity_expires_at?: string | null
-          medal_1?: boolean | null
-          medal_2?: boolean | null
-          medal_3?: boolean | null
-          medal_4?: boolean | null
-          user_id?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reports_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
+          {
+            foreignKeyName: "reports_reported_id_fkey"
+            columns: ["reported_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      admin_match_review: {
+        Row: {
+          finished_at: string | null
+          game_mode_id: string | null
+          game_mode_name: string | null
+          guild_id: string | null
+          match_id: string | null
+          reporter_name: string | null
+          status: string | null
+          winner_team: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_game_mode_id_fkey"
+            columns: ["game_mode_id"]
+            isOneToOne: false
+            referencedRelation: "game_modes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
+        ]
+      }
     }
     Functions: {
-      approve_all_server_matches: {
-        Args: { target_guild_id: string }
-        Returns: undefined
-      }
-      approve_match: { Args: { match_id_input: string }; Returns: undefined }
       submit_match_report: {
         Args: {
           match_id_input: string
