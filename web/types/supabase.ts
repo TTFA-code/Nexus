@@ -556,9 +556,14 @@ export type Database = {
         Returns: undefined
       }
       approve_match: { Args: { match_id_input: string }; Returns: undefined }
+      submit_match_report: {
+        Args: { p_match_id: string; p_reporter_id: string; p_result_data: Json }
+        Returns: undefined
+      }
+      update_mmr: { Args: { p_match_id: string }; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      report_status: "PENDING" | "RESOLVED" | "REJECTED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -685,6 +690,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      report_status: ["PENDING", "RESOLVED", "REJECTED"],
+    },
   },
 } as const
