@@ -428,12 +428,19 @@ export async function acceptMatchHandshake(lobbyId: string): Promise<ActionRespo
         // A. Get Lobby Details (game_mode, region, etc.)
         const { data: lobby } = await supabase
             .from('lobbies')
-            .select('*')
+            .select('*, game_modes(*)') // Fetch game_modes to check team_size/name
             .eq('id', lobbyId)
             .single()
 
         if (!lobby) throw new Error('Lobby vanished.')
         if (!lobby.game_mode_id) throw new Error('Lobby Game Mode Invalid');
+
+        // Validation: Enforce 3v3 Standard to have exactly 6 players
+        // We use the fetched game_modes data, casting to any until types are regenerated
+        const gameMode: any = lobby.game_modes;
+        if (gameMode && gameMode.name === '3v3 Standard' && allPlayers.length !== 6) {
+            throw new Error('Match Start Failed: 3v3 Standard requires exactly 6 players.');
+        }
 
         // RACE CONDITION GUARD: Check if match already exists
         if (lobby.match_id) {

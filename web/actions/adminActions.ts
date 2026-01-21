@@ -97,15 +97,25 @@ export async function getGuildMatchHistory(guildId: string) {
     }
 
     // Map to a cleaner format
-    return matches.map((m: any) => ({
-        id: m.id,
-        status: m.status,
-        date: m.created_at || m.finished_at,
-        gameName: m.game_modes?.games?.name || 'Unknown',
-        modeName: m.game_modes?.name || 'Unknown',
-        winner: m.winner_team,
-        icon: m.game_modes?.games?.icon_url
-    }))
+    return matches.map((m: any) => {
+        let gameName = m.game_modes?.games?.name || 'Unknown';
+        const modeName = m.game_modes?.name || 'Unknown';
+
+        // Explicitly distinguish Mobile if implied by Mode but not Game Name (e.g. "eFootball" game + "Mobile 1v1" mode)
+        if (modeName.toLowerCase().includes('mobile') && !gameName.toLowerCase().includes('mobile')) {
+            gameName = `${gameName} (Mobile)`;
+        }
+
+        return {
+            id: m.id,
+            status: m.status,
+            date: m.created_at || m.finished_at,
+            gameName: gameName,
+            modeName: modeName,
+            winner: m.winner_team,
+            icon: m.game_modes?.games?.icon_url
+        };
+    })
 }
 
 export async function getGuildMemberActivity(guildId: string) {
