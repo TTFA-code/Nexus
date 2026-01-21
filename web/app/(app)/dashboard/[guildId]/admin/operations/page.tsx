@@ -25,11 +25,15 @@ export default async function OperationsPage({ params }: { params: Promise<{ gui
 
     const validatedModes = (gameModes || []) as any[]
 
+    const globalModes = validatedModes.filter((mode) => !mode.guild_id)
+    const customModes = validatedModes.filter((mode) => mode.guild_id === guildId)
+
     return (
         <div className="h-full p-4 overflow-y-auto">
             <AdminOpsManager
                 initialLobbies={activeLobbies}
-                gameModes={validatedModes}
+                gameModes={globalModes}
+                customModes={customModes}
                 allGames={allGames || []}
                 guildId={guildId}
             />
