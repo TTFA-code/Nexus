@@ -14,8 +14,13 @@ export async function resolveReport(reportId: string, action: 'BAN' | 'DISMISS')
         .eq('id', reportId)
         .single()
 
+
     if (fetchError || !report) {
         throw new Error('Report not found')
+    }
+
+    if (!report.reported_id) {
+        throw new Error('Reported user ID is missing')
     }
 
     if (action === 'BAN') {

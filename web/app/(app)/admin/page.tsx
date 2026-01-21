@@ -13,7 +13,7 @@ export default async function AdminPage() {
     }
 
     const { data: clubs } = await supabase
-        .from('clubs')
+        .from('guilds')
         .select('guild_id')
         .order('created_at', { ascending: false })
         .limit(1)

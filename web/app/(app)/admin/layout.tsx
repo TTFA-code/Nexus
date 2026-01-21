@@ -17,7 +17,7 @@ export default async function AdminLayout({
     }
 
     const { data: clubs } = await supabase
-        .from('clubs')
+        .from('guilds')
         .select('*')
         .order('created_at', { ascending: false })
 

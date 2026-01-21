@@ -44,12 +44,12 @@ export async function GET(
         // Let's query 'players' table which usually has public info.
         const { data: player, error } = await supabase
             .from('players')
-            .select('discord_id') // Hypothesis: this column exists
-            .eq('user_id', targetUuid)
+            .select('user_id') // fetch the Discord ID
+            .or(`user_id.eq.${targetUuid},uuid_link.eq.${targetUuid}`)
             .single();
 
         if (player) {
-            targetDiscordId = player.discord_id;
+            targetDiscordId = player.user_id;
         }
     }
 
@@ -62,8 +62,8 @@ export async function GET(
 
     // 2. Fetch Nexus Guilds (Clubs)
     const { data: clubs } = await supabase
-        .from('clubs')
-        .select('guild_id, name, icon_url, invite_url');
+        .from('guilds')
+        .select('guild_id, name');
 
     if (!clubs || clubs.length === 0) {
         return NextResponse.json({ sectors: [] });
@@ -118,9 +118,9 @@ export async function GET(
             return {
                 id: club.guild_id,
                 name: club.name || 'Unknown Server',
-                icon: club.icon_url, // Assuming simplified for now, or construct strictly from ID + Hash
+                icon: null, // icon_url removed from schema
                 isMember: isViewerMember,
-                inviteUrl: !isViewerMember ? (club.invite_url || null) : null
+                inviteUrl: null // invite_url removed from schema
             };
         } catch (e) {
             console.error('Error checking guild membership', e);

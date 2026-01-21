@@ -36,7 +36,7 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
         if (members && members.length > 0) {
             const guildIds = members.map((m: any) => m.guild_id);
             const { data: clubsData } = await supabase
-                .from('clubs')
+                .from('guilds')
                 .select('guild_id, name, premium_tier')
                 .in('guild_id', guildIds);
             clubs = clubsData || [];

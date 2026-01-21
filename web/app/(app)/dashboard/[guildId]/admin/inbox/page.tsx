@@ -8,7 +8,7 @@ export default async function AdminInboxPage() {
     // Ideally this comes from the URL or User Profile.
     // For now, we select the first available guild from clubs.
     const { data: guild } = await supabase
-        .from('clubs')
+        .from('guilds')
         .select('guild_id')
         .limit(1)
         .single();

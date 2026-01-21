@@ -14,10 +14,12 @@ interface AdminOpsManagerProps {
     initialLobbies: any[]
     guildId: string
     gameModes: any[]
+    customModes: any[]
     allGames: any[]
+    children?: React.ReactNode
 }
 
-export function AdminOpsManager({ initialLobbies, guildId, gameModes, allGames }: AdminOpsManagerProps) {
+export function AdminOpsManager({ initialLobbies, guildId, gameModes, customModes, allGames, children }: AdminOpsManagerProps) {
     const [activeTab, setActiveTab] = useState<'DEPLOY' | 'LIVE' | 'HISTORY'>('DEPLOY')
     const [historyViewMode, setHistoryViewMode] = useState<'GUILD' | 'MEMBERS'>('GUILD')
 
@@ -139,12 +141,14 @@ export function AdminOpsManager({ initialLobbies, guildId, gameModes, allGames }
                 )}
 
                 {activeTab === 'LIVE' && (
-                    <div className="h-full overflow-y-auto custom-scrollbar">
+                    <div className="h-full overflow-y-auto custom-scrollbar flex flex-col gap-6">
                         <ActiveOps
                             lobbies={lobbies}
                             guildId={guildId}
                             onForceClose={handleForceClose}
                         />
+                        {/* Render children (Reports) here for now as they are part of Live Ops */}
+                        {children}
                     </div>
                 )}
 

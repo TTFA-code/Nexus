@@ -18,7 +18,7 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
 
     // Fetch Guild Info
     const { data: guild } = await supabase
-        .from('clubs')
+        .from('guilds')
         .select('*')
         .eq('guild_id', guildId)
         .single()
@@ -121,8 +121,8 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
                     <TabsContent value="sys" className="h-full mt-0 focus-visible:ring-0 focus-visible:outline-none">
                         <div className="h-full">
                             <ModeForge
-                                globalModes={globalModes || []}
-                                customModes={customModes || []}
+                                globalModes={(globalModes || []) as any}
+                                customModes={(customModes || []) as any}
                                 guildId={guildId}
                             />
                         </div>
