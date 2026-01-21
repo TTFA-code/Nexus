@@ -23,17 +23,23 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
         .eq('guild_id', guildId)
         .single()
 
+    // Fetch All Games (For Tournament Creator)
+    const { data: allGames } = await supabase
+        .from('games')
+        .select('*')
+        .order('name')
+
     // Fetch Global Game Modes (Nexus Standard)
     const { data: globalModes } = await supabase
         .from('game_modes')
-        .select('*, games(name, slug)')
+        .select('*, games(*)')
         .is('guild_id', null)
         .order('id')
 
     // Fetch Custom Game Modes (Sector Specific)
     const { data: customModes } = await supabase
         .from('game_modes')
-        .select('*, games(name, slug)')
+        .select('*, games(*)')
         .eq('guild_id', guildId)
         .order('id')
 
@@ -96,6 +102,7 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
                             guildId={guildId}
                             gameModes={globalModes || []}
                             customModes={customModes || []}
+                            allGames={allGames || []}
                         >
                             <IncidentReports reports={reports} guildId={guildId} />
                         </AdminOpsManager>
