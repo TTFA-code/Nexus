@@ -25,7 +25,7 @@ export default async function QueuePage({ params }: QueuePageProps) {
 
     const { data: gameModes } = await supabase
         .from('game_modes')
-        .select('*, games(name)')
+        .select('*, games!inner(name)')
         .eq('guild_id', guildId)
         .order('id', { ascending: true })
 
@@ -52,7 +52,6 @@ export default async function QueuePage({ params }: QueuePageProps) {
                             <TableHead>ID</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Team Size</TableHead>
-                            <TableHead>Picking Method</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Action</TableHead>
                         </TableRow>
@@ -63,14 +62,11 @@ export default async function QueuePage({ params }: QueuePageProps) {
                                 <TableCell className="font-mono text-xs">{mode.id}</TableCell>
                                 <TableCell className="font-medium">
                                     <div className="flex flex-col">
-                                        <span className="text-xs text-muted-foreground">{mode.games?.name}</span>
+                                        <span className="text-xs text-muted-foreground">{(mode.games as any)?.name || 'Unknown Game'}</span>
                                         <span>{mode.name}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell>{mode.team_size}v{mode.team_size}</TableCell>
-                                <TableCell>
-                                    <Badge variant="outline">{mode.picking_method}</Badge>
-                                </TableCell>
                                 <TableCell>
                                     <Badge variant={mode.is_active ? "default" : "secondary"}>
                                         {mode.is_active ? "Active" : "Inactive"}
@@ -86,7 +82,7 @@ export default async function QueuePage({ params }: QueuePageProps) {
                         ))}
                         {(!gameModes || gameModes.length === 0) && (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={5} className="h-24 text-center">
                                     No game modes found. Use the bot to create one.
                                 </TableCell>
                             </TableRow>

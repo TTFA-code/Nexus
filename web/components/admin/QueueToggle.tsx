@@ -6,12 +6,12 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 interface QueueToggleProps {
-    gameModeId: number
-    initialIsActive: boolean
+    gameModeId: string
+    initialIsActive: boolean | null
 }
 
 export function QueueToggle({ gameModeId, initialIsActive }: QueueToggleProps) {
-    const [isActive, setIsActive] = useState(initialIsActive)
+    const [isActive, setIsActive] = useState(!!initialIsActive)
     const [isLoading, setIsLoading] = useState(false)
     const supabase = createClient()
 
