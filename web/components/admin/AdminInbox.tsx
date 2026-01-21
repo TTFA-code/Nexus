@@ -17,7 +17,18 @@ interface AdminInboxProps {
 
 export const AdminInbox: React.FC<AdminInboxProps> = ({ guildId }) => {
 
-    type AdminMatchReview = Database['public']['Views']['admin_match_review']['Row'];
+    // type AdminMatchReview = Database['public']['Views']['admin_match_review']['Row'];
+
+    interface AdminMatchReview {
+        match_id: string;
+        status: string;
+        guild_id: string;
+        game_mode_name: string;
+        reporter_name: string;
+        winner_team: number | null;
+        finished_at: string | null;
+        game_mode_id: string;
+    }
 
     const [reports, setReports] = useState<AdminMatchReview[]>([]);
     const [loading, setLoading] = useState(true);
@@ -43,7 +54,7 @@ export const AdminInbox: React.FC<AdminInboxProps> = ({ guildId }) => {
                 throw new Error(error.message);
             }
 
-            setReports(data || []);
+            setReports((data || []) as unknown as AdminMatchReview[]);
         } catch (error: any) {
             console.error('AdminInbox Fetch Error:', error);
             toast.error(error.message || 'Failed to fetch reports');
