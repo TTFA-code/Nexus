@@ -30,7 +30,7 @@ export default async function MatchReportPage(props: MatchPageProps) {
         .from("matches")
         .select(`
       *,
-      game_mode:game_modes!matches_game_mode_id_fkey(*),
+      game_mode:game_modes!inner(name),
       match_players(
         *,
         player:players(*)
@@ -43,8 +43,8 @@ export default async function MatchReportPage(props: MatchPageProps) {
         return <div className="p-10 text-center text-red-500">Match not found</div>;
     }
 
-    const myPlayer = match.match_players.find((p: any) => p.user_id === user.id);
-    const opponent = match.match_players.find((p: any) => p.user_id !== user.id);
+    const myPlayer = match.match_players.find((p: any) => p.user_id === user.id) as any;
+    const opponent = match.match_players.find((p: any) => p.user_id !== user.id) as any;
 
     if (!myPlayer) {
         return <div className="p-10 text-center text-red-500">You are not a participant in this match.</div>;
@@ -89,7 +89,7 @@ export default async function MatchReportPage(props: MatchPageProps) {
                         MATCH IN PROGRESS
                     </h1>
                     <p className="text-sm font-mono text-zinc-400 uppercase tracking-widest">
-                        ID: {matchId.split('-')[0]} // {match.game_mode?.name}
+                        ID: {matchId.split('-')[0]} // {(match.game_mode as any)?.name || 'Unknown Mode'}
                     </p>
                 </div>
             )}
