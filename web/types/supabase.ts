@@ -557,7 +557,12 @@ export type Database = {
       }
       approve_match: { Args: { match_id_input: string }; Returns: undefined }
       submit_match_report: {
-        Args: { p_match_id: string; p_reporter_id: string; p_result_data: Json }
+        Args: {
+          match_id_input: string
+          my_score_input: number
+          opponent_score_input: number
+          reporter_id_input: string
+        }
         Returns: undefined
       }
       update_mmr: { Args: { p_match_id: string }; Returns: undefined }
