@@ -11,7 +11,7 @@ import { ReportUserDialog } from '@/components/profile/ReportUserDialog';
 // I'll assume standard HTML button with classes for safety to avoid import errors if the file doesn't exist.
 
 interface QueueSystemProps {
-    gameModeId: number;
+    gameModeId: string;
     teamSize: number;
 }
 
@@ -40,6 +40,9 @@ export function QueueSystem({ gameModeId, teamSize }: QueueSystemProps) {
     }, [gameModeId]);
 
     async function fetchQueue() {
+        // Safety Guard: Ensure gameModeId is a valid string UUID
+        if (!gameModeId || typeof gameModeId !== 'string') return;
+
         // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {

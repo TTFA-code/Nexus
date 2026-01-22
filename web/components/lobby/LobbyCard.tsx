@@ -54,7 +54,7 @@ interface LobbyCardProps {
     lobby: any
     variant?: 'tournament' | 'hosted' | 'default'
     currentUserId: string | null
-    onDissolve: (lobbyId: number, e: React.MouseEvent) => void
+    onDissolve: (lobbyId: string, e: React.MouseEvent) => void
     onJoin?: (lobbyId: string, password?: string) => void
 }
 

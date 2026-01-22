@@ -1,4 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
+import { Database } from '@/types/supabase';
+
+type TableName = keyof Database['public']['Tables'] | keyof Database['public']['Views'];
 
 type Manifest = {
     [table: string]: string[];
@@ -6,7 +9,9 @@ type Manifest = {
 
 const SCHEMA_MANIFEST: Manifest = {
     'lobby_players': ['status'],
-    'lobbies': ['scheduled_start', 'notes', 'sector_key']
+    'lobbies': ['scheduled_start', 'notes', 'sector_key', 'creator_id'],
+    'matches': ['id', 'game_mode_id', 'winner_team', 'approval_status'],
+    'match_players': ['match_id', 'user_id', 'team']
 };
 
 export const SchemaSentinel = {
@@ -30,7 +35,7 @@ export const SchemaSentinel = {
                         // Attempt to select the specific column with no rows.
                         // "HEAD" request logic equivalent for DB.
                         const { error } = await supabase
-                            .from(table)
+                            .from(table as any)
                             .select(column)
                             .limit(0)
                             .maybeSingle();

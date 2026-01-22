@@ -39,7 +39,7 @@ export function QueueControls() {
         }
     }
 
-    async function handleJoin(gameModeId: number) {
+    async function handleJoin(gameModeId: string) {
         setLoading(true);
         try {
             const res = await fetch('/api/queue/join', {

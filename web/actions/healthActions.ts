@@ -1,11 +1,17 @@
 'use server'
 
-import { SentinelCore } from '@/services/SentinelCore';
+import { SchemaSentinel } from '@/services/SchemaSentinel';
 
 export async function runSystemHealthCheck() {
     try {
-        const result = await SentinelCore.auditDatabase();
-        return result;
+        const { synced, missing } = await SchemaSentinel.checkSchemaSync();
+        const sql_patch = SchemaSentinel.generateMigrationPatch(missing);
+
+        return {
+            synced,
+            missing,
+            sql_patch
+        };
     } catch (error) {
         console.error('System Health Check Failed:', error);
         return {

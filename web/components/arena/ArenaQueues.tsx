@@ -48,7 +48,7 @@ export function ArenaQueues() {
         }
     }
 
-    async function handleJoin(gameModeId: number, e?: React.MouseEvent) {
+    async function handleJoin(gameModeId: string, e?: React.MouseEvent) {
         if (e) e.stopPropagation();
         setLoading(true);
         try {
@@ -69,7 +69,7 @@ export function ArenaQueues() {
         }
     }
 
-    async function handleLeave(gameModeId: number, e?: React.MouseEvent) {
+    async function handleLeave(gameModeId: string, e?: React.MouseEvent) {
         if (e) e.stopPropagation();
         setLoading(true);
         try {

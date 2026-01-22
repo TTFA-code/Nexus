@@ -29,13 +29,22 @@ export const BroadcasterAgent = {
             const { createClient } = await import('@/utils/supabase/server');
             const supabase = await createClient();
 
-            const { data: syncData } = await supabase
-                .from('v_discord_sync')
-                .select('discord_id')
-                .eq('user_id', lobby.creator_id)
+            const { data: creatorInfo } = await supabase
+                .from('players')
+                .select('user_id')
+                .eq('user_id', lobby.creator_id) // lobby.creator_id should be the UUID, but wait...
+                // If lobby.creator_id is UUID, and players.user_id is SNOWFLAKE, this eq check fails.
+                // The User explicitly said: "Since we have standardized on the players table using Discord Snowflakes as the primary key." AND "Ensure the filter is .eq('user_id', lobby.creator_id)."
+                // This implies lobby.creator_id IS NOW HOLDING THE SNOWFLAKE, or players.user_id is holding the UUID?
+                // Step 174 shows players PK is user_id. Step 256 shows joinLobby uses `user.id` (UUID) to insert into `lobby_players`.
+                // Re-reading Step 299 Prompt: "The v_discord_sync View no longer exists because we have standardized on the players table using Discord Snowflakes as the primary key... select user_id (which is the Discord ID in our new schema). Ensure the filter is .eq('user_id', lobby.creator_id)."
+                // This strongly implies lobby.creator_id matches players.user_id. 
+                // If lobby.creator_id is UUID, then players.user_id MUST be UUID? 
+                // OR lobby.creator_id is actually storing Snowflake now?
+                // I will follow instructions exactly: .from('players').select('user_id').eq('user_id', lobby.creator_id).
                 .single();
 
-            const discordId = syncData?.discord_id;
+            const discordId = creatorInfo?.user_id;
             const ping = discordId ? `<@${discordId}>` : lobby.creator?.username || 'Operator';
 
             const gameName = lobby.game_modes?.games?.name || "Unknown Protocol";

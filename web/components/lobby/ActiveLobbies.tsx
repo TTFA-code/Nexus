@@ -20,7 +20,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal';
 interface ActiveLobbiesProps {
     lobbies: any[]
     currentUserId: string | null
-    handleDissolve?: (id: number | string) => void
+    handleDissolve?: (id: string) => void
     onJoin?: (lobbyId: string) => void
 }
 
@@ -36,7 +36,7 @@ export function ActiveLobbies({
     // But our ID is number. We will cast it.
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-    function initiateDissolve(lobbyId: number | string, e: React.MouseEvent) {
+    function initiateDissolve(lobbyId: string, e: React.MouseEvent) {
         e.stopPropagation();
         setConfirmDeleteId(lobbyId.toString());
     }

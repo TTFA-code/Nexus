@@ -7,7 +7,7 @@ import { submitReadyState, leaveLobby } from "@/actions/lobbyActions";
 import { toast } from "sonner";
 
 interface ReadyCheckOverlayProps {
-    lobbyId: number;
+    lobbyId: string;
     currentStatus?: string; // Optional initial status
 }
 
