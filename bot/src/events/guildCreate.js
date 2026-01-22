@@ -7,7 +7,7 @@ module.exports = {
         const supabase = guild.client.supabase;
 
         try {
-            const { error } = await supabase.rpc('ensure_club_exists', {
+            const { error } = await supabase.rpc('ensure_guild_exists', {
                 gid: guild.id,
                 gname: guild.name
             });

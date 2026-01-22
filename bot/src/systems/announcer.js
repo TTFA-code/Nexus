@@ -6,15 +6,15 @@ class AnnouncementManager {
     }
 
     async getChannel(guildId) {
-        // Fetch club settings to find the announcement channel
-        const { data: club } = await this.client.supabase
-            .from('clubs')
+        // Fetch guild settings to find the announcement channel
+        const { data: guildSettings } = await this.client.supabase
+            .from('guilds')
             .select('announcement_channel_id')
             .eq('guild_id', guildId)
             .single();
 
-        if (club && club.announcement_channel_id) {
-            return this.client.channels.fetch(club.announcement_channel_id).catch(() => null);
+        if (guildSettings && guildSettings.announcement_channel_id) {
+            return this.client.channels.fetch(guildSettings.announcement_channel_id).catch(() => null);
         }
 
         // Fallback: System channel

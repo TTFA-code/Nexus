@@ -69,7 +69,7 @@ module.exports = {
                 console.log(`[GameMode] Guild ${guildId} missing from DB. Attempting to register...`);
 
                 const { error: guildError } = await supabase
-                    .from('clubs')
+                    .from('guilds')
                     .upsert({
                         guild_id: guildId,
                         name: interaction.guild.name,

@@ -29,34 +29,34 @@ module.exports = {
         if (subcommand === 'info') {
             await interaction.deferReply();
 
-            const { data: club, error } = await supabase
-                .from('clubs')
+            const { data: guildSettings, error } = await supabase
+                .from('guilds')
                 .select('*')
                 .eq('guild_id', guildId)
                 .single();
 
             if (error) {
                 console.error(error);
-                return interaction.editReply('❌ Failed to fetch club info.');
+                return interaction.editReply('❌ Failed to fetch guild settings.');
             }
 
-            if (!club) {
+            if (!guildSettings) {
                 // Auto-register if missing (similar to gamemode logic)
-                await supabase.from('clubs').upsert({
+                await supabase.from('guilds').upsert({
                     guild_id: guildId,
                     name: interaction.guild.name,
                     premium_tier: 0
                 });
-                return interaction.editReply('🆕 Club registered! Run the command again to see info.');
+                return interaction.editReply('🆕 Guild registered! Run the command again to see info.');
             }
 
             const embed = new EmbedBuilder()
-                .setTitle(`Club Info: ${club.name}`)
+                .setTitle(`Guild Info: ${guildSettings.name}`)
                 .addFields(
-                    { name: 'Premium Tier', value: club.premium_tier === 1 ? '🌟 Pro' : 'Free', inline: true },
-                    { name: 'Registered At', value: new Date(club.created_at).toLocaleDateString(), inline: true }
+                    { name: 'Premium Tier', value: guildSettings.premium_tier === 1 ? '🌟 Pro' : 'Free', inline: true },
+                    { name: 'Registered At', value: new Date(guildSettings.created_at).toLocaleDateString(), inline: true }
                 )
-                .setColor(club.premium_tier === 1 ? 0xFFD700 : 0x0099FF);
+                .setColor(guildSettings.premium_tier === 1 ? 0xFFD700 : 0x0099FF);
 
             await interaction.editReply({ embeds: [embed] });
 
@@ -66,7 +66,7 @@ module.exports = {
             await interaction.deferReply({ ephemeral: true });
 
             const { error } = await supabase
-                .from('clubs')
+                .from('guilds')
                 .update({ premium_tier: tier })
                 .eq('guild_id', guildId);
 
@@ -75,7 +75,7 @@ module.exports = {
                 return interaction.editReply(`❌ Failed to update premium tier: ${error.message}`);
             }
 
-            await interaction.editReply(`✅ Club premium tier set to **${tier === 1 ? 'Pro' : 'Free'}**.`);
+            await interaction.editReply(`✅ Guild premium tier set to **${tier === 1 ? 'Pro' : 'Free'}**.`);
         }
     },
 };

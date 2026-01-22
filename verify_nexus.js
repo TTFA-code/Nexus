@@ -60,8 +60,8 @@ async function runVerification() {
     const guildId = 'TEST_GUILD_' + Date.now();
     const modeName = 'Verif_Mode_' + Date.now();
 
-    // Create Club
-    await supabase.from('clubs').insert({ guild_id: guildId, name: 'Verification Club' });
+    // Create Guild
+    await supabase.from('guilds').insert({ guild_id: guildId, name: 'Verification Guild' });
 
     // Create Game Mode
     const { data: mode } = await supabase.from('game_modes').insert({

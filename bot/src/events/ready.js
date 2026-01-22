@@ -17,7 +17,7 @@ module.exports = {
                 // We use upsert to ensure we have the record, but don't overwrite existing configs if we can avoid it.
                 // However, basic info like name should be kept up to date.
                 const { error } = await supabase
-                    .from('clubs')
+                    .from('guilds')
                     .upsert({
                         guild_id: guildId,
                         name: guild.name,

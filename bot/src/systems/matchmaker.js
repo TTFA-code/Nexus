@@ -22,7 +22,7 @@ class Matchmaker {
         // 0. Ensure Club Exists (Safety Check)
         const guild = this.client.guilds.cache.get(guildId);
         if (guild) {
-            const { error: clubError } = await this.supabase.rpc('ensure_club_exists', {
+            const { error: clubError } = await this.supabase.rpc('ensure_guild_exists', {
                 gid: guild.id,
                 gname: guild.name
             });
