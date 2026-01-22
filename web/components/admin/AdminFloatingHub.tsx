@@ -54,7 +54,7 @@ export function AdminFloatingHub() {
     }
 
     return (
-        <div className="fixed top-6 right-6 z-[100] group">
+        <div className="hidden lg:block fixed top-6 right-6 z-[100] group">
             {/* The Orb */}
             <div className="animate-bob">
                 <Link href={linkTarget}>

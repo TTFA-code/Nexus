@@ -72,7 +72,7 @@ export function GlitchSidebar() {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             className={cn(
-                "relative h-screen z-50 flex flex-col border-r border-white/10 bg-black/40 backdrop-blur-xl transition-all duration-300 ease-out",
+                "relative h-screen z-50 hidden lg:flex flex-col border-r border-white/10 bg-black/40 backdrop-blur-xl transition-all duration-300 ease-out",
                 isOpen ? "w-64" : "w-20",
                 isGlitching && "border-cyber-cyan/50" // Glitch effect on border
             )}

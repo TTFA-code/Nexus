@@ -86,7 +86,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                         <div
                             key={player.user_id}
                             className={cn(
-                                "group flex items-center justify-between p-3 rounded border transition-all duration-300",
+                                "group flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-3 rounded border transition-all duration-300 gap-4 sm:gap-0",
                                 isBanned
                                     ? "bg-red-950/20 border-red-900/50 hover:border-red-500/50"
                                     : "bg-black/20 border-white/5 hover:border-cyan-500/30"
@@ -105,7 +105,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                                     )}
                                 </div>
                                 <div>
-                                    <div className="text-sm font-bold text-white font-orbitron tracking-wide">
+                                    <div className="text-sm sm:text-base font-bold text-white font-orbitron tracking-wide">
                                         {player.username || 'Unknown Player'}
                                     </div>
                                     <div className="text-[10px] text-zinc-500 font-mono uppercase">
@@ -115,10 +115,10 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                             </div>
 
                             {/* Status & Actions */}
-                            <div className="flex items-center gap-6">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
                                 {/* Status Badge */}
                                 <div className={cn(
-                                    "px-3 py-1 rounded text-[10px] font-bold tracking-widest border",
+                                    "px-3 py-1 rounded text-[10px] font-bold tracking-widest border text-center",
                                     isBanned
                                         ? "bg-red-500/20 text-red-400 border-red-500/50"
                                         : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
@@ -134,7 +134,7 @@ export function UserOverseer({ players, bannedUserIds, guildId }: UserOverseerPr
                                                 onClick={() => handleBanToggle(player.user_id)}
                                                 disabled={!!isLoading}
                                                 className={cn(
-                                                    "px-4 py-2 rounded text-xs font-bold tracking-wide transition-all border",
+                                                    "px-4 py-2 rounded text-xs font-bold tracking-wide transition-all border w-full sm:w-auto",
                                                     isBanned
                                                         ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/20"
                                                         : "bg-red-500/10 text-red-500 border-red-500/50 hover:bg-red-500/20",

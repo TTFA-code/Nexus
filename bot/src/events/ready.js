@@ -25,7 +25,11 @@ module.exports = {
                     }, { onConflict: 'guild_id' });
 
                 if (error) {
-                    console.error(`[DB Sync] Failed to sync guild ${guild.name} (${guildId}):`, error);
+                    if (error.code === '42501') {
+                        console.error("CRITICAL: Permission denied on 'guilds' table. Ensure 'GRANT ALL ON TABLE guilds TO service_role' has been run in Supabase SQL Editor.");
+                    } else {
+                        console.error(`[DB Sync] Failed to sync guild ${guild.name} (${guildId}):`, error);
+                    }
                 } else {
                     console.log(`[DB Sync] Verified guild: ${guild.name}`);
                 }
