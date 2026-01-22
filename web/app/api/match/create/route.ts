@@ -35,6 +35,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Game mode not found' }, { status: 404 })
         }
 
+        // Strict Validation Guard: Verify team_size is a valid number
+        if (typeof gameMode.team_size !== 'number') {
+            return NextResponse.json({ error: 'Invalid game mode configuration: team_size is missing or invalid' }, { status: 400 })
+        }
+
         // Total players needed = team_size * 2 (assuming 2 teams)
         // EXCEPT for 1v1 where team_size might be 1.
         const playersNeeded = gameMode.team_size * 2
