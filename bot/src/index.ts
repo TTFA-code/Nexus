@@ -79,6 +79,12 @@ try {
 }
 
 // 5. Load Events
+console.log('Current directory:', __dirname);
+try {
+    console.log('Files in current directory:', fs.readdirSync(__dirname));
+} catch (e) {
+    console.log('Could not read current directory');
+}
 require('./handlers/eventHandler')(client);
 
 // 6. Login
