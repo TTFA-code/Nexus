@@ -3,6 +3,48 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 
+export async function cancelMatchAction(matchId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Unauthorized' }
+
+    if (typeof matchId !== 'string') return { error: 'Invalid match ID format' }
+
+    const { error } = await (supabase.rpc as any)('cancel_match', {
+        match_id_input: matchId
+    })
+
+    if (error) {
+        console.error('Cancel Match RPC Error:', error)
+        return { error: error.message }
+    }
+
+    revalidatePath('/dashboard/admin')
+    revalidatePath('/admin/operations')
+    return { success: true, message: 'Match cancelled.' }
+}
+
+export async function rejectMatchAction(matchId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Unauthorized' }
+
+    if (typeof matchId !== 'string') return { error: 'Invalid match ID format' }
+
+    const { error } = await (supabase.rpc as any)('reject_match', {
+        match_id_input: matchId
+    })
+
+    if (error) {
+        console.error('Reject Match RPC Error:', error)
+        return { error: error.message }
+    }
+
+    revalidatePath('/dashboard/admin')
+    revalidatePath('/admin/operations')
+    return { success: true, message: 'Match rejected (voided).' }
+}
+
 export async function approveMatchAction(matchId: string) {
     const supabase = await createClient()
 

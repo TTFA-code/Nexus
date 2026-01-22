@@ -16,23 +16,29 @@ export type Database = {
     Tables: {
       game_modes: {
         Row: {
+          created_at: string | null
           game_id: string | null
           guild_id: string | null
           id: string
+          is_active: boolean | null
           name: string
           team_size: number | null
         }
         Insert: {
+          created_at?: string | null
           game_id?: string | null
           guild_id?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
           team_size?: number | null
         }
         Update: {
+          created_at?: string | null
           game_id?: string | null
           guild_id?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
           team_size?: number | null
         }
@@ -55,18 +61,21 @@ export type Database = {
       }
       games: {
         Row: {
+          created_at: string | null
           icon_url: string | null
           id: string
           name: string
           slug: string
         }
         Insert: {
+          created_at?: string | null
           icon_url?: string | null
           id?: string
           name: string
           slug: string
         }
         Update: {
+          created_at?: string | null
           icon_url?: string | null
           id?: string
           name?: string
@@ -78,16 +87,19 @@ export type Database = {
         Row: {
           created_at: string | null
           guild_id: string
+          reason: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
           guild_id: string
+          reason?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
           guild_id?: string
+          reason?: string | null
           user_id?: string
         }
         Relationships: [
@@ -109,19 +121,25 @@ export type Database = {
       }
       guilds: {
         Row: {
+          announcement_channel_id: string | null
           created_at: string | null
           guild_id: string
           name: string | null
+          premium_tier: number | null
         }
         Insert: {
+          announcement_channel_id?: string | null
           created_at?: string | null
           guild_id: string
           name?: string | null
+          premium_tier?: number | null
         }
         Update: {
+          announcement_channel_id?: string | null
           created_at?: string | null
           guild_id?: string
           name?: string | null
+          premium_tier?: number | null
         }
         Relationships: []
       }
@@ -134,11 +152,8 @@ export type Database = {
           guild_id: string | null
           id: string
           is_private: boolean | null
-          is_tournament: boolean | null
           match_id: string | null
-          notes: string | null
           region: string | null
-          scheduled_start: string | null
           sector_key: string | null
           status: string | null
           voice_required: boolean | null
@@ -151,11 +166,8 @@ export type Database = {
           guild_id?: string | null
           id?: string
           is_private?: boolean | null
-          is_tournament?: boolean | null
           match_id?: string | null
-          notes?: string | null
           region?: string | null
-          scheduled_start?: string | null
           sector_key?: string | null
           status?: string | null
           voice_required?: boolean | null
@@ -168,11 +180,8 @@ export type Database = {
           guild_id?: string | null
           id?: string
           is_private?: boolean | null
-          is_tournament?: boolean | null
           match_id?: string | null
-          notes?: string | null
           region?: string | null
-          scheduled_start?: string | null
           sector_key?: string | null
           status?: string | null
           voice_required?: boolean | null
@@ -199,45 +208,31 @@ export type Database = {
             referencedRelation: "guilds"
             referencedColumns: ["guild_id"]
           },
-          {
-            foreignKeyName: "lobbies_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "admin_match_review"
-            referencedColumns: ["match_id"]
-          },
-          {
-            foreignKeyName: "lobbies_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
         ]
       }
       lobby_players: {
         Row: {
+          created_at: string | null
           id: string
           is_ready: boolean | null
-          joined_at: string | null
           lobby_id: string | null
           status: string | null
           team: number | null
           user_id: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: string
           is_ready?: boolean | null
-          joined_at?: string | null
           lobby_id?: string | null
           status?: string | null
           team?: number | null
           user_id?: string | null
         }
         Update: {
+          created_at?: string | null
           id?: string
           is_ready?: boolean | null
-          joined_at?: string | null
           lobby_id?: string | null
           status?: string | null
           team?: number | null
@@ -262,19 +257,28 @@ export type Database = {
       }
       match_players: {
         Row: {
-          match_id: string
-          team: number | null
-          user_id: string
+          created_at: string | null
+          id: string
+          match_id: string | null
+          stats: Json | null
+          team: number
+          user_id: string | null
         }
         Insert: {
-          match_id: string
-          team?: number | null
-          user_id: string
+          created_at?: string | null
+          id?: string
+          match_id?: string | null
+          stats?: Json | null
+          team: number
+          user_id?: string | null
         }
         Update: {
-          match_id?: string
-          team?: number | null
-          user_id?: string
+          created_at?: string | null
+          id?: string
+          match_id?: string | null
+          stats?: Json | null
+          team?: number
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -306,7 +310,7 @@ export type Database = {
           id: string
           match_id: string | null
           reporter_id: string | null
-          result_data: Json | null
+          result_data: Json
           status: string | null
         }
         Insert: {
@@ -314,7 +318,7 @@ export type Database = {
           id?: string
           match_id?: string | null
           reporter_id?: string | null
-          result_data?: Json | null
+          result_data: Json
           status?: string | null
         }
         Update: {
@@ -322,7 +326,7 @@ export type Database = {
           id?: string
           match_id?: string | null
           reporter_id?: string | null
-          result_data?: Json | null
+          result_data?: Json
           status?: string | null
         }
         Relationships: [
@@ -357,6 +361,9 @@ export type Database = {
           game_mode_id: string | null
           guild_id: string | null
           id: string
+          metadata: Json | null
+          region: string | null
+          started_at: string | null
           status: string | null
           winner_team: number | null
         }
@@ -367,6 +374,9 @@ export type Database = {
           game_mode_id?: string | null
           guild_id?: string | null
           id?: string
+          metadata?: Json | null
+          region?: string | null
+          started_at?: string | null
           status?: string | null
           winner_team?: number | null
         }
@@ -377,17 +387,13 @@ export type Database = {
           game_mode_id?: string | null
           guild_id?: string | null
           id?: string
+          metadata?: Json | null
+          region?: string | null
+          started_at?: string | null
           status?: string | null
           winner_team?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "matches_creator_id_fkey"
-            columns: ["creator_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["user_id"]
-          },
           {
             foreignKeyName: "matches_game_mode_id_fkey"
             columns: ["game_mode_id"]
@@ -406,33 +412,43 @@ export type Database = {
       }
       mmr_history: {
         Row: {
-          change: number | null
+          change: number
           created_at: string | null
+          game_id: string | null
           id: string
           match_id: string | null
-          new_mmr: number | null
-          old_mmr: number | null
-          player_uuid: string | null
+          new_mmr: number
+          old_mmr: number
+          player_id: string | null
         }
         Insert: {
-          change?: number | null
+          change: number
           created_at?: string | null
+          game_id?: string | null
           id?: string
           match_id?: string | null
-          new_mmr?: number | null
-          old_mmr?: number | null
-          player_uuid?: string | null
+          new_mmr: number
+          old_mmr: number
+          player_id?: string | null
         }
         Update: {
-          change?: number | null
+          change?: number
           created_at?: string | null
+          game_id?: string | null
           id?: string
           match_id?: string | null
-          new_mmr?: number | null
-          old_mmr?: number | null
-          player_uuid?: string | null
+          new_mmr?: number
+          old_mmr?: number
+          player_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "mmr_history_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mmr_history_match_id_fkey"
             columns: ["match_id"]
@@ -448,8 +464,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "mmr_history_player_uuid_fkey"
-            columns: ["player_uuid"]
+            foreignKeyName: "mmr_history_player_id_fkey"
+            columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["user_id"]
@@ -459,21 +475,27 @@ export type Database = {
       player_mmr: {
         Row: {
           game_id: string
+          losses: number | null
           mmr: number | null
           updated_at: string | null
           user_id: string
+          wins: number | null
         }
         Insert: {
           game_id: string
+          losses?: number | null
           mmr?: number | null
           updated_at?: string | null
           user_id: string
+          wins?: number | null
         }
         Update: {
           game_id?: string
+          losses?: number | null
           mmr?: number | null
           updated_at?: string | null
           user_id?: string
+          wins?: number | null
         }
         Relationships: [
           {
@@ -494,66 +516,34 @@ export type Database = {
       }
       players: {
         Row: {
+          avatar_url: string | null
+          created_at: string | null
           is_banned: boolean | null
-          mmr: number | null
           user_id: string
           username: string | null
+          uuid_link: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
           is_banned?: boolean | null
-          mmr?: number | null
           user_id: string
           username?: string | null
+          uuid_link?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          created_at?: string | null
           is_banned?: boolean | null
-          mmr?: number | null
           user_id?: string
           username?: string | null
+          uuid_link?: string | null
         }
         Relationships: []
-      }
-      queues: {
-        Row: {
-          game_mode_id: string | null
-          id: string
-          joined_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          game_mode_id?: string | null
-          id?: string
-          joined_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          game_mode_id?: string | null
-          id?: string
-          joined_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "queues_game_mode_id_fkey"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "queues_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["user_id"]
-          },
-        ]
       }
       reports: {
         Row: {
           created_at: string | null
-          details: string | null
-          guild_id: string | null
           id: string
           reason: string
           reported_id: string | null
@@ -562,8 +552,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          details?: string | null
-          guild_id?: string | null
           id?: string
           reason: string
           reported_id?: string | null
@@ -572,8 +560,6 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          details?: string | null
-          guild_id?: string | null
           id?: string
           reason?: string
           reported_id?: string | null
@@ -581,13 +567,6 @@ export type Database = {
           status?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "reports_guild_id_fkey"
-            columns: ["guild_id"]
-            isOneToOne: false
-            referencedRelation: "guilds"
-            referencedColumns: ["guild_id"]
-          },
           {
             foreignKeyName: "reports_reported_id_fkey"
             columns: ["reported_id"]
@@ -609,22 +588,16 @@ export type Database = {
       admin_match_review: {
         Row: {
           finished_at: string | null
-          game_mode_id: string | null
           game_mode_name: string | null
           guild_id: string | null
+          guild_name: string | null
           match_id: string | null
           reporter_name: string | null
+          started_at: string | null
           status: string | null
           winner_team: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "matches_game_mode_id_fkey"
-            columns: ["game_mode_id"]
-            isOneToOne: false
-            referencedRelation: "game_modes"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "matches_guild_id_fkey"
             columns: ["guild_id"]
@@ -639,17 +612,16 @@ export type Database = {
       approve_match: { Args: { match_id_input: string }; Returns: undefined }
       submit_match_report: {
         Args: {
-          match_id_input: string
-          my_score_input: number
-          opponent_score_input: number
-          reporter_id_input: string
+          p_match_id: string
+          p_my_score: number
+          p_opponent_score: number
+          p_reporter_id: string
         }
-        Returns: undefined
+        Returns: Json
       }
-      update_mmr: { Args: { p_match_id: string }; Returns: undefined }
     }
     Enums: {
-      report_status: "PENDING" | "RESOLVED" | "REJECTED"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -776,8 +748,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      report_status: ["PENDING", "RESOLVED", "REJECTED"],
-    },
+    Enums: {},
   },
 } as const
