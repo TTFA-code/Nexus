@@ -19,28 +19,13 @@ export async function resolveReport(reportId: string, action: 'BAN' | 'DISMISS')
         throw new Error('Report not found')
     }
 
-    if (!report.reported_id) {
-        throw new Error('Reported user ID is missing')
+    // Safety Guard: Narrow the type for TypeScript
+    if (!report.guild_id || !report.reported_id) {
+        return { error: 'Invalid report data: Missing guild or player ID' }
     }
 
     if (action === 'BAN') {
-        // Ban the user and resolve
-        // Call toggleGuildBan - wait, toggleGuildBan toggles. If already banned, it unbans.
-        // We need 'ensureBanned' or similar logic.
-        // We will call toggleGuildBan but pass the reason.
-        // Actually, toggleGuildBan updates: logic in prompt said "If YES: Delete (Unban), If NO: Insert (Ban)".
-        // So we strictly want to BAN here.
-        // We should check if banned first? toggleGuildBan does that.
-        // But if they ARE banned, toggleGuildBan will unban them! That's risky for a "Resolve & Ban" button.
-        // I should modify toggleGuildBan to accept an explicit 'action' or 'forceBan' param?
-        // Or I just handle the insertion manually here to be safe and explicit.
-        // Re-reading prompt: "If action === 'BAN': Call toggleGuildBan (Insert into guild_bans) AND update report status to RESOLVED."
-        // I will trust the prompt but I will modify toggleGuildBan to be smarter or I will check myself.
-        // Let's modify toggleGuildBan to optionally take a 'force' argument or I'll just do the db op here for clarity and atomicity.
-        // Actually, modifying `toggleGuildBan` to take a reason is required anyway.
-        // Let's implement the ban logic here properly to ensure we don't accidentally unban.
-
-        // Check if already banned
+        // Check if already banned using verified IDs
         const { data: existingBan } = await supabase
             .from('guild_bans')
             .select('user_id')

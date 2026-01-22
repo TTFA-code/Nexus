@@ -541,9 +541,56 @@ export type Database = {
         }
         Relationships: []
       }
+      queues: {
+        Row: {
+          game_mode_id: string | null
+          guild_id: string | null
+          id: string
+          joined_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          game_mode_id?: string | null
+          guild_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          game_mode_id?: string | null
+          guild_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queues_game_mode_id_fkey"
+            columns: ["game_mode_id"]
+            isOneToOne: false
+            referencedRelation: "game_modes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queues_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
+          {
+            foreignKeyName: "queues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           created_at: string | null
+          guild_id: string
           id: string
           reason: string
           reported_id: string | null
@@ -552,6 +599,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          guild_id: string
           id?: string
           reason: string
           reported_id?: string | null
@@ -560,6 +608,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          guild_id?: string
           id?: string
           reason?: string
           reported_id?: string | null
@@ -567,6 +616,13 @@ export type Database = {
           status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reports_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["guild_id"]
+          },
           {
             foreignKeyName: "reports_reported_id_fkey"
             columns: ["reported_id"]
@@ -609,7 +665,13 @@ export type Database = {
       }
     }
     Functions: {
+      approve_all_server_matches: {
+        Args: { p_target_guild_id: string }
+        Returns: Json
+      }
       approve_match: { Args: { p_match_id: string }; Returns: undefined }
+      cancel_match: { Args: { p_match_id: string }; Returns: undefined }
+      reject_match: { Args: { p_match_id: string }; Returns: undefined }
       submit_match_report: {
         Args: {
           p_match_id: string
