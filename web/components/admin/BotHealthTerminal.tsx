@@ -40,7 +40,7 @@ export function BotHealthTerminal() {
                     // Fetch details for the new lobby (need game mode name)
                     const { data: details } = await supabase
                         .from('lobbies')
-                        .select('game_modes:game_mode_id(name))')
+                        .select('game_modes:game_mode_id(name)')
                         .eq('id', payload.new.id)
                         .single()
 
