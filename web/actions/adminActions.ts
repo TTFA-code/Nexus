@@ -11,7 +11,7 @@ export async function cancelMatchAction(matchId: string) {
     if (typeof matchId !== 'string') return { error: 'Invalid match ID format' }
 
     const { error } = await (supabase.rpc as any)('cancel_match', {
-        match_id_input: matchId
+        p_match_id: matchId
     })
 
     if (error) {
@@ -32,7 +32,7 @@ export async function rejectMatchAction(matchId: string) {
     if (typeof matchId !== 'string') return { error: 'Invalid match ID format' }
 
     const { error } = await (supabase.rpc as any)('reject_match', {
-        match_id_input: matchId
+        p_match_id: matchId
     })
 
     if (error) {
@@ -66,7 +66,7 @@ export async function approveMatchAction(matchId: string) {
     }
 
     const { data, error } = await supabase.rpc('approve_match', {
-        match_id_input: matchId
+        p_match_id: matchId
     })
 
     if (error) {
@@ -103,7 +103,7 @@ export async function approveAllMatchesAction(guildId: string) {
     console.log(`[ADMIN_ACTION] Approving ALL Pending Matches for Guild ${guildId}`);
 
     const { data, error } = await (supabase.rpc as any)('approve_all_server_matches', {
-        target_guild_id: guildId
+        p_target_guild_id: guildId
     })
 
     if (error) return { error: error.message }
