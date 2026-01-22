@@ -22,6 +22,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          picking_method: string
           team_size: number
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          picking_method?: string
           team_size?: number
         }
         Update: {
@@ -40,6 +42,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          picking_method?: string
           team_size?: number
         }
         Relationships: [

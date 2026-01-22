@@ -7,15 +7,16 @@ import { cn } from '@/lib/utils';
 
 // Define the type for GameMode
 type GameMode = {
-    id: number;
+    id: string;
     name: string;
+    game_name: string;
     team_size: number;
     picking_method: string;
 };
 
 interface GameSelectorProps {
     onSelect: (gameMode: GameMode) => void;
-    selectedId?: number;
+    selectedId?: string; // Updated to string for UUID
 }
 
 export function GameSelector({ onSelect, selectedId }: GameSelectorProps) {
@@ -26,7 +27,17 @@ export function GameSelector({ onSelect, selectedId }: GameSelectorProps) {
     useEffect(() => {
         async function fetchModes() {
             const { data } = await supabase.from('game_modes').select('*, games(name)').eq('is_active', true);
-            if (data) setGameModes(data);
+
+            if (data) {
+                const mappedModes: GameMode[] = data.map((mode: any) => ({
+                    id: mode.id,
+                    name: mode.name,
+                    game_name: mode.games?.name || 'Unknown Game',
+                    team_size: mode.team_size || 0,
+                    picking_method: mode.picking_method || 'Blind Pick', // Default fallback
+                }));
+                setGameModes(mappedModes);
+            }
             setLoading(false);
         }
         fetchModes();
@@ -36,7 +47,7 @@ export function GameSelector({ onSelect, selectedId }: GameSelectorProps) {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {gameModes.map((mode: any) => (
+            {gameModes.map((mode) => (
                 <button
                     key={mode.id}
                     onClick={() => onSelect(mode)}
@@ -51,7 +62,7 @@ export function GameSelector({ onSelect, selectedId }: GameSelectorProps) {
                         <Gamepad2 className={cn("w-6 h-6", selectedId === mode.id ? "text-[#ccff00]" : "text-zinc-400 group-hover:text-[#ccff00]")} />
                     </div>
 
-                    <h3 className="font-bold text-lg mb-1">{mode.games?.name}</h3>
+                    <h3 className="font-bold text-lg mb-1">{mode.game_name}</h3>
                     <div className="text-sm font-medium text-zinc-500 mb-1">{mode.name}</div>
 
                     <div className="flex items-center gap-4 text-xs font-mono mt-2 opacity-80">
