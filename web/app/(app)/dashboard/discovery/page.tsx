@@ -29,7 +29,7 @@ export default async function DiscoveryPage() {
     // Fetch Active Connections to determine state
     let connectedGuildIds: string[] = [];
     if (session?.user) {
-        const { data: members } = await (supabase as any)
+        const { data: members } = await supabase
             .from('server_members')
             .select('guild_id')
             .eq('user_id', session.user.id)

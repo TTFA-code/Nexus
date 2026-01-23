@@ -18,7 +18,8 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
 
     if (!isAuthorized) {
         console.error(`[SECURITY] Access Denied for Guild ${guildId}: ${reason}`);
-        redirect(`/dashboard/auth/scan?target=${guildId}`);
+        console.error(`[SECURITY] Access Denied for Guild ${guildId}: ${reason}`);
+        redirect('/dashboard/discovery');
     }
 
     // Fetch Admin Sectors for Bubble Selector
