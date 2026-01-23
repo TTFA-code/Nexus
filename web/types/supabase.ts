@@ -65,6 +65,8 @@ export type Database = {
       games: {
         Row: {
           created_at: string | null
+          created_by: string | null
+          guild_id: string | null
           icon_url: string | null
           id: string
           name: string
@@ -72,6 +74,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
+          guild_id?: string | null
           icon_url?: string | null
           id?: string
           name: string

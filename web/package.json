@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "gen-types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase.ts",
     "lint": "eslint"
   },
   "dependencies": {
