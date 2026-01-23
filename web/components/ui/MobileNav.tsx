@@ -20,7 +20,7 @@ export function MobileNav() {
             if (!user) return;
 
             // Check DB
-            const { data: member } = await (supabase as any)
+            const { data: member } = await supabase
                 .from('server_members')
                 .select('role')
                 .eq('user_id', user.id)
@@ -51,12 +51,7 @@ export function MobileNav() {
                 label="Leaderboard"
                 active={pathname?.includes('/leaderboard')}
             />
-            <MobileNavItem
-                href="/dashboard/activity"
-                icon={Activity}
-                label="Wellness"
-                active={pathname?.includes('/activity')}
-            />
+
             <MobileNavItem
                 href="/settings"
                 icon={Settings}
