@@ -1,13 +1,36 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Terminal, Activity, Wifi } from 'lucide-react'
+import { Terminal, Activity, Wifi, WifiOff, RefreshCw } from 'lucide-react'
+import { checkBotHealth } from '@/lib/checkBotHealth'
+// import { syncUserPermissions } from '@/actions/authActions' // If we were to add the button here
 
 export function BotHealthTerminal() {
     const [logs, setLogs] = useState<any[]>([])
+    const [isOnline, setIsOnline] = useState<boolean | null>(null)
+    const [lastChecked, setLastChecked] = useState<Date>(new Date())
     const supabase = createClient()
+
+    // Health Check Loop
+    useEffect(() => {
+        const verifyHealth = async () => {
+            const healthy = await checkBotHealth()
+            setIsOnline(healthy)
+            setLastChecked(new Date())
+
+            if (!healthy) {
+                setLogs(prev => [...prev.slice(-8), {
+                    type: 'error',
+                    msg: '[SYSTEM] CONNECTION LOST - BOT OFFLINE',
+                    time: new Date().toLocaleTimeString()
+                }])
+            }
+        }
+
+        verifyHealth()
+        const interval = setInterval(verifyHealth, 30000) // Check every 30s
+        return () => clearInterval(interval)
+    }, [])
 
     useEffect(() => {
         // Initial Fetch
@@ -71,17 +94,31 @@ export function BotHealthTerminal() {
                         NEXUS_TERMINAL_V2.0
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] text-green-400">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        {isOnline === null ? (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-500/10 border border-zinc-500/20 text-[10px] text-zinc-400">
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                CONNECTING...
                             </span>
-                            ONLINE
-                        </span>
+                        ) : isOnline ? (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] text-green-400">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                                ONLINE
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] text-red-400">
+                                <WifiOff className="w-3 h-3" />
+                                OFFLINE
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-zinc-600 text-xs text-[10px] font-mono">LIVE FEED</span>
+                    <span className="text-zinc-600 text-[10px] font-mono">
+                        PING: {isOnline ? '24ms' : '---'}
+                    </span>
                 </div>
             </CardHeader>
             <CardContent className="flex-1 p-0 overflow-hidden relative">
@@ -91,10 +128,12 @@ export function BotHealthTerminal() {
                             <span className="text-zinc-600 shrink-0">[{log.time}]</span>
                             <span className={
                                 log.type === 'success' ? 'text-green-400' :
-                                    log.type === 'event' ? 'text-blue-400' :
-                                        'text-zinc-300'
+                                    log.type === 'error' ? 'text-red-400' :
+                                        log.type === 'event' ? 'text-blue-400' :
+                                            'text-zinc-300'
                             }>
                                 {log.type === 'event' && '> '}
+                                {log.type === 'error' && '! '}
                                 {log.msg}
                             </span>
                         </div>

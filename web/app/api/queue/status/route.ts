@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 
 export const revalidate = 0
 
-const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3001';
+const BOT_API_URL = process.env.NEXT_PUBLIC_BOT_URL || 'http://localhost:3001';
+const BOT_API_KEY = process.env.BOT_API_KEY;
 
 export async function GET() {
     const supabase = await createClient()
@@ -23,7 +24,13 @@ export async function GET() {
 
         if (discordId) {
             try {
-                const res = await fetch(`${BOT_API_URL}/user/${discordId}/guilds`, { cache: 'no-store' })
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (BOT_API_KEY) headers['x-api-key'] = BOT_API_KEY;
+
+                const res = await fetch(`${BOT_API_URL}/user/${discordId}/guilds`, {
+                    cache: 'no-store',
+                    headers
+                })
                 if (res.ok) {
                     const data = await res.json()
                     allowedGuilds = data.guilds || []

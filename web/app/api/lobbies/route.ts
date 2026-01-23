@@ -4,7 +4,10 @@ import { NextResponse } from 'next/server'
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-const BOT_API_URL = process.env.NEXT_PUBLIC_BOT_URL || 'http://localhost:3001';
+let BOT_API_URL = process.env.NEXT_PUBLIC_BOT_URL || 'http://localhost:3001';
+if (process.env.NODE_ENV === 'production' && !BOT_API_URL.startsWith('http')) {
+    BOT_API_URL = `https://${BOT_API_URL}`;
+}
 const BOT_API_KEY = process.env.BOT_API_KEY;
 
 if (process.env.NODE_ENV === 'production' && BOT_API_URL.includes('localhost')) {
