@@ -147,17 +147,25 @@ export async function verifyNexusAdmin(guildId: string): Promise<{ isAuthorized:
     // The user rules did NOT mention bypassing. I will stick to DB logic.
 
     try {
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+        const discordId = discordIdentity?.id;
+
+        if (!discordId) {
+            console.warn(`[Gatekeeper] No Discord ID found for user ${user.id}`);
+            return { isAuthorized: false, reason: "No Discord Link" };
+        }
+
         // Query server_members
-        console.log('Checking member role for:', { userId: user.id, guildId })
+        console.log('Checking member role for:', { userId: discordId, guildId })
         const { data: member, error: dbError } = await supabase
             .from('server_members')
             .select('role')
-            .eq('user_id', user.id)
+            .eq('user_id', discordId)
             .eq('guild_id', guildId)
             .single();
 
         if (dbError || !member) {
-            console.warn(`[Gatekeeper] Access Denied: User ${user.id} not found in guild ${guildId} members.`);
+            console.warn(`[Gatekeeper] Access Denied: User ${discordId} not found in guild ${guildId} members.`);
             return { isAuthorized: false, reason: "Not a Guild Member" };
         }
 

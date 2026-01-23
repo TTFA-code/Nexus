@@ -74,7 +74,7 @@ export async function POST(request: Request) {
                 game_mode_id: gameModeData.id,
                 guild_id: gameModeData.guild_id,
                 status: status,
-                creator_id: user.id, // Use Supabase Auth UUID
+                creator_id: hostId, // Use Discord ID
                 is_private: is_private,
                 voice_required: voice_required,
                 is_tournament: is_tournament || false,
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
                 .from('lobby_players')
                 .insert([{
                     lobby_id: lobby.id,
-                    user_id: user.id, // Using Auth UUID per directive
+                    user_id: hostId, // Using Discord ID
                     status: 'joined',
                     is_ready: false
                 }])

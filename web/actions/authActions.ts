@@ -56,10 +56,18 @@ export async function syncUserPermissions(guildId: string): Promise<{ success: b
 
     // 4. Upsert with Service Role
     try {
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+        const discordId = discordIdentity?.id;
+
+        if (!discordId) {
+            console.error('[AuthActions] No Discord Identity found for user:', user.id);
+            return { success: false, message: "No Discord Identity found." };
+        }
+
         const { error } = await adminDb
             .from('server_members')
             .upsert({
-                user_id: user.id,
+                user_id: discordId, // Use Discord ID (Text)
                 guild_id: guildId,
                 role: role
             }, { onConflict: 'user_id,guild_id' });
@@ -68,7 +76,7 @@ export async function syncUserPermissions(guildId: string): Promise<{ success: b
             console.error('[AuthActions] Failed to upsert server_member:', error);
             return { success: false, message: "Database sync failed." };
         } else {
-            console.log(`[Auth Success] Service Role successfully provisioned @nexus-admin pass for user: ${user.id}`);
+            console.log(`[Auth Success] Service Role successfully provisioned @nexus-admin pass for user: ${discordId} (UUID: ${user.id})`);
             return { success: true, message: `Synced as ${role}`, role };
         }
     } catch (err) {
@@ -87,10 +95,15 @@ export async function disconnectAdmin(guildId: string): Promise<{ success: boole
     if (!session?.user) return { success: false, message: "Unauthorized" };
 
     try {
+        const discordIdentity = session.user.identities?.find(i => i.provider === 'discord');
+        const discordId = discordIdentity?.id;
+
+        if (!discordId) return { success: false, message: "No Discord ID found" };
+
         const { error } = await adminDb
             .from('server_members')
             .update({ role: 'player' })
-            .eq('user_id', session.user.id)
+            .eq('user_id', discordId)
             .eq('guild_id', guildId);
 
         if (error) {

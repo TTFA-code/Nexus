@@ -21,7 +21,13 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
         }
 
         // Use the Supabase Auth UUID
-        const userId = user.id
+        const authUuid = user.id
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
+        const userId = discordIdentity?.id
+
+        if (!userId) {
+            throw new Error('Unauthorized: No linked Discord account.')
+        }
 
         // 2. Security Check (Standard Client - RLS Updated)
         console.log("JOINING LOBBY WITH ID:", lobbyId);
@@ -71,7 +77,7 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
         // 1.5 Active Session Check (Lobby Validation)
         // @ts-ignore - RPC not yet typed
         const { data: isActiveSession, error: rpcError } = await supabase.rpc('check_active_session', {
-            p_user_id: userId
+            p_user_id: userId // Passing Discord ID if RPC supports it, otherwise might need adaptation
         });
 
         if (isActiveSession) {
@@ -104,8 +110,7 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
         // But the primary fix is the INSERT.
         // Let's grab discord ID just for the ban check if needed, but use UUID for insert.
 
-        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
-        const discordId = discordIdentity?.id
+        const discordId = userId // Already extracted above
 
         if (discordId && lobby.guild_id) {
             const { data: ban } = await supabase
@@ -166,7 +171,7 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
             .from('lobby_players')
             .insert([{
                 lobby_id: lobbyId,
-                user_id: userId, // <--- CORRECTED: NOW USING UUID
+                user_id: userId, // <--- CORRECTED: NOW USING DISCORD ID
                 status: 'joined'
             }])
 
@@ -203,8 +208,10 @@ export async function leaveLobby(lobbyId: string): Promise<ActionResponse> {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return { success: false, message: 'Not authenticated.' }
 
-        // Correctly use UUID for deletion
-        const userId = user.id
+        // Correctly use Discord ID (Text) for deletion
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
+        const userId = discordIdentity?.id
+        if (!userId) return { success: false, message: 'No Discord account.' }
 
         const { error } = await supabase
             .from('lobby_players')
@@ -264,6 +271,10 @@ export async function submitReadyState(lobbyId: string, isReady: boolean): Promi
         if (!user) throw new Error('Unauthorized.')
 
         const userUuid = user.id
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
+        const discordId = discordIdentity?.id
+
+        if (!discordId) throw new Error('No Discord Link')
 
         const status = isReady ? 'ACCEPTED' : 'DECLINED'
 
@@ -271,7 +282,7 @@ export async function submitReadyState(lobbyId: string, isReady: boolean): Promi
             .from('ready_checks' as any)
             .upsert({
                 lobby_id: lobbyId,
-                user_id: userUuid, // Using UUID per schema
+                user_id: discordId, // Using Discord ID
                 status: status
             }, { onConflict: 'lobby_id, user_id' })
 
@@ -300,8 +311,10 @@ export async function toggleReady(lobbyId: string): Promise<ActionResponse> {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Unauthorized.')
 
-        // Correctly use UUID
-        const userId = user.id
+        // Correctly use Discord ID
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
+        const userId = discordIdentity?.id
+        if (!userId) throw new Error('No Discord Link')
 
         // 2. Fetch Lobby Status
         const { data: lobby, error: lobbyError } = await supabase
@@ -323,7 +336,7 @@ export async function toggleReady(lobbyId: string): Promise<ActionResponse> {
             .from('lobby_players')
             .select('is_ready')
             .eq('lobby_id', lobbyId)
-            .eq('user_id', userId) // UUID
+            .eq('user_id', userId) // Discord ID
             .single()
 
         if (fetchError || !currentPlayer) throw new Error('You are not in this lobby.')
@@ -335,7 +348,7 @@ export async function toggleReady(lobbyId: string): Promise<ActionResponse> {
             .from('lobby_players')
             .update({ is_ready: newStatus })
             .eq('lobby_id', lobbyId)
-            .eq('user_id', userId) // UUID
+            .eq('user_id', userId) // Discord ID
 
         if (updateError) throw new Error('Failed to update ready status.')
 
