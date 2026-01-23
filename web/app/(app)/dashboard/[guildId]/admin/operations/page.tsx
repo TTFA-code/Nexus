@@ -14,10 +14,11 @@ export default async function OperationsPage({ params }: { params: Promise<{ gui
         .eq('is_active', true)
         .order('name')
 
-    // Fetch All Active Games (For Custom Creation)
+    // Fetch All Games (Global + Custom)
     const { data: allGames } = await supabase
         .from('games')
-        .select('id, name, icon_url')
+        .select('id, name, icon_url, guild_id')
+        .or(`guild_id.eq.${guildId},guild_id.is.null`)
         .order('name')
 
     // Fetch Active Lobbies

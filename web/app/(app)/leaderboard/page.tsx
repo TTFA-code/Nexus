@@ -14,7 +14,8 @@ import { PageHeader } from "@/components/ui/PageHeader"
 
 // ... existing imports
 
-export const revalidate = 0
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 interface LeaderboardPageProps {
     searchParams: Promise<{ game?: string }>
@@ -27,7 +28,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
     // Fetch Games for Filter
     const { data: games, error: gamesError } = await supabase
         .from('games')
-        .select('id, name')
+        .select('id, name, created_by, creator:players!games_created_by_fkey(username)')
         .order('name', { ascending: true })
 
     if (gamesError) {

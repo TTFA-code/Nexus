@@ -14,30 +14,37 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
         return { error: "Unauthorized" };
     }
 
-    console.log(`[MATCH_SUBMIT] User ${user.id} submitting for Match ${matchId}`);
+    const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+    const discordId = discordIdentity?.id;
+
+    if (!discordId) {
+        return { error: 'Unauthorized: No Discord Link' };
+    }
+
+    console.log(`[MATCH_SUBMIT] User ${discordId} submitting for Match ${matchId}`);
 
     // 2. Participant Check (Security)
     const { data: participation, error: partError } = await supabase
         .from('match_players')
         .select('user_id')
         .eq('match_id', matchId)
-        .eq('user_id', user.id)
+        .eq('user_id', discordId) // Use Discord ID
         .single();
 
     if (partError || !participation) {
-        console.error(`[MATCH_SUBMIT] Security Warning: User ${user.id} attempted to submit for match ${matchId} but is not a participant.`);
+        console.error(`[MATCH_SUBMIT] Security Warning: User ${discordId} attempted to submit for match ${matchId} but is not a participant.`);
         return { error: 'Unauthorized: You are not a player in this match.' };
     }
 
     // 3. Call RPC (Transaction)
     const { data, error } = await supabase.rpc('submit_match_report', {
         p_match_id: matchId,
-        p_reporter_id: user.id,
+        p_reporter_id: discordId, // Use Discord ID
         p_my_score: myScore,
         p_opponent_score: opponentScore
     });
 
-    console.log(`[MATCH_SUBMIT] RPC Called. Match: ${matchId}, Reporter: ${user.id}, MyScore: ${myScore}, OppScore: ${opponentScore}`);
+    console.log(`[MATCH_SUBMIT] RPC Called. Match: ${matchId}, Reporter: ${discordId}, MyScore: ${myScore}, OppScore: ${opponentScore}`);
 
     if (error) {
         console.error("Submit Result RPC Error:", error);
@@ -50,7 +57,6 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
     }
 
     // 4. Status Check & Cleanup
-    // If the match is finished, we must close the lobby so it disappears from the Arena.
     const { data: match } = await supabase
         .from('matches')
         .select('finished_at, status')
@@ -66,7 +72,7 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
     }
 
     revalidatePath(`/dashboard/play/match/${matchId}`);
-    revalidatePath('/dashboard/play'); // Refresh Arena list
+    revalidatePath('/dashboard/play');
     return { success: true };
 }
 
@@ -116,10 +122,6 @@ export async function createLobby(formData: {
         const hostId = discordIdentity?.id;
 
         if (!hostId) {
-            // Fallback: If no discord identity, rely on UUID if possible, or fail if system strictly requires Discord Snowflake.
-            // Based on API route, it returned 400. We will try to be lenient if possible, or stick to strict if needed.
-            // User request implies "Harden", so strict is probably better, but let's check.
-            // API route: status 400.
             return { error: 'Discord identity missing. Please link Discord.' };
         }
 
@@ -139,14 +141,14 @@ export async function createLobby(formData: {
             }
         }
 
-        // 3. Create Lobby (Atomic-ish via subsequent calls, but fast enough for this context)
+        // 3. Create Lobby (Use Discord ID for creator_id)
         const { data: lobby, error: lobbyError } = await supabase
             .from('lobbies')
             .insert({
                 game_mode_id: gameModeData.id,
                 guild_id: gameModeData.guild_id,
                 status: status,
-                creator_id: user.id, // Auth UUID
+                creator_id: hostId, // Discord ID
                 is_private: is_private,
                 voice_required: voice_required,
                 is_tournament: is_tournament || false,
@@ -162,22 +164,19 @@ export async function createLobby(formData: {
             return { error: 'Failed to create lobby' };
         }
 
-        // 4. Auto-Join (If not tournament)
+        // 4. Auto-Join (Using Discord ID)
         if (!is_tournament) {
             const { error: joinError } = await supabase
                 .from('lobby_players')
                 .insert([{
                     lobby_id: lobby.id,
-                    user_id: user.id,
+                    user_id: hostId, // Discord ID
                     status: 'joined',
                     is_ready: false
                 }]);
 
             if (joinError) {
                 console.error('Auto-Join Error:', joinError);
-                // Note: Lobby exists but creator failed to join. 
-                // We return success for the lobby, but maybe warn? 
-                // Usually this shouldn't happen.
             }
         }
 

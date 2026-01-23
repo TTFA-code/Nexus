@@ -44,7 +44,7 @@ export async function getActiveLobbies(guildId: string) {
 
         const { data, error } = await supabase
             .from('lobbies')
-            .select('*, creator_id, lobby_players(user_id), creator:creator_id(username, avatar_url), game_modes(*, games(name, icon_url))')
+            .select('*, creator_id, lobby_players(user_id), creator:creator_id(username, avatar_url), game_modes(*, games(name, icon_url, created_by, creator:players!games_created_by_fkey(username)))')
             // Dynamic Admin Filtering:
             .or(`guild_id.eq.${guildId},guild_id.is.null`)
             .eq('is_tournament', true) // Only show Tournament Lobbies in Command Center

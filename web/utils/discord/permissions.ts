@@ -16,43 +16,51 @@ export interface DiscordRole {
     permissions: string;
 }
 
-export async function getDiscordPermissions(guildId: string, accessToken: string, retry = false): Promise<DiscordMember | null> {
-    try {
-        const res = await fetch(`${DISCORD_API_BASE}/users/@me/guilds/${guildId}/member`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            next: { revalidate: 60 } // Cache for 60s
-        });
+// Global Helper for 429 Handling
+async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response | null> {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const res = await fetch(url, options);
 
-        if (res.status === 429) {
-            if (!retry) {
+            if (res.status === 429) {
                 const retryAfter = res.headers.get('Retry-After');
-                const wait = retryAfter ? parseInt(retryAfter) * 1000 : 2000;
-                console.warn(`[DiscordPermissions] Rate Limited (429). Retrying in ${wait}ms...`);
-                await new Promise(r => setTimeout(r, wait));
-                return getDiscordPermissions(guildId, accessToken, true);
-            } else {
-                console.error(`[DiscordPermissions] Rate Limited (429) - Retry failed.`);
-                return null;
+                // Default to 1s if header missing, else parse (header is usually in seconds)
+                const waitMs = retryAfter ? (parseFloat(retryAfter) * 1000) : 1000 * (i + 1);
+                console.warn(`[DiscordAPI] Rate Limited (429). Retrying in ${waitMs}ms... (Attempt ${i + 1}/${retries})`);
+                await new Promise(r => setTimeout(r, waitMs));
+                continue;
             }
-        }
 
-        if (res.status === 403 || res.status === 401 || res.status === 404) {
-            console.warn(`[DiscordPermissions] User not in guild or access denied (${res.status}). Defaulting to null (Player).`);
-            return null;
+            return res;
+        } catch (e) {
+            console.error('[DiscordAPI] Network Error:', e);
+            if (i === retries - 1) return null; // Return null on final failure
+            await new Promise(r => setTimeout(r, 1000)); // Standard backoff for network err
         }
+    }
+    return null;
+}
 
-        if (!res.ok) {
-            console.error(`[DiscordPermissions] Failed to fetch member: ${res.status} ${res.statusText}`);
-            return null;
-        }
+export async function getDiscordPermissions(guildId: string, accessToken: string): Promise<DiscordMember | null> {
+    const url = `${DISCORD_API_BASE}/users/@me/guilds/${guildId}/member`;
+    const res = await fetchWithRetry(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        next: { revalidate: 60 }
+    });
 
-        return await res.json();
-    } catch (error) {
-        console.error('[DiscordPermissions] Exception fetching member:', error);
+    if (!res) return null;
+
+    if (res.status === 403 || res.status === 401 || res.status === 404) {
+        console.warn(`[DiscordPermissions] User not in guild or access denied (${res.status}).`);
+        return null; // Graceful fail
+    }
+
+    if (!res.ok) {
+        console.error(`[DiscordPermissions] Failed to fetch member: ${res.status} ${res.statusText}`);
         return null;
     }
+
+    return await res.json();
 }
 
 export async function getGuildRoles(guildId: string): Promise<DiscordRole[]> {
@@ -62,43 +70,31 @@ export async function getGuildRoles(guildId: string): Promise<DiscordRole[]> {
         return [];
     }
 
-    try {
-        const res = await fetch(`${DISCORD_API_BASE}/guilds/${guildId}/roles`, {
-            headers: {
-                Authorization: `Bot ${token}`,
-            },
-            next: { revalidate: 300 }, // Cache somewhat
-        });
+    const url = `${DISCORD_API_BASE}/guilds/${guildId}/roles`;
+    const res = await fetchWithRetry(url, {
+        headers: { Authorization: `Bot ${token}` },
+        next: { revalidate: 300 }
+    });
 
-        if (!res.ok) {
-            // If 403/404, bot likely not in guild
-            return [];
-        }
-
-        return await res.json();
-    } catch (error) {
-        console.error('[DiscordPermissions] Error fetching roles:', error);
+    if (!res || !res.ok) {
+        console.error('[DiscordPermissions] Failed to fetch roles (likely 403 or network).');
         return [];
     }
+
+    return await res.json();
 }
 
 export async function getGuildOwner(guildId: string): Promise<string | null> {
     const token = process.env.DISCORD_BOT_TOKEN;
     if (!token) return null;
 
-    try {
-        const res = await fetch(`${DISCORD_API_BASE}/guilds/${guildId}`, {
-            headers: {
-                Authorization: `Bot ${token}`,
-            },
-            next: { revalidate: 300 },
-        });
+    const url = `${DISCORD_API_BASE}/guilds/${guildId}`;
+    const res = await fetchWithRetry(url, {
+        headers: { Authorization: `Bot ${token}` },
+        next: { revalidate: 300 }
+    });
 
-        if (!res.ok) return null;
-        const guild = await res.json();
-        return guild.owner_id;
-
-    } catch (error) {
-        return null;
-    }
+    if (!res || !res.ok) return null;
+    const guild = await res.json();
+    return guild.owner_id;
 }

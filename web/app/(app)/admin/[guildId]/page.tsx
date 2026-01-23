@@ -26,7 +26,8 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
     // Fetch All Games (For Tournament Creator)
     const { data: allGames } = await supabase
         .from('games')
-        .select('*')
+        .select('id, name, icon_url, guild_id')
+        .or(`guild_id.eq.${guildId},guild_id.is.null`)
         .order('name')
 
     // Fetch Global Game Modes (Nexus Standard)

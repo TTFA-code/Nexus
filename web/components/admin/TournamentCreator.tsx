@@ -357,8 +357,10 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
                                 onChange={(e) => setNewModeGameId(e.target.value)}
                                 className="w-full bg-black/40 border border-white/10 rounded p-2 text-sm text-white font-mono focus:border-cyan-500/50 outline-none"
                             >
-                                {allGames.map(game => (
-                                    <option key={game.id} value={game.id}>{game.name}</option>
+                                {allGames.map((game: any) => (
+                                    <option key={game.id} value={game.id}>
+                                        {game.name} {game.guild_id ? '(Custom)' : '(Standard)'}
+                                    </option>
                                 ))}
                             </select>
                         </div>

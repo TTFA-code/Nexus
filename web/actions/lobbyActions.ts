@@ -369,21 +369,22 @@ export async function initializeMatchSequence(lobbyId: string): Promise<ActionRe
         const supabase = await createClient()
 
         // 1. Auth Check (Commander Only)
-        // Ideally we check if user is creator, but for speed, let's just allow any auth'd user 
-        // who is technically in the lobby (DB RLS or frontend will gate UI).
-        // Best practice: Check creator_id.
-
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Unauthorized.')
 
-        // Verify Commander Status (Optional but good)
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
+        const discordId = discordIdentity?.id
+
+        if (!discordId) throw new Error('Unauthorized: No Discord Link')
+
+        // Verify Commander Status (Comparing Discord ID)
         const { data: lobby } = await supabase
             .from('lobbies')
             .select('creator_id')
             .eq('id', lobbyId)
             .single()
 
-        if (!lobby || lobby.creator_id !== user.id) {
+        if (!lobby || lobby.creator_id !== discordId) { // Fixed Comparison
             throw new Error('Unauthorized: Only the Commander can initiate launch.')
         }
 
@@ -426,15 +427,22 @@ export async function acceptMatchHandshake(lobbyId: string): Promise<ActionRespo
             console.error('[HANDSHAKE] No user found.');
             throw new Error('Unauthorized')
         }
-        const userId = user.id
-        console.log(`[HANDSHAKE] User ${userId} accepted.`);
+
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
+        const discordId = discordIdentity?.id // Fixed ID Source
+
+        if (!discordId) {
+            throw new Error('Unauthorized: No Discord Link')
+        }
+
+        console.log(`[HANDSHAKE] User ${discordId} accepted.`);
 
         // 2. Set THIS user to ready
         const { error: updateError } = await supabase
             .from('lobby_players')
             .update({ is_ready: true })
             .eq('lobby_id', lobbyId)
-            .eq('user_id', userId)
+            .eq('user_id', discordId) // Fixed ID Usage
 
         if (updateError) {
             console.error('[HANDSHAKE] Update Error:', updateError);

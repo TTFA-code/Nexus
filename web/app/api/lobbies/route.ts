@@ -1,9 +1,14 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
-export const revalidate = 0
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
-const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3001';
+const BOT_API_URL = process.env.DISCORD_BOT_URL || 'http://localhost:3001';
+
+if (process.env.NODE_ENV === 'production' && BOT_API_URL.includes('localhost')) {
+    console.warn('⚠️  WARNING: Using localhost for DISCORD_BOT_URL in production environment!');
+}
 
 export async function GET() {
     const supabase = await createClient()
