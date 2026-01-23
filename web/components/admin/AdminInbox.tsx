@@ -17,18 +17,8 @@ interface AdminInboxProps {
 
 export const AdminInbox: React.FC<AdminInboxProps> = ({ guildId }) => {
 
-    // type AdminMatchReview = Database['public']['Views']['admin_match_review']['Row'];
-
-    interface AdminMatchReview {
-        match_id: string;
-        status: string;
-        guild_id: string;
-        game_mode_name: string;
-        reporter_name: string;
-        winner_team: number | null;
-        finished_at: string | null;
-        game_mode_id: string;
-    }
+    // Derived from RPC Return Type
+    type AdminMatchReview = Database['public']['Functions']['get_matches_for_review']['Returns'][number];
 
     const [reports, setReports] = useState<AdminMatchReview[]>([]);
     const [loading, setLoading] = useState(true);
@@ -41,13 +31,9 @@ export const AdminInbox: React.FC<AdminInboxProps> = ({ guildId }) => {
 
         setLoading(true);
         try {
-            // Updated Query using View
+            // Updated Query using Secure RPC
             const { data, error } = await supabase
-                .from('admin_match_review')
-                .select('*')
-                .eq('status', 'pending_approval')
-                .eq('guild_id', guildId) // Filter by Guild - Explicitly using URL param
-                .order('finished_at', { ascending: false });
+                .rpc('get_matches_for_review', { target_guild_id: guildId });
 
             if (error) {
                 console.error('Fetch Error:', error.message);

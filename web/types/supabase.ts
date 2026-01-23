@@ -711,6 +711,21 @@ export type Database = {
       approve_match: { Args: { p_match_id: string }; Returns: undefined }
       cancel_match: { Args: { p_match_id: string }; Returns: undefined }
       reject_match: { Args: { p_match_id: string }; Returns: undefined }
+      get_matches_for_review: {
+        Args: {
+          target_guild_id: string
+        }
+        Returns: {
+          match_id: string
+          status: string
+          guild_id: string
+          game_mode_name: string | null
+          reporter_name: string | null
+          winner_team: number | null
+          finished_at: string | null
+          started_at: string | null
+        }[]
+      }
       submit_match_report: {
         Args: {
           p_match_id: string
