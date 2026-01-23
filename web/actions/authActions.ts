@@ -57,29 +57,49 @@ export async function syncUserPermissions(guildId: string): Promise<{ success: b
     // 4. Upsert with Service Role
     try {
         const discordIdentity = user.identities?.find(i => i.provider === 'discord');
-        const discordId = discordIdentity?.id;
+        const discordId = String(discordIdentity?.id); // Strict String Cast
 
-        if (!discordId) {
+        if (!discordId || discordId === 'undefined') {
             console.error('[AuthActions] No Discord Identity found for user:', user.id);
             return { success: false, message: "No Discord Identity found." };
         }
 
-        const { error } = await adminDb
+        console.log('[AuthActions] Syncing with Service Role...');
+
+        // STEP A: Ensure Player Exists First
+        // We upsert the player to ensure the Foreign Key in server_members will satisfy
+        const { error: playerError } = await adminDb
+            .from('players')
+            .upsert({
+                user_id: discordId,
+                uuid_link: String(user.id), // Link Supabase Auth UUID
+                // We could sync avatar/username here too if we have it from metadata
+                username: user.user_metadata?.full_name || user.user_metadata?.name || 'Unknown',
+                avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture
+            }, { onConflict: 'user_id' });
+
+        if (playerError) {
+            console.error('[AuthActions] Failed to upsert player record:', playerError.message, playerError.hint);
+            return { success: false, message: `Database Sync Failed (Player): ${playerError.message}` };
+        }
+
+        // STEP B: Upsert Server Member
+        const { error: memberError } = await adminDb
             .from('server_members')
             .upsert({
-                user_id: discordId, // Use Discord ID (Text)
-                guild_id: guildId,
+                user_id: discordId,
+                guild_id: String(guildId), // Strict String Cast
                 role: role
             }, { onConflict: 'user_id,guild_id' });
 
-        if (error) {
-            console.error('[AuthActions] Failed to upsert server_member:', error);
-            return { success: false, message: "Database sync failed." };
+        if (memberError) {
+            console.error('[AuthActions] Failed to upsert server_member:', memberError.message, memberError.hint);
+            return { success: false, message: `Database Sync Failed (Member): ${memberError.message}` };
         } else {
             console.log(`[Auth Success] Service Role successfully provisioned @nexus-admin pass for user: ${discordId} (UUID: ${user.id})`);
             return { success: true, message: `Synced as ${role}`, role };
         }
-    } catch (err) {
+    } catch (err: any) {
         console.error('[AuthActions] DB Error:', err);
         return { success: false, message: "Internal Server Error during sync." };
     }

@@ -1,6 +1,19 @@
 "use server";
 
-const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3001';
+const BOT_API_URL = process.env.NEXT_PUBLIC_BOT_URL || 'http://localhost:3001';
+const BOT_API_KEY = process.env.BOT_API_KEY;
+
+// Common Headers Helper
+const getHeaders = () => {
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+    if (BOT_API_KEY) {
+        headers['x-api-key'] = BOT_API_KEY;
+    }
+    return headers;
+};
+
 
 export interface BotHealth {
     status: string;
@@ -18,7 +31,10 @@ export interface QueueInfo {
 
 export async function getBotHealth(): Promise<BotHealth> {
     try {
-        // const res = await fetch(`${BOT_API_URL}/health`, { cache: 'no-store' });
+        // const res = await fetch(`${BOT_API_URL}/health`, { 
+        //    cache: 'no-store',
+        //    headers: getHeaders()
+        // });
         // if (!res.ok) throw new Error('Failed to fetch health');
         // return await res.json();
         return { status: 'ok', bot_status: 'online' }; // MOCKED FOR NOW
@@ -30,7 +46,10 @@ export async function getBotHealth(): Promise<BotHealth> {
 
 export async function getQueues(): Promise<QueueInfo[]> {
     try {
-        const res = await fetch(`${BOT_API_URL}/queues`, { cache: 'no-store' });
+        const res = await fetch(`${BOT_API_URL}/queues`, {
+            cache: 'no-store',
+            headers: getHeaders()
+        });
         if (!res.ok) throw new Error('Failed to fetch queues');
         return await res.json();
     } catch (error) {
@@ -43,9 +62,7 @@ export async function joinQueue(userId: string, guildId: string, gameModeName: s
     try {
         const res = await fetch(`${BOT_API_URL}/queues/join`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: getHeaders(),
             body: JSON.stringify({ userId, guildId, gameModeName }),
         });
 
@@ -61,9 +78,7 @@ export async function leaveQueue(userId: string, guildId: string) {
     try {
         const res = await fetch(`${BOT_API_URL}/queues/leave`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: getHeaders(),
             body: JSON.stringify({ userId, guildId }),
         });
 

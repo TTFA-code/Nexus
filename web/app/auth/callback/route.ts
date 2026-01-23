@@ -29,16 +29,28 @@ export async function GET(request: Request) {
 
             // 1. Sync UUID Link (Existing)
             if (discordId) {
-                const { error: syncError } = await supabase
-                    .from('players')
-                    .upsert({
-                        user_id: discordId, // PK (Discord ID)
-                        username: user.user_metadata.full_name || 'Unknown',
-                        avatar_url: user.user_metadata.avatar_url
-                    }, { onConflict: 'user_id' })
+                // Initialize Admin Client for Service Role Clearance
+                const adminDb = createAdminClient()
+                console.log('[Auth Callback] Syncing Player with Service Role...')
 
-                if (syncError) {
-                    console.error('Auth Sync Error:', syncError)
+                if (adminDb) {
+                    // Upsert Player using Service Role to bypass RLS
+                    const { error: syncError } = await adminDb
+                        .from('players')
+                        .upsert({
+                            user_id: discordId, // PK (Discord ID)
+                            uuid_link: user.id, // Supabase Auth UUID
+                            username: user.user_metadata.full_name || 'Unknown',
+                            avatar_url: user.user_metadata.avatar_url
+                        }, { onConflict: 'user_id' })
+
+                    if (syncError) {
+                        console.error('Auth Sync Error (Player Upsert):', syncError)
+                    } else {
+                        console.log('[Auth Callback] Player Upsert Successful for:', discordId)
+                    }
+                } else {
+                    console.error("CRITICAL: Service Role Client could not be initialized in Auth Callback.")
                 }
 
                 // 2. Sync Discord Roles (New)

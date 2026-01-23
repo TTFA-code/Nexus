@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server'
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-const BOT_API_URL = process.env.DISCORD_BOT_URL || 'http://localhost:3001';
+const BOT_API_URL = process.env.NEXT_PUBLIC_BOT_URL || 'http://localhost:3001';
+const BOT_API_KEY = process.env.BOT_API_KEY;
 
 if (process.env.NODE_ENV === 'production' && BOT_API_URL.includes('localhost')) {
-    console.warn('⚠️  WARNING: Using localhost for DISCORD_BOT_URL in production environment!');
+    console.warn('⚠️  WARNING: Using localhost for BOT_API_URL in production environment!');
 }
 
 export async function GET() {
@@ -25,7 +26,13 @@ export async function GET() {
 
         if (discordId) {
             try {
-                const res = await fetch(`${BOT_API_URL}/user/${discordId}/guilds`, { cache: 'no-store' })
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (BOT_API_KEY) headers['x-api-key'] = BOT_API_KEY;
+
+                const res = await fetch(`${BOT_API_URL}/user/${discordId}/guilds`, {
+                    cache: 'no-store',
+                    headers
+                })
                 if (res.ok) {
                     const data = await res.json()
                     allowedGuilds = data.guilds || []
