@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 export default function Dashboard() {
     console.log("DEBUG: Dashboard root hit");
+    console.log('Dashboard Loaded Successfully');
     // redirect('/dashboard/play');
     return (
         <div className="p-10 text-white">
