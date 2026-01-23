@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { getDiscordPermissions, getGuildRoles, getGuildOwner } from '@/utils/discord/permissions';
 
-import { createAdminClient } from '@/utils/supabase/admin';
+import { createAdminClient } from '@/lib/supabaseAdmin';
 
 export async function syncUserPermissions(guildId: string): Promise<{ success: boolean, message?: string, role?: string }> {
     const supabase = await createClient(); // Keep for Auth Session
@@ -64,6 +64,7 @@ export async function syncUserPermissions(guildId: string): Promise<{ success: b
             return { success: false, message: "No Discord Identity found." };
         }
 
+        console.log('Using Admin Client for Sync...');
         console.log('[AuthActions] Syncing with Service Role...');
 
         // STEP A: Ensure Player Exists First
@@ -79,7 +80,7 @@ export async function syncUserPermissions(guildId: string): Promise<{ success: b
             }, { onConflict: 'user_id' });
 
         if (playerError) {
-            console.error('[AuthActions] Failed to upsert player record:', playerError.message, playerError.hint);
+            console.error('[AuthActions] Failed to upsert player record:', playerError);
             return { success: false, message: `Database Sync Failed (Player): ${playerError.message}` };
         }
 
@@ -93,7 +94,7 @@ export async function syncUserPermissions(guildId: string): Promise<{ success: b
             }, { onConflict: 'user_id,guild_id' });
 
         if (memberError) {
-            console.error('[AuthActions] Failed to upsert server_member:', memberError.message, memberError.hint);
+            console.error('[AuthActions] Failed to upsert server_member:', memberError);
             return { success: false, message: `Database Sync Failed (Member): ${memberError.message}` };
         } else {
             console.log(`[Auth Success] Service Role successfully provisioned @nexus-admin pass for user: ${discordId} (UUID: ${user.id})`);
