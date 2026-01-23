@@ -25,7 +25,7 @@ export default function LandingPage() {
         {/* Buttons */}
         <div className="flex flex-col md:flex-row gap-4 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
           <Button asChild className="rounded-full px-8 py-7 text-lg bg-[#5865F2] hover:bg-[#4752C4] shadow-[0_0_20px_rgba(88,101,242,0.4)] transition-all hover:scale-105 active:scale-95 text-white">
-            <Link href="/login">
+            <Link href="/login?next=/dashboard/arena">
               Login with Discord
             </Link>
           </Button>

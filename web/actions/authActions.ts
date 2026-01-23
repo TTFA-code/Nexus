@@ -56,7 +56,7 @@ export async function syncUserPermissions(guildId: string): Promise<{ success: b
 
     // 4. Upsert with Service Role
     try {
-        const { error } = await (adminDb as any)
+        const { error } = await adminDb
             .from('server_members')
             .upsert({
                 user_id: user.id,
@@ -87,7 +87,7 @@ export async function disconnectAdmin(guildId: string): Promise<{ success: boole
     if (!session?.user) return { success: false, message: "Unauthorized" };
 
     try {
-        const { error } = await (adminDb as any)
+        const { error } = await adminDb
             .from('server_members')
             .update({ role: 'player' })
             .eq('user_id', session.user.id)

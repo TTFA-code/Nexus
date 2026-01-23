@@ -6,7 +6,7 @@ export default function LoginPage() {
     const supabase = createClient()
 
     const handleLogin = async () => {
-        const redirectTo = `${location.origin}/auth/callback?next=/dashboard`
+        const redirectTo = `${location.origin}/auth/callback?next=/dashboard/arena`
         console.log('OAuth Redirect URL:', redirectTo)
 
         await supabase.auth.signInWithOAuth({

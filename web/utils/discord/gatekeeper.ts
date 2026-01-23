@@ -148,7 +148,7 @@ export async function verifyNexusAdmin(guildId: string): Promise<{ isAuthorized:
 
     try {
         // Query server_members
-        const { data: member, error: dbError } = await (supabase as any)
+        const { data: member, error: dbError } = await supabase
             .from('server_members')
             .select('role')
             .eq('user_id', user.id)
