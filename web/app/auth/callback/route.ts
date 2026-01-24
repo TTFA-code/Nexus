@@ -39,7 +39,7 @@ export async function GET(request: Request) {
                         .from('players')
                         .upsert({
                             user_id: discordId, // PK (Discord ID)
-                            uuid_link: user.id, // Supabase Auth UUID
+                            uuid_link: String(user.id), // Supabase Auth UUID (explicit string conversion)
                             username: user.user_metadata.full_name || 'Unknown',
                             avatar_url: user.user_metadata.avatar_url
                         }, { onConflict: 'user_id' })
