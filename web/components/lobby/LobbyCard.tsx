@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react'
-import { Users, Swords, Lock, Key, Trophy, User, Loader2, Mic, Timer, Trash2 } from 'lucide-react'
+import { Users, Swords, Lock, Key, Trophy, User, Loader2, Mic, Timer, Trash2, CheckCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { JoinButton } from './JoinButton'
@@ -225,9 +225,37 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
 
                 {/* Actions */}
                 <div className="flex flex-col gap-2">
-                    {/* STRICT PRIORITY: MEMBER -> VISITOR */}
+                    {/* STRICT PRIORITY: COMMANDER (not joined) -> MEMBER -> VISITOR */}
                     {(() => {
-                        // 1. Member: Re-entry Logic (Commander also falls here if joined)
+                        // 1. Commander who hasn't joined: Show "READY UP" button
+                        if (isCommander && !isUserJoined) {
+                            return (
+                                <button
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        setIsJoining(true);
+                                        try {
+                                            const result = await joinLobby(lobby.id);
+                                            if (result.success) {
+                                                toast.success("You're ready!");
+                                                router.push(`/dashboard/play/lobby/${lobby.id}`);
+                                            } else {
+                                                toast.error(result.message || 'Failed to ready up');
+                                            }
+                                        } finally {
+                                            setIsJoining(false);
+                                        }
+                                    }}
+                                    disabled={isJoining}
+                                    className="w-full py-3 rounded-xl bg-[#ccff00] hover:bg-[#b3e600] text-black font-mono font-bold tracking-widest text-xs uppercase flex items-center justify-center gap-2 border border-[#ccff00]/50 shadow-[0_0_15px_rgba(204,255,0,0.3)] hover:shadow-[0_0_25px_rgba(204,255,0,0.5)] transition-all"
+                                >
+                                    {isJoining ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                    READY UP
+                                </button>
+                            );
+                        }
+
+                        // 2. Member: Re-entry Logic (Commander also falls here if joined)
                         if (isUserJoined) {
                             return (
                                 <button
@@ -243,7 +271,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                             );
                         }
 
-                        // 2. Visitor: Join Action
+                        // 3. Visitor: Join Action
                         return (
                             <JoinButton
                                 lobbyId={lobby.id}
@@ -258,7 +286,21 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
                         );
                     })()}
 
-                    {/* Additional Tournament/Host Status Indicators can go below or be integrated if preferred, keeping it simple as per request */}
+                    {/* Delete Button (Commander Only) */}
+                    {isCommander && (
+                        <button
+                            onClick={handleDissolveWrapped}
+                            disabled={isDissolving}
+                            className="w-full py-2.5 rounded-xl bg-red-900/20 hover:bg-red-900/30 text-red-400 font-mono font-bold tracking-widest text-xs uppercase flex items-center justify-center gap-2 border border-red-500/30 hover:border-red-500/50 transition-all group/delete"
+                        >
+                            {isDissolving ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Trash2 className="w-4 h-4 group-hover/delete:animate-pulse" />
+                            )}
+                            {isDissolving ? 'TERMINATING SIGNAL...' : 'DISSOLVE LOBBY'}
+                        </button>
+                    )}
                 </div>
             </div>
 

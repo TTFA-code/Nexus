@@ -233,7 +233,10 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                         <Button
                             variant="ghost"
                             className="w-full text-zinc-500 hover:text-white hover:bg-white/5 tracking-widest text-xs uppercase"
-                            onClick={resetForm}
+                            onClick={() => {
+                                resetForm();
+                                window.location.href = '/dashboard/play';
+                            }}
                         >
                             RETURN TO ARENA
                         </Button>
