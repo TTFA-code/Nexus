@@ -116,7 +116,7 @@ export function DiscoveryInterface({ guilds, connectedGuildIds }: { guilds: Guil
                             </div>
 
                             {isConnected ? (
-                                <div className="mt-auto flex gap-2 w-full">
+                                <div className="mt-auto flex flex-col sm:flex-row gap-2 w-full">
                                     <Link
                                         href={`/dashboard/${guild.id}/admin`}
                                         className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/20 transition-all group-hover/card:shadow-[0_0_15px_-5px_cyan]"
@@ -147,7 +147,7 @@ export function DiscoveryInterface({ guilds, connectedGuildIds }: { guilds: Guil
                                     onClick={() => handleScan(guild.id)}
                                     disabled={!!scanning}
                                     className={cn(
-                                        "mt-auto flex items-center justify-center gap-2 w-full py-2 rounded-lg text-sm font-bold transition-all",
+                                        "mt-auto flex items-center justify-center gap-2 w-full py-3 sm:py-2 rounded-lg text-sm font-bold transition-all",
                                         isScanning
                                             ? "bg-yellow-500/20 text-yellow-500 cursor-wait"
                                             : "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"

@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS public.ready_checks (
 
 -- Player MMR (Per Game, Per Player)
 CREATE TABLE IF NOT EXISTS public.player_mmr (
-    user_id uuid NOT NULL, -- Supabase Auth UUID (from players.uuid_link)
+    user_id uuid NOT NULL REFERENCES public.players(uuid_link) ON DELETE CASCADE,
     game_id uuid NOT NULL REFERENCES public.games(id) ON DELETE CASCADE,
     mmr integer DEFAULT 1000,
     updated_at timestamptz DEFAULT now(),

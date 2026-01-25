@@ -20,12 +20,25 @@ export interface MatchHistoryItem {
     finishedAt: string;
 }
 
-export async function getUserProfileData(userId: string) {
+export async function getUserProfileData(userUuid: string) {
     const supabase = await createClient();
 
     try {
-        // 1. Fetch Match History
-        // We need matches where this user played.
+        // 0. Resolve Discord ID from UUID (required for Match History link)
+        const { data: playerRecord, error: playerError } = await supabase
+            .from('players')
+            .select('user_id, username')
+            .eq('uuid_link', userUuid)
+            .single();
+
+        if (playerError || !playerRecord) {
+            console.error("Profile Error: Could not resolve player from UUID", userUuid);
+            return { stats: null, history: [] };
+        }
+
+        const discordId = playerRecord.user_id;
+
+        // 1. Fetch Match History (Uses Discord ID)
         const { data: matchHistoryData, error: historyError } = await supabase
             .from('match_players')
             .select(`
@@ -43,17 +56,12 @@ export async function getUserProfileData(userId: string) {
                     )
                 )
             `)
-            .eq('user_id', userId)
+            .eq('user_id', discordId)
             .eq('matches.status', 'finished')
             .order('matches(finished_at)', { ascending: false });
-        // Note: ordering on joined table might start being tricky in Supabase logic, 
-        // usually we sort the parent or use a dedicated RPC/View if complex. 
-        // For now, let's try the simple join sort or sort in JS if needed. 
-        // Actually, Supabase supports ordering by joined column: .order('finished_at', { foreignTable: 'matches', ascending: false })
 
         if (historyError) {
             console.error('Error fetching match history:', historyError);
-            // Fallback to empty if error
             return { stats: null, history: [] };
         }
 
@@ -68,8 +76,6 @@ export async function getUserProfileData(userId: string) {
             const winnerTeam = match.winner_team;
 
             let result: 'Victory' | 'Defeat' | 'Draw' = 'Draw';
-
-            // Normalize winnerTeam (handle potential null or string)
             const wTeam = Number(winnerTeam);
 
             if (wTeam === 0) {
@@ -106,15 +112,14 @@ export async function getUserProfileData(userId: string) {
             };
         });
 
-        // Sort JS side to be safe/consistent since nested ordering can be finicky
         history.sort((a, b) => new Date(b.finishedAt).getTime() - new Date(a.finishedAt).getTime());
 
         // 3. Calculate Win Rate
         const winRate = totalMatches > 0 ? ((wins / totalMatches) * 100) : 0;
 
-        // 4. Fetch MMRs (Combat Ratings)
+        // 4. Fetch MMRs (Uses UUID)
         const { data: mmrData } = await supabase
-            .from('player_mmr' as any)
+            .from('player_mmr')
             .select(`
                 mmr,
                 game_id,
@@ -122,7 +127,7 @@ export async function getUserProfileData(userId: string) {
                     name
                 )
             `)
-            .eq('user_id', userId);
+            .eq('user_id', userUuid);
 
         // Map to a cleaner structure
         const mmrs = (mmrData as any[])?.map((m: any) => ({
@@ -130,16 +135,14 @@ export async function getUserProfileData(userId: string) {
             value: m.mmr
         })) || [];
 
-        // For backwards compatibility/simplicity, we can still expose a "primary" mmr if needed,
-        // but it's better to expose the list.
-        // Let's attach the list to stats.
 
-        // 5. Fetch MMR History trend
-        // 5. Fetch MMR History trend
+        // 5. Fetch MMR History trend (Uses UUID or Discord ID? Schema says player_uuid NOT NULL. 
+        // Need to check how 'submit_match_report' inserts it.
+        // It inserts p_record.uuid_link::uuid. So it uses UUID!
         const { data: rawTrendData } = await supabase
             .from('mmr_history')
             .select('new_mmr, created_at, match_id, change')
-            .eq('player_uuid', userId)
+            .eq('player_uuid', userUuid)
             .order('created_at', { ascending: true });
 
         // Enrich with Game Names manually to avoid deep join issues

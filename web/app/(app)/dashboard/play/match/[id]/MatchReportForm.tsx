@@ -69,7 +69,7 @@ export default function MatchReportForm({ matchId, myStats, opponentStats, userI
             <h3 className="text-center text-zinc-400 font-mono uppercase tracking-widest mb-8">Report Results</h3>
 
             <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-emerald-500 uppercase tracking-wider block text-center">My Score</label>
                         <Input

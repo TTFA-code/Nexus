@@ -129,9 +129,9 @@ export default function ProfilePage() {
                             </div>
                             <h1 className="text-5xl font-black text-white mb-2 tracking-tight font-display">{displayName}</h1>
 
-                            {/* MMR Tag(s) */}
+                            {/* MMR Tag(s) - Only show if matches played */}
                             <div className="flex flex-wrap items-center gap-3 mb-6">
-                                {stats?.mmrList && stats.mmrList.length > 0 ? (
+                                {stats?.totalMatches && stats.totalMatches > 0 && stats?.mmrList && stats.mmrList.length > 0 ? (
                                     stats.mmrList.map((m, idx) => (
                                         <span key={idx} className="inline-flex items-center gap-2 px-3 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono font-bold text-sm">
                                             <Swords className="w-3 h-3" />

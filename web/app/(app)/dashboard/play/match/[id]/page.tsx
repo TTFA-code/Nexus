@@ -87,7 +87,7 @@ export default async function MatchReportPage(props: MatchPageProps) {
     const mmrChangeText = mmrChange !== null ? `${mmrChange >= 0 ? "+" : ""}${mmrChange}` : "";
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-4 max-w-4xl mx-auto space-y-12">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-4 max-w-4xl mx-auto space-y-8 md:space-y-12">
 
             {/* HEADER */}
             {!isFinished && (
@@ -104,16 +104,16 @@ export default async function MatchReportPage(props: MatchPageProps) {
             {/* RESULT BANNER */}
             {isFinished && (
                 isDraw ? (
-                    <div className="w-full bg-amber-900/20 border border-amber-500/50 text-amber-500 p-8 text-center flex items-center justify-center gap-4 animate-pulse border-dashed">
-                        <Handshake className="w-12 h-12" />
-                        <span className="text-6xl font-black tracking-widest">DRAW {mmrChangeText}</span>
+                    <div className="w-full bg-amber-900/20 border border-amber-500/50 text-amber-500 p-6 md:p-8 text-center flex items-center justify-center gap-4 animate-pulse border-dashed">
+                        <Handshake className="w-8 h-8 md:w-12 md:h-12" />
+                        <span className="text-3xl md:text-6xl font-black tracking-widest">DRAW {mmrChangeText}</span>
                     </div>
                 ) : won ? (
-                    <div className="w-full bg-emerald-500/20 border border-emerald-500 text-emerald-500 p-8 text-center text-6xl font-black tracking-widest animate-pulse">
+                    <div className="w-full bg-emerald-500/20 border border-emerald-500 text-emerald-500 p-6 md:p-8 text-center text-3xl md:text-6xl font-black tracking-widest animate-pulse">
                         VICTORY {mmrChangeText}
                     </div>
                 ) : (
-                    <div className="w-full bg-red-500/20 border border-red-500 text-red-500 p-8 text-center text-6xl font-black tracking-widest animate-pulse">
+                    <div className="w-full bg-red-500/20 border border-red-500 text-red-500 p-6 md:p-8 text-center text-3xl md:text-6xl font-black tracking-widest animate-pulse">
                         DEFEAT {mmrChangeText}
                     </div>
                 )
@@ -126,22 +126,22 @@ export default async function MatchReportPage(props: MatchPageProps) {
             )}
 
             {/* VERSUS DISPLAY */}
-            <div className="flex items-center justify-center gap-12 sm:gap-24 w-full">
+            <div className="flex items-center justify-center gap-4 md:gap-24 w-full">
                 {/* ME */}
                 <div className="flex flex-col items-center gap-4">
-                    <div className="relative w-32 h-32 rounded-full border-4 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)] overflow-hidden bg-zinc-900">
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)] overflow-hidden bg-zinc-900">
                         <Image
                             src={myPlayer.player?.avatar_url || "/placeholder-avatar.png"}
                             alt="Me" fill className="object-cover"
                         />
                     </div>
                     <div className="text-center">
-                        <div className="font-bold text-xl text-white">{myPlayer.player?.username || "Me"}</div>
-                        {isFinished && <div className="text-4xl font-mono text-emerald-400 mt-2">{myStats?.score ?? 0}</div>}
+                        <div className="font-bold text-lg md:text-xl text-white">{myPlayer.player?.username || "Me"}</div>
+                        {isFinished && <div className="text-3xl md:text-4xl font-mono text-emerald-400 mt-2">{myStats?.score ?? 0}</div>}
                     </div>
                 </div>
 
-                <div className="text-6xl font-black text-zinc-700 italic">VS</div>
+                <div className="text-4xl md:text-6xl font-black text-zinc-700 italic">VS</div>
 
                 {/* OPPONENT */}
                 <div className="flex flex-col items-center gap-4">
