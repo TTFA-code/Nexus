@@ -63,6 +63,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive 
     const router = useRouter()
     const isCommander = currentUserId && lobby.creator_id === currentUserId
     const [showPasswordModal, setShowPasswordModal] = useState(false)
+    const [showTournamentWarning, setShowTournamentWarning] = useState(false) // NEW: Warning state
     const [isDissolving, setIsDissolving] = useState(false)
     const [isJoining, setIsJoining] = useState(false);
     const isUserJoined = lobby.lobby_players?.some((p: any) => String(p.user_id) === String(currentUserId));
@@ -238,24 +239,18 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive 
                                 <button
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        setIsJoining(true);
-                                        try {
-                                            const result = await joinLobby(lobby.id);
-                                            if (result.success) {
-                                                toast.success("You're ready!");
-                                                router.push(`/dashboard/play/lobby/${lobby.id}`);
-                                            } else {
-                                                toast.error(result.message || 'Failed to ready up');
-                                            }
-                                        } finally {
-                                            setIsJoining(false);
+                                        // NEW: Check for Tournament Confirmation
+                                        if (lobby.is_tournament) {
+                                            setShowTournamentWarning(true);
+                                            return;
                                         }
+                                        executeJoin();
                                     }}
                                     disabled={isJoining}
                                     className="w-full py-3 rounded-xl bg-[#ccff00] hover:bg-[#b3e600] text-black font-mono font-bold tracking-widest text-xs uppercase flex items-center justify-center gap-2 border border-[#ccff00]/50 shadow-[0_0_15px_rgba(204,255,0,0.3)] hover:shadow-[0_0_25px_rgba(204,255,0,0.5)] transition-all"
                                 >
                                     {isJoining ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                    READY UP
+                                    {lobby.is_tournament ? "JOIN AS PLAYER" : "READY UP"}
                                 </button>
                             );
                         }
@@ -364,8 +359,64 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive 
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            {/* TOURNAMENT CONFIRMATION MODAL */}
+            <Dialog open={showTournamentWarning} onOpenChange={setShowTournamentWarning}>
+                <DialogContent className="bg-black/90 backdrop-blur-xl border border-fuchsia-500/30 text-white shadow-2xl sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-fuchsia-500 font-orbitron tracking-wide">
+                            <Trophy className="w-5 h-5" />
+                            CONFIRM PARTICIPATION
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="py-4">
+                        <p className="text-zinc-300 text-sm leading-relaxed">
+                            You are the <strong>Tournament Administrator</strong>.
+                        </p>
+                        <p className="mt-2 text-white font-bold text-sm bg-fuchsia-500/10 border border-fuchsia-500/20 p-3 rounded-lg">
+                            ⚠️ You are about to enter as a PLAYER.
+                        </p>
+                        <p className="mt-2 text-zinc-400 text-xs">
+                            Confirm only if you intend to compete in this bracket.
+                        </p>
+                    </div>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <button
+                            onClick={() => setShowTournamentWarning(false)}
+                            className="px-4 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs font-mono uppercase tracking-widest border border-white/10"
+                        >
+                            CANCEL
+                        </button>
+                        <button
+                            onClick={executeJoin}
+                            className="px-4 py-2 rounded bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-fuchsia-500/20 flex justify-center items-center gap-2 font-orbitron uppercase tracking-widest"
+                            disabled={isJoining}
+                        >
+                            {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                            CONFIRM ENTRY
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
+
+    async function executeJoin() {
+        setIsJoining(true);
+        try {
+            const result = await joinLobby(lobby.id);
+            if (result.success) {
+                toast.success("You're ready!");
+                router.push(`/dashboard/play/lobby/${lobby.id}`);
+            } else {
+                toast.error(result.message || 'Failed to ready up');
+            }
+        } finally {
+            setIsJoining(false);
+            setShowTournamentWarning(false);
+        }
+    }
 
     async function handlePrivateJoin() {
         if (!passwordInput) {
