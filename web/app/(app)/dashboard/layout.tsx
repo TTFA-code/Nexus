@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Swords, FileText, Trophy } from 'lucide-react';
+import { Swords, FileText, Trophy, Shield } from 'lucide-react';
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function DashboardLayout({
@@ -14,11 +14,11 @@ export default function DashboardLayout({
 
     const tabs = [
         { name: 'The Arena', href: '/dashboard/play', icon: Swords },
-        { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
+        { name: 'Command Center', href: '/dashboard/discovery', icon: Shield },
         { name: 'Profile', href: '/dashboard/profile/me', icon: FileText },
     ];
 
-    const showHeader = !pathname.includes('/admin') && !pathname.includes('/leaderboard') && !pathname.includes('/discovery');
+    const showHeader = !pathname.includes('/admin') && !pathname.includes('/leaderboard');
 
     return (
         <div className="min-h-screen bg-[#0a0a0f]/50 backdrop-blur-md text-white">

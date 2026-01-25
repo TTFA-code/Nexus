@@ -72,8 +72,8 @@ export default async function MatchReportPage(props: MatchPageProps) {
             .from("mmr_history")
             .select("change")
             .eq("match_id", matchId)
-            // Schema Audit: mmr_history.player_uuid actually stores Discord IDs (from match_players)
-            .eq("player_uuid", discordId)
+            // Fix: mmr_history stores Auth UUID, not Discord ID
+            .eq("player_uuid", user.id)
             .limit(1)
             .maybeSingle();
 
@@ -145,7 +145,7 @@ export default async function MatchReportPage(props: MatchPageProps) {
 
                 {/* OPPONENT */}
                 <div className="flex flex-col items-center gap-4">
-                    <div className="relative w-32 h-32 rounded-full border-4 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)] overflow-hidden bg-zinc-900">
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)] overflow-hidden bg-zinc-900">
                         <Image
                             src={opponent?.player?.avatar_url || "/placeholder-avatar.png"}
                             alt="Opponent" fill className="object-cover"
