@@ -390,14 +390,6 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                 }
                             })()}
                         </div>
-                        <Button
-                            onClick={onLeave}
-                            className="h-10 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-400 font-medium text-xs sm:text-sm hover:text-white hover:border-zinc-600 hover:bg-zinc-900 transition-all duration-200"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">RETURN TO ARENA</span>
-                            <span className="sm:hidden">BACK</span>
-                        </Button>
                     </div>
                 </div>
 
