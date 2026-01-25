@@ -19,6 +19,12 @@ export function MatchReporting() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        // Get Discord ID to match match_players.user_id (TEXT)
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+        const discordId = discordIdentity?.id;
+
+        if (!discordId) return;
+
         // Fetch ongoing matches
         const { data } = await supabase
             .from('matches')
@@ -31,10 +37,9 @@ export function MatchReporting() {
             .order('started_at', { ascending: false });
 
         if (data) {
-            // Filter locally for matches where the user is a player
-            // This is a temp fix until we do a proper join filter or RPC
+            // Filter for matches where the user is a player
             const myMatches = data.filter(m =>
-                m.match_players.some((mp: any) => mp.user_id === user.id)
+                m.match_players.some((mp: any) => mp.user_id === discordId) // Use Discord ID
             );
             setMatches(myMatches);
         }
