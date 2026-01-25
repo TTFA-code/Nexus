@@ -23,6 +23,12 @@ export function GlitchSidebar() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            // Get Discord ID to match server_members.user_id
+            const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+            const discordId = discordIdentity?.id;
+
+            if (!discordId) return;
+
             // Emergency Local Bypass (Matches Gatekeeper)
             if (activeGuildId === "547362530826125313") {
                 // We can either bypass or strict check. 
@@ -37,7 +43,7 @@ export function GlitchSidebar() {
             const { data: member } = await (supabase as any)
                 .from('server_members')
                 .select('role')
-                .eq('user_id', user.id)
+                .eq('user_id', discordId) // Use Discord ID, not UUID
                 .eq('guild_id', activeGuildId)
                 .single();
 

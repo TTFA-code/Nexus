@@ -13,18 +13,26 @@ export default async function Dashboard() {
     }
 
     // 2. Fetch Guilds via server_members
-    // We select guilds that the user is a member of
-    const { data: members } = await supabase
-        .from('server_members')
-        .select(`
-            role,
-            guild_id,
-            guilds (
-                name,
-                guild_id
-            )
-        `)
-        .eq('user_id', user.id)
+    // Get Discord ID to match server_members.user_id (TEXT)
+    const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+    const discordId = discordIdentity?.id;
+
+    let members: any[] = [];
+    if (discordId) {
+        const { data } = await supabase
+            .from('server_members')
+            .select(`
+                role,
+                guild_id,
+                guilds (
+                    name,
+                    guild_id
+                )
+            `)
+            .eq('user_id', discordId); // Use Discord ID, not UUID
+
+        members = data || [];
+    }
 
     // Extract guilds from the relationship
     const guilds = members?.map(m => m.guilds).filter(Boolean) || []

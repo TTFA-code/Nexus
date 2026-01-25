@@ -19,11 +19,17 @@ export function MobileNav() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            // Get Discord ID to match server_members.user_id
+            const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+            const discordId = discordIdentity?.id;
+
+            if (!discordId) return;
+
             // Check DB
             const { data: member } = await supabase
                 .from('server_members')
                 .select('role')
-                .eq('user_id', user.id)
+                .eq('user_id', discordId) // Use Discord ID, not UUID
                 .eq('guild_id', activeGuildId)
                 .single();
 
