@@ -28,19 +28,25 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
 
     let guilds: any[] = [];
     if (user) {
-        const { data: members } = await (supabase as any)
-            .from('server_members')
-            .select('guild_id')
-            .eq('user_id', user.id)
-            .eq('role', 'nexus-admin');
+        // Get Discord ID to match server_members.user_id (TEXT)
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+        const discordId = discordIdentity?.id;
 
-        if (members && members.length > 0) {
-            const guildIds = members.map((m: any) => m.guild_id);
-            const { data: guildsData } = await supabase
-                .from('guilds')
-                .select('guild_id, name, premium_tier')
-                .in('guild_id', guildIds);
-            guilds = guildsData || [];
+        if (discordId) {
+            const { data: members } = await (supabase as any)
+                .from('server_members')
+                .select('guild_id')
+                .eq('user_id', discordId) // Use Discord ID, not UUID
+                .eq('role', 'nexus-admin');
+
+            if (members && members.length > 0) {
+                const guildIds = members.map((m: any) => m.guild_id);
+                const { data: guildsData } = await supabase
+                    .from('guilds')
+                    .select('guild_id, name, premium_tier')
+                    .in('guild_id', guildIds);
+                guilds = guildsData || [];
+            }
         }
     }
 

@@ -17,13 +17,17 @@ export default function PlayPage() {
     const router = useRouter();
     const supabase = createClient();
 
-    // 1. Fetch User
+    // 1. Fetch User Discord ID
     useEffect(() => {
         async function getUser() {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                // FIX: Use UUID to match lobby_players and creator_id
-                setCurrentUserId(user.id);
+                // Get Discord ID (TEXT) to match lobby creator_id and lobby_players
+                const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+                const discordId = discordIdentity?.id;
+                if (discordId) {
+                    setCurrentUserId(discordId);
+                }
             }
         }
         getUser();
