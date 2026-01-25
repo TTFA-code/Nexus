@@ -54,16 +54,17 @@ interface LobbyCardProps {
     lobby: any
     variant?: 'tournament' | 'hosted' | 'default'
     currentUserId: string | null
+    isActive?: boolean // NEW: Whether this is user's active lobby
     onDissolve: (lobbyId: string, e: React.MouseEvent) => void
     onJoin?: (lobbyId: string, password?: string) => void
 }
 
-export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolve, onJoin }: LobbyCardProps) {
-    const router = useRouter();
+export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive = false, onDissolve, onJoin }: LobbyCardProps) {
+    const router = useRouter()
     const isCommander = currentUserId && lobby.creator_id === currentUserId
+    const [showPasswordModal, setShowPasswordModal] = useState(false)
     const [isDissolving, setIsDissolving] = useState(false)
-
-    // Check if user is in the lobby_players list (Robust String Comparison)
+    const [isJoining, setIsJoining] = useState(false);
     const isUserJoined = lobby.lobby_players?.some((p: any) => String(p.user_id) === String(currentUserId));
 
     // DEBUG: Log values to help diagnose button issue
@@ -79,9 +80,8 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
     }
 
     // --- PASSWORD MODAL STATE ---
-    const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordInput, setPasswordInput] = useState("");
-    const [isJoining, setIsJoining] = useState(false);
+    const [passwordError, setPasswordError] = useState("");
     const [isShakeError, setIsShakeError] = useState(false);
 
     // DEBUG: Diagnose Lockout
@@ -141,8 +141,18 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
     }
 
     return (
-        <div className={`group relative overflow-hidden rounded-3xl bg-black/40 border ${borderColor} ${hoverColor} ${glowShadow} transition-all duration-300 backdrop-blur-md`}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+        <div className={`group relative overflow-hidden rounded-3xl bg-black/40 border ${isActive ? 'border-green-500/60 shadow-[0_0_30px_rgba(34,197,94,0.3)]' : `${borderColor} ${glowShadow}`} ${!isActive && hoverColor} transition-all duration-300 backdrop-blur-md ${isActive && 'ring-2 ring-green-500/20'}`}>
+            <div className={`absolute inset-0 bg-gradient-to-br ${isActive ? 'from-green-500/10' : bgGradient} to-transparent ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} />
+
+            {/* IN LOBBY Badge (Top Left) */}
+            {isActive && (
+                <div className="absolute top-4 left-4 z-20 animate-in slide-in-from-left duration-300">
+                    <div className="px-3 py-1 bg-green-500/20 backdrop-blur-sm border border-green-500/40 rounded-full flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-green-400 text-xs font-bold uppercase tracking-wider">IN LOBBY</span>
+                    </div>
+                </div>
+            )}
 
             {/* Voice Indicator (Top Right) */}
             {lobby.require_vc && (

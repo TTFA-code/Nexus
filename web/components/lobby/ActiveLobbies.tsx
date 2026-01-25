@@ -20,6 +20,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal';
 interface ActiveLobbiesProps {
     lobbies: any[]
     currentUserId: string | null
+    activeLobbyId?: string | null // NEW: Active lobby ID
     handleDissolve?: (id: string) => void
     onJoin?: (lobbyId: string) => void
 }
@@ -27,6 +28,7 @@ interface ActiveLobbiesProps {
 export function ActiveLobbies({
     lobbies,
     currentUserId,
+    activeLobbyId, // NEW: Receive active lobby ID
     handleDissolve,
     onJoin
 }: ActiveLobbiesProps) {
@@ -79,12 +81,14 @@ export function ActiveLobbies({
     );
 
     const renderLobbyCard = (lobby: any, variant: 'tournament' | 'hosted' | 'default') => {
+        const isActive = activeLobbyId === lobby.id; // Check if this is the active lobby
         return (
             <LobbyCard
                 key={lobby.id}
                 lobby={lobby}
                 variant={variant}
                 currentUserId={currentUserId}
+                isActive={isActive} // NEW: Pass active state
                 onDissolve={initiateDissolve}
                 onJoin={onJoin}
             />

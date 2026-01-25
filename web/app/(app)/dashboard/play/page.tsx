@@ -13,6 +13,7 @@ export default function PlayPage() {
     const [isMatchReady, setIsMatchReady] = useState(false);
     const [lobbies, setLobbies] = useState<any[]>([]);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [activeLobbyId, setActiveLobbyId] = useState<string | null>(null); // NEW: Track active lobby
 
     const router = useRouter();
     const supabase = createClient();
@@ -43,6 +44,24 @@ export default function PlayPage() {
             console.error("Failed to fetch lobbies", e);
         }
     };
+
+    // 3. Detect Active Lobby (which lobby is user currently in)
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const detectActiveLobby = async () => {
+            const { data } = await supabase
+                .from('lobby_players')
+                .select('lobby_id')
+                .eq('user_id', currentUserId)
+                .eq('status', 'joined')
+                .single();
+
+            setActiveLobbyId(data?.lobby_id || null);
+        };
+
+        detectActiveLobby();
+    }, [currentUserId, lobbies]); // Re-check when lobbies update
 
     useEffect(() => {
         fetchLobbies();
@@ -137,6 +156,7 @@ export default function PlayPage() {
                 <ActiveLobbies
                     lobbies={lobbies}
                     currentUserId={currentUserId}
+                    activeLobbyId={activeLobbyId} // NEW: Pass active lobby ID
                     handleDissolve={handleLobbyDissolved}
                     onJoin={handleLobbyJoined}
                 />
