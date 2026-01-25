@@ -117,8 +117,14 @@ export function ActiveLobbies({
                     </button>
 
                     {tournamentsExpanded && (
-                        <div className="p-6 flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-6 scrollbar-thin scrollbar-thumb-fuchsia-900/50 scrollbar-track-transparent">
-                            {tournamentGames.map(l => renderLobbyCard(l, 'tournament'))}
+                        <div className="relative p-6">
+                            {/* Mobile Scroll Indicator */}
+                            <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-fuchsia-950/90 to-transparent pointer-events-none z-10 md:hidden flex items-center justify-end pr-4">
+                                <ChevronDown className="w-6 h-6 text-fuchsia-400 rotate-[-90deg] animate-pulse" />
+                            </div>
+                            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-6 scrollbar-thin scrollbar-thumb-fuchsia-900/50 scrollbar-track-transparent">
+                                {tournamentGames.map(l => renderLobbyCard(l, 'tournament'))}
+                            </div>
                         </div>
                     )}
                 </section>
@@ -136,8 +142,14 @@ export function ActiveLobbies({
                         <div className="h-px bg-gradient-to-r from-sky-500/50 to-transparent flex-1 ml-4" />
                     </div>
 
-                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 scrollbar-hide">
-                        {hostedGames.map(l => renderLobbyCard(l, 'hosted'))}
+                    <div className="relative">
+                        {/* Mobile Scroll Indicator Overlay */}
+                        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-black/80 to-transparent pointer-events-none z-10 md:hidden flex items-center justify-end pr-2">
+                            <ChevronDown className="w-6 h-6 text-sky-400 rotate-[-90deg] animate-pulse" />
+                        </div>
+                        <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 scrollbar-hide">
+                            {hostedGames.map(l => renderLobbyCard(l, 'hosted'))}
+                        </div>
                     </div>
                 </section>
             )}
@@ -166,8 +178,14 @@ export function ActiveLobbies({
                 </div>
 
                 {filteredSignals.length > 0 ? (
-                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 scrollbar-hide">
-                        {filteredSignals.map(l => renderLobbyCard(l, 'default'))}
+                    <div className="relative">
+                        {/* Mobile Scroll Indicator Overlay */}
+                        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-black/80 to-transparent pointer-events-none z-10 md:hidden flex items-center justify-end pr-2">
+                            <ChevronDown className="w-6 h-6 text-[#ccff00] rotate-[-90deg] animate-pulse" />
+                        </div>
+                        <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 scrollbar-hide">
+                            {filteredSignals.map(l => renderLobbyCard(l, 'default'))}
+                        </div>
                     </div>
                 ) : (
                     /* EMPTY STATE */
