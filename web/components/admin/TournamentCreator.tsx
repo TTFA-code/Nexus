@@ -197,27 +197,27 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
     return (
         <div className="max-w-5xl mx-auto space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 bg-black/40 border-l-4 border-l-pink-500 border border-white/10 rounded-r-lg backdrop-blur-md">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 md:p-6 bg-black/40 border-l-4 border-l-pink-500 border border-white/10 rounded-r-lg backdrop-blur-md gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-pink-500/10 rounded border border-pink-500/20">
+                    <div className="p-3 bg-pink-500/10 rounded border border-pink-500/20 shrink-0">
                         <Swords className="w-6 h-6 text-pink-500" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-white font-orbitron tracking-wide">
+                        <h2 className="text-lg md:text-2xl font-bold text-white font-orbitron tracking-wide">
                             TOURNAMENT LOBBIES
                         </h2>
-                        <p className="text-sm text-zinc-400 font-mono uppercase tracking-widest">
+                        <p className="text-xs md:text-sm text-zinc-400 font-mono uppercase tracking-widest">
                             Tournament Initialization Interface
                         </p>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex bg-black/40 p-1 rounded-lg border border-white/10">
+                <div className="flex bg-black/40 p-1 rounded-lg border border-white/10 w-full md:w-auto overflow-x-auto no-scrollbar justify-center md:justify-start">
                     <button
                         onClick={() => setActiveTab('SELECT')}
                         className={cn(
-                            "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded transition-all",
+                            "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded transition-all flex-1 md:flex-none text-center",
                             activeTab === 'SELECT' ? "bg-pink-500 text-white" : "text-zinc-500 hover:text-white"
                         )}
                     >
@@ -226,7 +226,7 @@ export function TournamentCreator({ gameModes, allGames, guildId, onCreated }: T
                     <button
                         onClick={() => setActiveTab('CREATE')}
                         className={cn(
-                            "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded transition-all flex items-center gap-2",
+                            "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded transition-all flex items-center justify-center gap-2 flex-1 md:flex-none text-center",
                             activeTab === 'CREATE' ? "bg-cyan-500 text-white" : "text-zinc-500 hover:text-white"
                         )}
                     >

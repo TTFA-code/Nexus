@@ -4,6 +4,7 @@ import { verifyNexusAdmin } from '@/utils/discord/gatekeeper';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { createClient } from '@/utils/supabase/server';
 import { SidebarServerSelector } from '@/components/admin/SidebarServerSelector';
+import { MobileAdminHeader } from '@/components/admin/MobileAdminHeader';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -51,11 +52,23 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
     }
 
     return (
-        <div className="flex h-full min-h-[calc(100vh-100px)]">
-            <SidebarServerSelector guilds={guilds} />
-            <AdminSidebar guildId={guildId} />
-            <div className="flex-1 p-6 overflow-y-auto">
-                {children}
+        <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-100px)]">
+            {/* Mobile Header */}
+            <MobileAdminHeader guildId={guildId} guilds={guilds} />
+
+            {/* Desktop Sidebars (Hidden on Mobile) */}
+            <div className="hidden md:block">
+                <SidebarServerSelector guilds={guilds} />
+            </div>
+            <div className="hidden md:block h-full">
+                <AdminSidebar guildId={guildId} />
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 p-0 md:p-6 overflow-y-auto">
+                <div className="p-4 md:p-0"> {/* Inner padding container for mobile */}
+                    {children}
+                </div>
             </div>
         </div>
     );

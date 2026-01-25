@@ -81,11 +81,11 @@ export function AdminOpsManager({ initialLobbies, guildId, gameModes, customMode
     return (
         <div className="flex flex-col h-full gap-6">
             {/* Tab Navigation */}
-            <div className="flex items-center gap-2 p-1 bg-black/40 border border-white/10 rounded-lg w-fit backdrop-blur-md">
+            <div className="flex items-center gap-2 p-1 bg-black/40 border border-white/10 rounded-lg w-full md:w-fit backdrop-blur-md overflow-x-auto no-scrollbar">
                 <button
                     onClick={() => setActiveTab('DEPLOY')}
                     className={cn(
-                        "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded flex items-center gap-2 transition-all",
+                        "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded flex items-center gap-2 transition-all whitespace-nowrap",
                         activeTab === 'DEPLOY'
                             ? "bg-pink-600/20 text-pink-400 border border-pink-500/50 shadow-[0_0_10px_rgba(219,39,119,0.2)]"
                             : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
@@ -94,11 +94,11 @@ export function AdminOpsManager({ initialLobbies, guildId, gameModes, customMode
                     <Rocket className="w-3 h-3" />
                     DEPLOYMENT
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-1" />
+                <div className="w-px h-4 bg-white/10 mx-1 shrink-0" />
                 <button
                     onClick={() => setActiveTab('LIVE')}
                     className={cn(
-                        "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded flex items-center gap-2 transition-all",
+                        "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded flex items-center gap-2 transition-all whitespace-nowrap",
                         activeTab === 'LIVE'
                             ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
                             : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
@@ -112,11 +112,11 @@ export function AdminOpsManager({ initialLobbies, guildId, gameModes, customMode
                         </span>
                     )}
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-1" />
+                <div className="w-px h-4 bg-white/10 mx-1 shrink-0" />
                 <button
                     onClick={() => setActiveTab('HISTORY')}
                     className={cn(
-                        "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded flex items-center gap-2 transition-all",
+                        "px-4 py-2 text-xs font-bold font-orbitron tracking-wider rounded flex items-center gap-2 transition-all whitespace-nowrap",
                         activeTab === 'HISTORY'
                             ? "bg-blue-600/20 text-blue-400 border border-blue-500/50 shadow-[0_0_10px_rgba(37,99,235,0.2)]"
                             : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"

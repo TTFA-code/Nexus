@@ -47,25 +47,25 @@ export function GameTrackingTable({ games, viewMode = 'GUILD', onViewChange }: G
     return (
         <div className="flex flex-col h-full bg-black/40 border border-white/10 rounded-xl overflow-hidden backdrop-blur-xl">
             {/* Header */}
-            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/10 rounded border border-blue-500/20">
-                            <Trophy className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-white font-orbitron tracking-wide">
-                                OPERATION HISTORY
-                            </h3>
-                            <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">
-                                ARCHIVED MATCH LOGS
-                            </p>
-                        </div>
+            <div className="p-4 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between bg-white/5 gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/10 rounded border border-blue-500/20 shrink-0">
+                        <Trophy className="w-5 h-5 text-blue-500" />
                     </div>
+                    <div>
+                        <h3 className="text-sm md:text-lg font-bold text-white font-orbitron tracking-wide">
+                            OPERATION HISTORY
+                        </h3>
+                        <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">
+                            ARCHIVED MATCH LOGS
+                        </p>
+                    </div>
+                </div>
 
+                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                     {/* View Toggle */}
                     {onViewChange && (
-                        <div className="flex bg-black/40 rounded p-1 border border-white/10">
+                        <div className="flex bg-black/40 rounded p-1 border border-white/10 w-fit self-start md:self-auto">
                             <button
                                 onClick={() => onViewChange('GUILD')}
                                 className={cn(
@@ -86,86 +86,88 @@ export function GameTrackingTable({ games, viewMode = 'GUILD', onViewChange }: G
                             </button>
                         </div>
                     )}
-                </div>
 
-                <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                    <Input
-                        placeholder="SEARCH OP ID..."
-                        className="pl-9 h-9 bg-black/50 border-white/10 focus:border-cyan-500/50 text-xs font-mono tracking-wider"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <div className="relative w-full md:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <Input
+                            placeholder="SEARCH OP ID..."
+                            className="pl-9 h-9 bg-black/50 border-white/10 focus:border-cyan-500/50 text-xs font-mono tracking-wider w-full"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Table Area */}
-            <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-                <Table>
-                    <TableHeader className="bg-black/40 sticky top-0 z-10 backdrop-blur-md">
-                        <TableRow className="border-white/10 hover:bg-transparent">
-                            <TableHead className="w-[100px] text-zinc-500 font-mono uppercase text-[10px]">Op ID</TableHead>
-                            <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Protocol</TableHead>
-                            <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Directive (Mode)</TableHead>
-                            {viewMode === 'MEMBERS' && (
-                                <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Operative</TableHead>
-                            )}
-                            <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Status</TableHead>
-                            <TableHead className="text-right text-zinc-500 font-mono uppercase text-[10px]">Result</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredGames.length > 0 ? (
-                            filteredGames.map((game) => (
-                                <TableRow key={game.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                                    <TableCell className="font-mono text-xs text-zinc-400 group-hover:text-cyan-400 transition-colors">
-                                        #{game.id.toString().slice(0, 8)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            {game.icon ? (
-                                                <img src={game.icon} className="w-4 h-4 rounded-sm opacity-70" alt="" />
-                                            ) : (
-                                                <Gamepad2 className="w-4 h-4 text-zinc-600" />
-                                            )}
-                                            <span className="text-zinc-300 font-bold text-xs">{game.gameName}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-xs text-zinc-400 font-mono uppercase">
-                                        {game.modeName}
-                                    </TableCell>
-                                    {viewMode === 'MEMBERS' && (
-                                        <TableCell className="text-xs text-purple-400 font-mono">
-                                            {game.playedBy}
+            <div className="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scrollbar">
+                <div className="min-w-[600px]"> {/* Ensure table has min width so it scrolls instead of squashing */}
+                    <Table>
+                        <TableHeader className="bg-black/40 sticky top-0 z-10 backdrop-blur-md">
+                            <TableRow className="border-white/10 hover:bg-transparent">
+                                <TableHead className="w-[100px] text-zinc-500 font-mono uppercase text-[10px]">Op ID</TableHead>
+                                <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Protocol</TableHead>
+                                <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Directive (Mode)</TableHead>
+                                {viewMode === 'MEMBERS' && (
+                                    <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Operative</TableHead>
+                                )}
+                                <TableHead className="text-zinc-500 font-mono uppercase text-[10px]">Status</TableHead>
+                                <TableHead className="text-right text-zinc-500 font-mono uppercase text-[10px]">Result</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredGames.length > 0 ? (
+                                filteredGames.map((game) => (
+                                    <TableRow key={game.id} className="border-white/5 hover:bg-white/5 transition-colors group">
+                                        <TableCell className="font-mono text-xs text-zinc-400 group-hover:text-cyan-400 transition-colors">
+                                            #{game.id.toString().slice(0, 8)}
                                         </TableCell>
-                                    )}
-                                    <TableCell>
-                                        <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 font-mono uppercase rounded-sm border", getStatusColor(game.status))}>
-                                            {game.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {game.winner ? (
-                                            <span className="text-xs font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">
-                                                TEAM {game.winner} VICTORY
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] text-zinc-600 font-mono uppercase">
-                                                In Progress
-                                            </span>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                {game.icon ? (
+                                                    <img src={game.icon} className="w-4 h-4 rounded-sm opacity-70" alt="" />
+                                                ) : (
+                                                    <Gamepad2 className="w-4 h-4 text-zinc-600" />
+                                                )}
+                                                <span className="text-zinc-300 font-bold text-xs">{game.gameName}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-xs text-zinc-400 font-mono uppercase">
+                                            {game.modeName}
+                                        </TableCell>
+                                        {viewMode === 'MEMBERS' && (
+                                            <TableCell className="text-xs text-purple-400 font-mono">
+                                                {game.playedBy}
+                                            </TableCell>
                                         )}
+                                        <TableCell>
+                                            <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 font-mono uppercase rounded-sm border", getStatusColor(game.status))}>
+                                                {game.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {game.winner ? (
+                                                <span className="text-xs font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">
+                                                    TEAM {game.winner} VICTORY
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] text-zinc-600 font-mono uppercase">
+                                                    In Progress
+                                                </span>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow className="hover:bg-transparent">
+                                    <TableCell colSpan={5} className="h-24 text-center text-zinc-500 font-mono uppercase text-xs tracking-widest">
+                                        No records found matching query.
                                     </TableCell>
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow className="hover:bg-transparent">
-                                <TableCell colSpan={5} className="h-24 text-center text-zinc-500 font-mono uppercase text-xs tracking-widest">
-                                    No records found matching query.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
         </div>
     )
