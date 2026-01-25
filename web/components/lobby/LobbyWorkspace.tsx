@@ -243,14 +243,14 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
         <div className={`space-y-6 animate-in fade-in zoom-in duration-300`}>
             {/* Header / StatusBar */}
             <div className={`w-full p-6 rounded-2xl border ${borderColor} bg-gradient-to-r ${bgGradient} relative overflow-hidden transition-all duration-500 ${allReady ? `shadow-[0_0_50px_rgba(34,197,94,0.1)] border-green-500/30` : ''}`}>
-                <div className="flex justify-between items-start relative z-10">
-                    <div>
+                <div className="flex flex-wrap justify-between items-start gap-4 relative z-10">
+                    <div className="flex-1 min-w-[250px]">
                         <div className={`flex items-center gap-2 text-${themeColor}-400 mb-1 font-mono text-xs uppercase tracking-widest`}>
                             <Shield className="w-4 h-4" />
                             SECURE LOBBY // {lobby.region} <span className="text-zinc-600">|</span> <span className={connectionStatus === 'Connected' ? 'text-green-500' : 'text-yellow-500 animate-pulse'}>{connectionStatus}</span>
                         </div>
-                        <h1 className="text-3xl font-heading font-bold text-white uppercase tracking-wider">{lobby.game_modes?.name || "Unknown Operation"}</h1>
-                        <div className="flex items-center gap-4 mt-4">
+                        <h1 className="text-2xl md:text-3xl font-heading font-bold text-white uppercase tracking-wider">{lobby.game_modes?.name || "Unknown Operation"}</h1>
+                        <div className="flex items-center gap-2 md:gap-4 mt-4 flex-wrap">
                             <span className="px-3 py-1 bg-black/40 rounded border border-white/5 text-xs text-zinc-400 font-mono">
                                 ID: {lobby.id.slice(0, 8)}
                             </span>
@@ -268,16 +268,15 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full sm:w-auto">
                         {/* Commander / Player Controls */}
-                        {/* Commander / Player Controls */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch gap-2">
                             {/* 1. Ready State (Only if joined) */}
                             {currentUserPlayer && (
                                 <Button
                                     onClick={handleToggleReady}
                                     disabled={toggling}
-                                    className={`h-12 px-8 font-bold font-orbitron tracking-widest border transition-all duration-300 ${isMeReady
+                                    className={`h-10 sm:h-12 px-4 sm:px-8 font-bold font-orbitron tracking-widest text-xs sm:text-sm border transition-all duration-300 ${isMeReady
                                         ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]'
                                         : (() => {
                                             // Dynamic Theme Logic
@@ -291,7 +290,8 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                         isMeReady ? (
                                             <>
                                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                                READY (PRESS TO CANCEL)
+                                                <span className="hidden sm:inline">READY (PRESS TO CANCEL)</span>
+                                                <span className="sm:hidden">READY</span>
                                             </>
                                         ) : "READY UP"
                                     )}
@@ -308,7 +308,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                             size="sm"
                                             onClick={() => setShowDissolveConfirm(true)}
                                             disabled={isDissolving}
-                                            className="h-12 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 px-4"
+                                            className="h-10 sm:h-12 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 px-4"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
@@ -319,7 +319,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                             variant="ghost"
                                             size="sm"
                                             onClick={handleLeave}
-                                            className="h-12 text-zinc-500 hover:text-white px-4 border border-transparent hover:border-zinc-700"
+                                            className="h-10 sm:h-12 text-zinc-500 hover:text-white px-4 border border-transparent hover:border-zinc-700"
                                         >
                                             <LogOut className="w-4 h-4" />
                                         </Button>
@@ -329,7 +329,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                     return (
                                         <Button
                                             onClick={handleJoin}
-                                            className={`h-12 px-8 font-bold font-orbitron tracking-widest border bg-${themeColor}-500 text-black hover:bg-${themeColor}-400 border-${themeColor}-400`}
+                                            className={`h-10 sm:h-12 px-4 sm:px-8 font-bold font-orbitron tracking-widest text-xs sm:text-sm border bg-${themeColor}-500 text-black hover:bg-${themeColor}-400 border-${themeColor}-400`}
                                         >
                                             JOIN LOBBY
                                         </Button>
@@ -339,11 +339,11 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                         </div>
                         <Button
                             onClick={onLeave}
-
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-400 font-medium text-sm hover:text-white hover:border-zinc-600 hover:bg-zinc-900 transition-all duration-200"
+                            className="h-10 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-400 font-medium text-xs sm:text-sm hover:text-white hover:border-zinc-600 hover:bg-zinc-900 transition-all duration-200"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            RETURN TO ARENA
+                            <span className="hidden sm:inline">RETURN TO ARENA</span>
+                            <span className="sm:hidden">BACK</span>
                         </Button>
                     </div>
                 </div>
