@@ -14,7 +14,6 @@ export default function DashboardLayout({
 
     const tabs = [
         { name: 'The Arena', href: '/dashboard/play', icon: Swords },
-        { name: 'Command Center', href: '/dashboard/discovery', icon: Shield },
         { name: 'Profile', href: '/dashboard/profile/me', icon: FileText },
     ];
 

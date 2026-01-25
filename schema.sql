@@ -272,6 +272,48 @@ BEGIN
 END;
 $$;
 
+-- Get Guild Member Matches (Member Intel)
+CREATE OR REPLACE FUNCTION get_guild_member_matches(p_guild_id text)
+RETURNS TABLE (
+    id uuid,
+    status text,
+    created_at timestamptz,
+    finished_at timestamptz,
+    winner_team integer,
+    game_name text,
+    mode_name text,
+    game_icon text,
+    player_username text,
+    player_avatar text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        m.id,
+        m.status,
+        m.started_at as created_at,
+        m.finished_at,
+        m.winner_team,
+        COALESCE(g.name, 'Unknown Game') as game_name,
+        COALESCE(gm.name, 'Unknown Mode') as mode_name,
+        g.icon_url as game_icon,
+        p.username as player_username,
+        p.avatar_url as player_avatar
+    FROM match_players mp
+    JOIN server_members sm ON mp.user_id = sm.user_id
+    JOIN players p ON mp.user_id = p.user_id
+    JOIN matches m ON mp.match_id = m.id
+    LEFT JOIN game_modes gm ON m.game_mode_id = gm.id
+    LEFT JOIN games g ON gm.game_id = g.id
+    WHERE sm.guild_id = p_guild_id
+    ORDER BY m.started_at DESC
+    LIMIT 100;
+END;
+$$;
+
 -- Drop all versions of submit_match_report
 DO $$
 DECLARE

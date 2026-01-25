@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useParams } from "next/navigation"
-import { Home, Trophy, Activity, Settings, ShieldAlert } from "lucide-react"
+import { Home, Trophy, Activity, Settings, ShieldAlert, Radio } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/utils/supabase/client"
 
@@ -52,10 +52,10 @@ export function MobileNav() {
                 active={pathname === '/dashboard/play'}
             />
             <MobileNavItem
-                href="/leaderboard"
-                icon={Trophy}
-                label="Leaderboard"
-                active={pathname?.includes('/leaderboard')}
+                href="/dashboard/discovery"
+                icon={Radio}
+                label="Command"
+                active={pathname === '/dashboard/discovery'}
             />
 
             <MobileNavItem
