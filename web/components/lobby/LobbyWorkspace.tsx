@@ -199,6 +199,8 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
         setToggling(false);
         if (res.success) {
             toast.success(res.message);
+            // Force immediate UI update
+            await fetchLobby();
         } else {
             toast.error(res.message);
         }
