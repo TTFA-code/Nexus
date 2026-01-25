@@ -198,24 +198,34 @@ function Top3Card({ player, rank, searchQuery }: { player: any, rank: number, se
             "relative flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 hover:scale-[1.02] group",
             styles.bg, styles.border, styles.glow, styles.height
         )}>
-            <div className="absolute top-2 right-4 text-4xl font-black font-mono opacity-10 select-none">#{rank}</div>
+            <div className="absolute top-2 right-4 text-4xl font-black font-mono opacity-10 select-none text-white">#{rank}</div>
 
-            {rank === 1 && (
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce duration-[2000ms]">
+            {/* Icons: Crown (Rank 1) or Medals (Rank 2/3) */}
+            <div className={cn(
+                "absolute left-1/2 -translate-x-1/2 flex items-center justify-center",
+                rank === 1 ? "-top-6" : "-top-5"
+            )}>
+                <div className={cn(
+                    rank === 1 ? "animate-bounce duration-[2000ms]" : "animate-pulse duration-[3000ms]"
+                )}>
                     {styles.icon}
                 </div>
-            )}
+            </div>
 
             <Avatar className={cn("h-16 w-16 border-2 mb-3 shadow-xl", rank === 1 ? "h-20 w-20 border-amber-500" : "border-white/10")}>
                 <AvatarImage src={player.player?.avatar_url} />
-                <AvatarFallback className="bg-black text-zinc-500"><User className="w-6 h-6" /></AvatarFallback>
+                <AvatarFallback className="bg-black text-zinc-500"><User className={cn("w-6 h-6", styles.text)} /></AvatarFallback>
             </Avatar>
 
-            <div className={cn("font-bold text-center truncate w-full mb-1", isMatch ? "text-white scale-110" : "text-white")}>
+            {/* Username - Explicitly bright and readable */}
+            <div className={cn(
+                "font-bold text-center truncate w-full mb-1 px-2 z-10",
+                isMatch ? "text-white scale-110" : "text-white drop-shadow-md"
+            )}>
                 {player.player?.username || "Unknown"}
             </div>
 
-            <div className={cn("font-mono font-bold text-lg px-3 py-0.5 rounded border bg-black/50", styles.text, rank === 3 ? "border-[#8B5A2B]/30" : "border-white/10")}>
+            <div className={cn("font-mono font-bold text-lg px-3 py-0.5 rounded border bg-black/50 backdrop-blur-sm z-10", styles.text, rank === 3 ? "border-[#8B5A2B]/30" : "border-white/10")}>
                 {player.mmr}
             </div>
         </div>
