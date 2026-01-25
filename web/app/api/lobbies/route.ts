@@ -88,7 +88,10 @@ export async function GET() {
             .from('lobbies')
             .select('*, game_modes(*, games(name, icon_url)), lobby_players(*)')
             .neq('status', 'finished')
-            .or(`guild_id.is.null,guild_id.in.(${allowedGuilds.length ? allowedGuilds.join(',') : '000'})`)
+            .or(allowedGuilds.length > 0
+                ? `guild_id.is.null,guild_id.in.(${allowedGuilds.join(',')})`
+                : `guild_id.is.null`
+            )
             .order('created_at', { ascending: false })
 
         if (error) {

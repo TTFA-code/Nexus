@@ -81,7 +81,8 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
         });
 
         if (isActiveSession) {
-            throw new Error('Lobby Warning: You are already deployed in an active match. Finish your current session before joining another.');
+            // throw new Error('Lobby Warning: You are already deployed in an active match. Finish your current session before joining another.');
+            console.warn("User is flagged as active in another session, but bypass allowed for beta testing.");
         }
 
         // 2.1 Password Check (Private Sector Protection)

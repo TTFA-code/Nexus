@@ -35,7 +35,7 @@ export async function getUserProfileData(userId: string) {
                     winner_team,
                     finished_at,
                     status,
-                    game_modes!fk_game_mode (
+                    game_modes (
                         name,
                         games (
                             name
@@ -152,7 +152,7 @@ export async function getUserProfileData(userId: string) {
                 .from('matches')
                 .select(`
                     id, 
-                    game_modes!fk_game_mode (
+                    game_modes (
                         games (
                             name
                         )

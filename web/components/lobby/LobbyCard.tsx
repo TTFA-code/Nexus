@@ -125,7 +125,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive 
 
     return (
         <div className={`group relative overflow-hidden rounded-3xl bg-black/40 border ${isActive ? 'border-green-500/60 shadow-[0_0_30px_rgba(34,197,94,0.3)]' : `${borderColor} ${glowShadow}`} ${!isActive && hoverColor} transition-all duration-300 backdrop-blur-md ${isActive && 'ring-2 ring-green-500/20'}`}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${isActive ? 'from-green-500/10' : bgGradient} to-transparent ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${isActive ? 'from-green-500/10' : bgGradient} to-transparent ${isActive ? 'opacity-100' : 'opacity-40 sm:opacity-0 sm:group-hover:opacity-100'} transition-opacity`} />
 
             {/* IN LOBBY Badge (Top Left) */}
             {isActive && (
