@@ -86,7 +86,7 @@ export async function GET() {
 
         const { data: lobbiesData, error } = await supabase
             .from('lobbies')
-            .select('*, game_modes(*, games(name, icon_url)), creator:creator_id(username, avatar_url), lobby_players(*)')
+            .select('*, game_modes(*, games(name, icon_url)), lobby_players(*)')
             .neq('status', 'finished')
             .or(`guild_id.is.null,guild_id.in.(${allowedGuilds.length ? allowedGuilds.join(',') : '000'})`)
             .order('created_at', { ascending: false })
@@ -99,10 +99,19 @@ export async function GET() {
 
         const lobbies = lobbiesData as unknown as LobbyWithRelations[];
 
+        // Fetch creator data separately (creator_id is TEXT, not a foreign key)
+        const creatorIds = [...new Set(lobbies.map(l => l.creator_id))];
+        const { data: creatorsData } = await supabase
+            .from('players')
+            .select('user_id, username, avatar_url')
+            .in('user_id', creatorIds);
+
+        const creatorMap = new Map(creatorsData?.map(c => [c.user_id, c]) || []);
+
         // Transform data
         const safeLobbies = lobbies.map(lobby => ({
             ...lobby,
-            // creator is already populated by alias
+            creator: creatorMap.get(lobby.creator_id) || null, // ← Populate from separate query
             players: undefined,
             player_count: lobby.lobby_players?.length || 0,
             displayProtocol: lobby.game_modes?.games?.name || 'Unknown Protocol', // Flattened for UI

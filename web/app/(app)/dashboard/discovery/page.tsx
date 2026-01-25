@@ -5,9 +5,18 @@ import { DiscoveryInterface } from './DiscoveryInterface';
 
 export default async function DiscoveryPage() {
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser(); // Fixed security warning
+    const { data: { session } } = await supabase.auth.getSession(); // Still need for provider_token
 
-    if (!session || !session.provider_token) {
+    if (!user || !session?.provider_token) {
+        redirect('/login');
+    }
+
+    // Get Discord ID from identities
+    const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+    const discordId = discordIdentity?.id;
+
+    if (!discordId) {
         redirect('/login');
     }
 
@@ -28,16 +37,14 @@ export default async function DiscoveryPage() {
 
     // Fetch Active Connections to determine state
     let connectedGuildIds: string[] = [];
-    if (session?.user) {
-        const { data: members } = await supabase
-            .from('server_members')
-            .select('guild_id')
-            .eq('user_id', session.user.id)
-            .eq('role', 'nexus-admin');
+    const { data: members } = await supabase
+        .from('server_members')
+        .select('guild_id')
+        .eq('user_id', discordId) // ← Use Discord ID (TEXT), not UUID
+        .eq('role', 'nexus-admin');
 
-        if (members) {
-            connectedGuildIds = members.map((m: any) => m.guild_id);
-        }
+    if (members) {
+        connectedGuildIds = members.map((m: any) => m.guild_id);
     }
 
     return (

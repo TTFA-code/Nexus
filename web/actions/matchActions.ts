@@ -164,21 +164,9 @@ export async function createLobby(formData: {
             return { error: 'Failed to create lobby' };
         }
 
-        // 4. Auto-Join (Using Discord ID)
-        if (!is_tournament) {
-            const { error: joinError } = await supabase
-                .from('lobby_players')
-                .insert([{
-                    lobby_id: lobby.id,
-                    user_id: hostId, // Discord ID
-                    status: 'joined',
-                    is_ready: false
-                }]);
-
-            if (joinError) {
-                console.error('Auto-Join Error:', joinError);
-            }
-        }
+        // Auto-join now handled by database trigger (auto_join_lobby_creator)
+        // Trigger automatically inserts creator into lobby_players on lobby creation
+        // Removed manual insert to prevent duplicate key constraint violation
 
         revalidatePath('/dashboard/play');
         return { success: true, lobbyId: lobby.id, sectorKey: lobby.sector_key, lobby };
