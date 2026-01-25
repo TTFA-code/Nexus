@@ -52,6 +52,12 @@ export function MobileNav() {
                 active={pathname === '/dashboard/play'}
             />
             <MobileNavItem
+                href="/dashboard/leaderboard"
+                icon={Trophy}
+                label="Leaderboard"
+                active={pathname?.includes('/leaderboard')}
+            />
+            <MobileNavItem
                 href="/dashboard/discovery"
                 icon={Radio}
                 label="Command"
