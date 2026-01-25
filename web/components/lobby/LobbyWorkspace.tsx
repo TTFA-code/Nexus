@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Users, Clock, Shield, AlertTriangle, MessageSquare, Copy, LogOut, CheckCircle, Play, Loader2, Trash2, ArrowLeft } from 'lucide-react';
+import { Users, Clock, Shield, AlertTriangle, MessageSquare, Copy, LogOut, CheckCircle, Play, Loader2, Trash2, ArrowLeft, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/client';
 import { toggleReady, joinLobby, leaveLobby, initializeMatchSequence, acceptMatchHandshake } from '@/actions/lobbyActions';
 import { deleteLobby } from '@/actions/deleteLobby';
+import { kickPlayer } from '@/actions/kickPlayer'; // NEW: Import kick action
 import { toast } from 'sonner';
 
 import { useRouter } from 'next/navigation';
@@ -33,6 +34,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     const [showMatchOverlay, setShowMatchOverlay] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState('Connecting to Match Server...');
+    const [kickTargetId, setKickTargetId] = useState<string | null>(null); // NEW: Kick confirmation state
 
 
     const supabase = createClient();
@@ -210,6 +212,21 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
         }
     };
 
+    // NEW: Kick Player Handler
+    const handleKick = async () => {
+        if (!kickTargetId) return;
+
+        setKickTargetId(null); // Close confirmation
+        const res = await kickPlayer(lobbyId, kickTargetId);
+
+        if (res.success) {
+            toast.success(res.message);
+            // Real-time subscription will auto-update the UI
+        } else {
+            toast.error(res.message);
+        }
+    };
+
     if (loading) return <div className="p-12 text-center text-zinc-500 animate-pulse">Establishing Uplink...</div>;
     if (error) return <div className="p-12 text-center text-red-500 border border-red-500/20 bg-red-500/10 rounded-xl">{error} <Button variant="ghost" onClick={onLeave} className="ml-4">Return</Button></div>;
 
@@ -372,6 +389,19 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                     cancelText="STAY"
                 />
 
+                {/* Kick Player Confirmation */}
+                <ConfirmModal
+                    isOpen={kickTargetId !== null}
+                    onOpenChange={(open) => !open && setKickTargetId(null)}
+                    title="REMOVE PLAYER"
+                    description="Remove this player from the lobby? They will be disconnected immediately."
+                    onConfirm={handleKick}
+                    onCancel={() => setKickTargetId(null)}
+                    isDestructive={true}
+                    confirmText="REMOVE PLAYER"
+                    cancelText="CANCEL"
+                />
+
                 {/* Match Overlay */}
                 {showMatchOverlay && (
                     <MatchFoundOverlay
@@ -481,6 +511,17 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                         </div>
                                     </div>
                                     {p.is_ready && <CheckCircle className="w-5 h-5 text-green-500 animate-in zoom-in spin-in-90 duration-300" />}
+
+                                    {/* Kick Button (Commander Only, Not Self) */}
+                                    {isCommander && p.user_id !== authUserId && (
+                                        <button
+                                            onClick={() => setKickTargetId(p.user_id)}
+                                            className="ml-2 p-1.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                                            title="Remove Player"
+                                        >
+                                            <UserX className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                             {/* Placeholder - will verify file firsts */}
