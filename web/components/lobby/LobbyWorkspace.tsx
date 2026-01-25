@@ -59,6 +59,73 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
         }
     }, [authUserId, lobby]);
 
+    // Extract fetchLobby so it can be called from handlers
+    const fetchLobby = async () => {
+        const { data: lobbyData, error } = await supabase
+            .from('lobbies')
+            .select(`
+                *,
+                lobby_players (
+                    *,
+                    player:players!lobby_players_user_id_fkey (
+                        username,
+                        avatar_url,
+                        uuid_link
+                    )
+                ),
+                game_modes (
+                    *,
+                    games (
+                        id,
+                        name
+                    )
+                )
+            `)
+            .eq('id', lobbyId)
+            .single();
+
+        console.log("Game Mode Data:", lobbyData?.game_modes);
+
+        if (error) {
+            console.error("Error fetching lobby workspace:", error);
+            setError("Connection Lost to Sector Signal.");
+        } else {
+            // Fetch MMR data for each player based on lobby's game
+            const gameId = lobbyData?.game_modes?.games?.id;
+
+            if (gameId && lobbyData.lobby_players) {
+                // Get all player UUIDs
+                const playerUUIDs = lobbyData.lobby_players
+                    .map((p: any) => p.player?.uuid_link)
+                    .filter(Boolean);
+
+                // Fetch MMR for these players for this game
+                const { data: mmrData } = await supabase
+                    .from('player_mmr')
+                    .select('user_id, mmr')
+                    .eq('game_id', gameId)
+                    .in('user_id', playerUUIDs);
+
+                // Create MMR lookup map
+                const mmrMap = new Map(mmrData?.map(m => [m.user_id, m.mmr]) || []);
+
+                // Attach MMR to each player
+                lobbyData.lobby_players = lobbyData.lobby_players.map((p: any) => ({
+                    ...p,
+                    mmr: mmrMap.get(p.player?.uuid_link) || null
+                }));
+            }
+
+            setLobby(lobbyData);
+            const sortedPlayers = (lobbyData.lobby_players || []).sort((a: any, b: any) => {
+                if (a.user_id === lobbyData.creator_id) return -1;
+                if (b.user_id === lobbyData.creator_id) return 1;
+                return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+            });
+            setPlayers(sortedPlayers);
+        }
+    };
+
     // Match Status Watcher
     useEffect(() => {
         if (lobby?.status === 'starting') {
@@ -84,72 +151,6 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
             // 2. Fetch Lobby
             await fetchLobby();
             setLoading(false);
-        };
-
-        const fetchLobby = async () => {
-            const { data: lobbyData, error } = await supabase
-                .from('lobbies')
-                .select(`
-                    *,
-                    lobby_players (
-                        *,
-                        player:players!lobby_players_user_id_fkey (
-                            username,
-                            avatar_url,
-                            uuid_link
-                        )
-                    ),
-                    game_modes (
-                        *,
-                        games (
-                            id,
-                            name
-                        )
-                    )
-                `)
-                .eq('id', lobbyId)
-                .single();
-
-            console.log("Game Mode Data:", lobbyData?.game_modes);
-
-            if (error) {
-                console.error("Error fetching lobby workspace:", error);
-                setError("Connection Lost to Sector Signal.");
-            } else {
-                // Fetch MMR data for each player based on lobby's game
-                const gameId = lobbyData?.game_modes?.games?.id;
-
-                if (gameId && lobbyData.lobby_players) {
-                    // Get all player UUIDs
-                    const playerUUIDs = lobbyData.lobby_players
-                        .map((p: any) => p.player?.uuid_link)
-                        .filter(Boolean);
-
-                    // Fetch MMR for these players for this game
-                    const { data: mmrData } = await supabase
-                        .from('player_mmr')
-                        .select('user_id, mmr')
-                        .eq('game_id', gameId)
-                        .in('user_id', playerUUIDs);
-
-                    // Create MMR lookup map
-                    const mmrMap = new Map(mmrData?.map(m => [m.user_id, m.mmr]) || []);
-
-                    // Attach MMR to each player
-                    lobbyData.lobby_players = lobbyData.lobby_players.map((p: any) => ({
-                        ...p,
-                        mmr: mmrMap.get(p.player?.uuid_link) || null
-                    }));
-                }
-
-                setLobby(lobbyData);
-                const sortedPlayers = (lobbyData.lobby_players || []).sort((a: any, b: any) => {
-                    if (a.user_id === lobbyData.creator_id) return -1;
-                    if (b.user_id === lobbyData.creator_id) return 1;
-                    return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
-                });
-                setPlayers(sortedPlayers);
-            }
         };
 
         init();
