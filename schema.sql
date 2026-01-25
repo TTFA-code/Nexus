@@ -814,6 +814,17 @@ EXCEPTION
 END $$;
 
 -- =================================================================================
+-- 11. ENABLE REALTIME
+-- =================================================================================
+
+-- Add tables to the publication to enable client-side subscriptions
+ALTER PUBLICATION supabase_realtime ADD TABLE public.lobbies;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.lobby_players;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.matches;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.match_players;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.ready_checks;
+
+-- =================================================================================
 -- END OF SCHEMA MIGRATION
 -- =================================================================================
 -- After running this, verify with:
@@ -824,4 +835,7 @@ END $$;
 -- 
 -- Verify constraints:
 -- SELECT conname, conrelid::regclass FROM pg_constraint WHERE connamespace = 'public'::regnamespace;
+--
+-- Verify Realtime:
+-- SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime';
 -- =================================================================================

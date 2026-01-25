@@ -486,7 +486,12 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                         <Button
                             onClick={async () => {
                                 const res = await initializeMatchSequence(lobbyId);
-                                if (!res.success) toast.error(res.message);
+                                if (!res.success) {
+                                    toast.error(res.message);
+                                } else {
+                                    // Force immediate UI update for Commander so overlay appears instantly
+                                    await fetchLobby();
+                                }
                             }}
                             className="bg-green-500 hover:bg-green-400 text-black font-bold h-10 px-6 font-orbitron tracking-widest shadow-lg shadow-green-500/20 animate-pulse transition-all hover:scale-105"
                         >

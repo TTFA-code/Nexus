@@ -43,8 +43,14 @@ export default async function MatchReportPage(props: MatchPageProps) {
         return <div className="p-10 text-center text-red-500">Match not found</div>;
     }
 
-    const myPlayer = match.match_players.find((p: any) => p.user_id === user.id) as any;
-    const opponent = match.match_players.find((p: any) => p.user_id !== user.id) as any;
+    const discordId = user.identities?.find(i => i.provider === 'discord')?.id;
+
+    if (!discordId) {
+        return <div className="p-10 text-center text-red-500">Error: No Discord Identity Linked.</div>;
+    }
+
+    const myPlayer = match.match_players.find((p: any) => p.user_id === discordId) as any;
+    const opponent = match.match_players.find((p: any) => p.user_id !== discordId) as any;
 
     if (!myPlayer) {
         return <div className="p-10 text-center text-red-500">You are not a participant in this match.</div>;
@@ -66,7 +72,8 @@ export default async function MatchReportPage(props: MatchPageProps) {
             .from("mmr_history")
             .select("change")
             .eq("match_id", matchId)
-            .eq("player_uuid", user.id)
+            // Schema Audit: mmr_history.player_uuid actually stores Discord IDs (from match_players)
+            .eq("player_uuid", discordId)
             .limit(1)
             .maybeSingle();
 

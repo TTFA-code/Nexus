@@ -83,15 +83,16 @@ export function ActiveLobbies({
     const renderLobbyCard = (lobby: any, variant: 'tournament' | 'hosted' | 'default') => {
         const isActive = activeLobbyId === lobby.id; // Check if this is the active lobby
         return (
-            <LobbyCard
-                key={lobby.id}
-                lobby={lobby}
-                variant={variant}
-                currentUserId={currentUserId}
-                isActive={isActive} // NEW: Pass active state
-                onDissolve={initiateDissolve}
-                onJoin={onJoin}
-            />
+            <div key={lobby.id} className="min-w-[85vw] sm:min-w-[400px] md:min-w-0 snap-center flex-shrink-0">
+                <LobbyCard
+                    lobby={lobby}
+                    variant={variant}
+                    currentUserId={currentUserId}
+                    isActive={isActive} // NEW: Pass active state
+                    onDissolve={initiateDissolve}
+                    onJoin={onJoin}
+                />
+            </div>
         );
     };
 
@@ -116,7 +117,7 @@ export function ActiveLobbies({
                     </button>
 
                     {tournamentsExpanded && (
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="p-6 flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-6 scrollbar-thin scrollbar-thumb-fuchsia-900/50 scrollbar-track-transparent">
                             {tournamentGames.map(l => renderLobbyCard(l, 'tournament'))}
                         </div>
                     )}
@@ -135,7 +136,7 @@ export function ActiveLobbies({
                         <div className="h-px bg-gradient-to-r from-sky-500/50 to-transparent flex-1 ml-4" />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 scrollbar-hide">
                         {hostedGames.map(l => renderLobbyCard(l, 'hosted'))}
                     </div>
                 </section>
@@ -165,7 +166,7 @@ export function ActiveLobbies({
                 </div>
 
                 {filteredSignals.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 scrollbar-hide">
                         {filteredSignals.map(l => renderLobbyCard(l, 'default'))}
                     </div>
                 ) : (
