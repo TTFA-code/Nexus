@@ -50,12 +50,16 @@ export default function PlayPage() {
         if (!currentUserId) return;
 
         const detectActiveLobby = async () => {
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('lobby_players')
                 .select('lobby_id')
                 .eq('user_id', currentUserId)
                 .eq('status', 'joined')
-                .single();
+                .maybeSingle();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error("Error checking active lobby:", error);
+            }
 
             setActiveLobbyId(data?.lobby_id || null);
         };
