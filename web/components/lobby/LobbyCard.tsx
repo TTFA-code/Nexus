@@ -66,6 +66,18 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, onDissolv
     // Check if user is in the lobby_players list (Robust String Comparison)
     const isUserJoined = lobby.lobby_players?.some((p: any) => String(p.user_id) === String(currentUserId));
 
+    // DEBUG: Log values to help diagnose button issue
+    if (isCommander || lobby.creator_id === currentUserId) {
+        console.log('[LobbyCard Debug]', {
+            lobbyId: lobby.id,
+            currentUserId,
+            creatorId: lobby.creator_id,
+            isCommander,
+            isUserJoined,
+            lobbyPlayers: lobby.lobby_players?.map((p: any) => p.user_id)
+        });
+    }
+
     // --- PASSWORD MODAL STATE ---
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordInput, setPasswordInput] = useState("");
