@@ -41,23 +41,23 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
 
     // Dynamic Permission Logic (Identity Lock Hook) - MOVED TO TOP LEVEL
     const isCommander = useMemo(() => {
-        if (!authUserId || !lobby) return false;
-        return String(authUserId) === String(lobby.creator_id);
-    }, [authUserId, lobby]);
+        if (!discordUserId || !lobby) return false;
+        return String(discordUserId) === String(lobby.creator_id); // FIX: Use Discord ID
+    }, [discordUserId, lobby]);
 
     // Real-Time Force Update Logger - MOVED TO TOP LEVEL
     useEffect(() => {
         // Task 2: Verify Data Flow
-        console.log("Commander Check:", { myId: authUserId, creatorId: lobby?.creator_id });
+        console.log("Commander Check:", { myId: discordUserId, creatorId: lobby?.creator_id, isCommander });
 
         if (process.env.NODE_ENV === 'development') {
             console.log("[LOBBY AUTH]", {
-                me: authUserId,
+                me: discordUserId,
                 owner: lobby?.creator_id,
-                match: String(authUserId) === String(lobby?.creator_id)
+                match: String(discordUserId) === String(lobby?.creator_id)
             });
         }
-    }, [authUserId, lobby]);
+    }, [discordUserId, lobby, isCommander]);
 
     // Extract fetchLobby so it can be called from handlers
     const fetchLobby = async () => {
