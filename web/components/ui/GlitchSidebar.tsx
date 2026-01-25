@@ -40,12 +40,16 @@ export function GlitchSidebar() {
             }
 
             // Check DB
-            const { data: member } = await (supabase as any)
+            const { data: member, error } = await (supabase as any)
                 .from('server_members')
                 .select('role')
                 .eq('user_id', discordId) // Use Discord ID, not UUID
                 .eq('guild_id', activeGuildId)
-                .single();
+                .maybeSingle();
+
+            if (error) {
+                console.warn('[GlitchSidebar] Failed to check admin role:', error.message);
+            }
 
             if (member && member.role === 'nexus-admin') {
                 setIsAdmin(true);

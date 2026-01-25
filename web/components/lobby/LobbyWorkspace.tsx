@@ -283,8 +283,8 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
 
     const maxPlayers = (lobby.game_modes?.team_size || 5) * 2;
     const allReady = players.length > 0 && players.every(p => p.is_ready);
-    // FIX: Match against authUserId (UUID) not discordUserId
-    const currentUserPlayer = players.find(p => p.user_id === authUserId);
+    // FIX: Compare against discordUserId (TEXT) not authUserId (UUID)
+    const currentUserPlayer = players.find(p => p.user_id === discordUserId);
     const isMeReady = currentUserPlayer?.is_ready;
 
 
@@ -546,10 +546,10 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                             {/* MMR Badge */}
                                             {p.mmr !== null && p.mmr !== undefined && (
                                                 <div className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${p.mmr >= 2000 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : // Diamond
-                                                        p.mmr >= 1500 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : // Platinum
-                                                            p.mmr >= 1200 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : // Gold
-                                                                p.mmr >= 900 ? 'bg-zinc-400/20 text-zinc-300 border border-zinc-400/40' : // Silver
-                                                                    'bg-orange-500/20 text-orange-400 border border-orange-500/40' // Bronze
+                                                    p.mmr >= 1500 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : // Platinum
+                                                        p.mmr >= 1200 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : // Gold
+                                                            p.mmr >= 900 ? 'bg-zinc-400/20 text-zinc-300 border border-zinc-400/40' : // Silver
+                                                                'bg-orange-500/20 text-orange-400 border border-orange-500/40' // Bronze
                                                     }`}>
                                                     {p.mmr} MMR
                                                 </div>

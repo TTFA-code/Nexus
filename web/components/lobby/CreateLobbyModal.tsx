@@ -66,7 +66,6 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                 .then(res => res.json())
                 .then(data => {
                     if (data.game_modes) {
-                        console.log("Modal Game Modes:", data.game_modes);
                         setAvailableModes(data.game_modes);
                     }
                 })
@@ -138,11 +137,7 @@ export function CreateLobbyModal({ onLobbyCreated }: { onLobbyCreated?: (lobby: 
                 return;
             }
 
-            const { lobby, lobbyId, sectorKey: returnedKey } = response as any; // Cast to any to avoid strict type issues if inference is slow, or fix inference.
-            // Actually, better to let inference work if possible, but for speed 'as any' is safe here since we know the return.
-            // But wait, I defined createLobby. It should infer.
-            // Let's just do the fix for sectorKey type mismatch.
-            console.log('Lobby Created:', lobby);
+            const { lobby, lobbyId, sectorKey: returnedKey } = response as any;
 
             // Optimistic Update
             if (onLobbyCreated && lobby) {

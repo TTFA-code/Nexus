@@ -67,31 +67,14 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive 
     const [isJoining, setIsJoining] = useState(false);
     const isUserJoined = lobby.lobby_players?.some((p: any) => String(p.user_id) === String(currentUserId));
 
-    // DEBUG: Log values to help diagnose button issue
-    if (isCommander || lobby.creator_id === currentUserId) {
-        console.log('[LobbyCard Debug]', {
-            lobbyId: lobby.id,
-            currentUserId,
-            creatorId: lobby.creator_id,
-            isCommander,
-            isUserJoined,
-            lobbyPlayers: lobby.lobby_players?.map((p: any) => p.user_id)
-        });
-    }
+    // Debug logging removed for production
 
     // --- PASSWORD MODAL STATE ---
     const [passwordInput, setPasswordInput] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [isShakeError, setIsShakeError] = useState(false);
 
-    // DEBUG: Diagnose Lockout
-    console.log(`[LobbyCard ${lobby.id.slice(0, 4)}]`, {
-        me: currentUserId,
-        players: lobby.lobby_players?.map((p: any) => p.user_id),
-        isUserJoined,
-        isCommander,
-        creator: lobby.creator_id
-    });
+    // Debug logging removed for production
 
     const currentPlayers = lobby.player_count || lobby.lobby_players?.length || 0;
     const maxPlayers = (lobby.game_modes?.team_size || 5) * 2
@@ -177,7 +160,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive 
                 {/* Content */}
                 <div className="mb-6">
                     <div className="flex items-center gap-2 mb-1">
-                        {lobby.game_icon && <img src={lobby.game_icon} className="w-8 h-8 rounded-md border border-white/10" alt="" />}
+                        {lobby.game_icon && <img src={lobby.game_icon} onError={(e) => e.currentTarget.style.display = 'none'} className="w-8 h-8 rounded-md border border-white/10" alt="" />}
                         <div>
                             <h3 className="text-lg font-bold text-white font-orbitron leading-tight">{lobby.displayProtocol || lobby.game_name}</h3>
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-zinc-500 uppercase tracking-widest font-mono mt-1">
@@ -204,7 +187,7 @@ export function LobbyCard({ lobby, variant = 'default', currentUserId, isActive 
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 border border-white/10 shrink-0 shadow-lg">
-                            <AvatarImage src={lobby.creator?.avatar_url} />
+                            <AvatarImage src={lobby.creator?.avatar_url} onError={(e: any) => e.currentTarget.style.display = 'none'} />
                             <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
                         </Avatar>
                         <div className="overflow-hidden">
