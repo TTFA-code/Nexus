@@ -95,10 +95,17 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                         *,
                         player:players!lobby_players_user_id_fkey (
                             username,
-                            avatar_url
+                            avatar_url,
+                            uuid_link
                         )
                     ),
-                    game_modes (*)
+                    game_modes (
+                        *,
+                        games (
+                            id,
+                            name
+                        )
+                    )
                 `)
                 .eq('id', lobbyId)
                 .single();
@@ -109,6 +116,32 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                 console.error("Error fetching lobby workspace:", error);
                 setError("Connection Lost to Sector Signal.");
             } else {
+                // Fetch MMR data for each player based on lobby's game
+                const gameId = lobbyData?.game_modes?.games?.id;
+
+                if (gameId && lobbyData.lobby_players) {
+                    // Get all player UUIDs
+                    const playerUUIDs = lobbyData.lobby_players
+                        .map((p: any) => p.player?.uuid_link)
+                        .filter(Boolean);
+
+                    // Fetch MMR for these players for this game
+                    const { data: mmrData } = await supabase
+                        .from('player_mmr')
+                        .select('user_id, mmr')
+                        .eq('game_id', gameId)
+                        .in('user_id', playerUUIDs);
+
+                    // Create MMR lookup map
+                    const mmrMap = new Map(mmrData?.map(m => [m.user_id, m.mmr]) || []);
+
+                    // Attach MMR to each player
+                    lobbyData.lobby_players = lobbyData.lobby_players.map((p: any) => ({
+                        ...p,
+                        mmr: mmrMap.get(p.player?.uuid_link) || null
+                    }));
+                }
+
                 setLobby(lobbyData);
                 const sortedPlayers = (lobbyData.lobby_players || []).sort((a: any, b: any) => {
                     if (a.user_id === lobbyData.creator_id) return -1;
@@ -506,8 +539,21 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                         <div className={`text-sm font-bold truncate ${p.is_ready ? 'text-green-400' : 'text-white'}`}>
                                             {p.player?.username || "Unknown Player"}
                                         </div>
-                                        <div className={`text-[10px] uppercase font-mono ${p.is_ready ? 'text-green-500/70' : 'text-zinc-500'}`}>
-                                            {p.is_ready ? 'READY FOR DEPLOYMENT' : 'PREPARING...'}
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <div className={`text-[10px] uppercase font-mono ${p.is_ready ? 'text-green-500/70' : 'text-zinc-500'}`}>
+                                                {p.is_ready ? 'READY FOR DEPLOYMENT' : 'PREPARING...'}
+                                            </div>
+                                            {/* MMR Badge */}
+                                            {p.mmr !== null && p.mmr !== undefined && (
+                                                <div className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${p.mmr >= 2000 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : // Diamond
+                                                        p.mmr >= 1500 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : // Platinum
+                                                            p.mmr >= 1200 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : // Gold
+                                                                p.mmr >= 900 ? 'bg-zinc-400/20 text-zinc-300 border border-zinc-400/40' : // Silver
+                                                                    'bg-orange-500/20 text-orange-400 border border-orange-500/40' // Bronze
+                                                    }`}>
+                                                    {p.mmr} MMR
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     {p.is_ready && <CheckCircle className="w-5 h-5 text-green-500 animate-in zoom-in spin-in-90 duration-300" />}
