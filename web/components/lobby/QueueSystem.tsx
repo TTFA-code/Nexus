@@ -259,8 +259,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
 
             {/* --- SEARCHING INDICATOR --- */}
             {isSearching && (
-                <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-10 fade-in duration-300">
-                    <div className="bg-zinc-900/90 backdrop-blur-md border border-[#ccff00]/30 rounded-2xl p-4 shadow-2xl flex items-center gap-4 min-w-[300px]">
+                <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-40 animate-in slide-in-from-bottom-10 fade-in duration-300">
+                    <div className="bg-zinc-900/90 backdrop-blur-md border border-[#ccff00]/30 rounded-2xl p-4 shadow-2xl flex items-center gap-4 min-w-[300px] max-w-[calc(100vw-32px)]">
                         <div className="relative">
                             <div className="absolute inset-0 bg-[#ccff00] rounded-full animate-ping opacity-20" />
                             <div className="relative w-12 h-12 bg-black rounded-full flex items-center justify-center border border-[#ccff00]/50">
