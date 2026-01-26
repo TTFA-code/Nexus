@@ -233,14 +233,17 @@ export function QueueProvider({ children }: { children: ReactNode }) {
             {/* Verify we are in the dashboard/play area? Or global? User said "wraps layout.tsx" and "Nexus (/dashboard/play)". */}
             {/* Assuming global stickiness is fine, or check pathname. */}
             {(pathname?.startsWith('/dashboard/play') && !matchFoundData && !isInMatch && !isSearching) && (
-                <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-10 fade-in duration-500">
+                <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-40 animate-in slide-in-from-bottom-10 fade-in duration-500">
                     <Button
                         size="lg"
-                        className="h-16 px-8 rounded-full bg-[#ccff00] hover:bg-[#b3e600] text-black font-black font-orbitron tracking-widest text-lg shadow-[0_0_30px_rgba(204,255,0,0.4)] hover:shadow-[0_0_50px_rgba(204,255,0,0.6)] hover:scale-105 transition-all border-2 border-black/10"
+                        className="
+                            rounded-full bg-[#ccff00] hover:bg-[#b3e600] text-black font-black font-orbitron tracking-widest shadow-[0_0_30px_rgba(204,255,0,0.4)] hover:shadow-[0_0_50px_rgba(204,255,0,0.6)] hover:scale-105 transition-all border-2 border-black/10
+                            w-14 h-14 p-0 md:w-auto md:h-16 md:px-8 
+                        "
                         onClick={() => setShowModeSelector(true)}
                     >
-                        <Swords className="w-6 h-6 mr-3" />
-                        FIND MATCH
+                        <Swords className="w-6 h-6 md:mr-3" />
+                        <span className="hidden md:inline text-lg">FIND MATCH</span>
                     </Button>
                 </div>
             )}
