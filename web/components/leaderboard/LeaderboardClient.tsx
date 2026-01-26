@@ -172,6 +172,12 @@ function GameLeaderboard({ game, players, searchQuery }: { game: string, players
                                         </div>
                                     </div>
 
+                                    <div className="text-right mr-4 hidden md:block">
+                                        <div className="text-xs font-mono font-bold text-zinc-500">
+                                            <span className="text-emerald-500">{entry.wins}W</span> - <span className="text-red-500">{entry.losses}L</span>
+                                        </div>
+                                    </div>
+
                                     <div className="text-emerald-400 font-mono font-bold text-sm bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                                         {entry.mmr}
                                     </div>
@@ -273,6 +279,11 @@ function Top3Card({ player, rank, searchQuery }: { player: any, rank: number, se
             {/* MMR */}
             <div className={cn("font-mono font-bold text-sm md:text-lg px-2 md:px-3 py-0.5 rounded border bg-black/50 backdrop-blur-sm z-10", styles.text, rank === 3 ? "border-[#8B5A2B]/30" : "border-white/10")}>
                 {player.mmr}
+            </div>
+
+            {/* W/L Record - Added Here */}
+            <div className="mt-1 text-xs font-mono font-bold text-zinc-400">
+                <span className="text-emerald-500">{player.wins}W</span> - <span className="text-red-500">{player.losses}L</span>
             </div>
 
             {/* Icons: Medals (Rank 2/3 - Bottom/Under MMR) */}

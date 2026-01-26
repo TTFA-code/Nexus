@@ -11,6 +11,8 @@ export default async function LeaderboardPage() {
         .from('player_mmr')
         .select(`
             mmr,
+            wins,
+            losses,
             game_id,
             user_id,
             games:game_id ( name )
