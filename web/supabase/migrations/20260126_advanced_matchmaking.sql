@@ -99,8 +99,8 @@ BEGIN
                     IF i IN (1, 4, 5, 8, 9) THEN v_team := 1; ELSE v_team := 2; END IF;
 
                     -- Insert Players
-                    INSERT INTO public.match_players (match_id, user_id, team, created_at)
-                    VALUES (v_match_id, v_player_row.discord_id, v_team, NOW());
+                    INSERT INTO public.match_players (match_id, user_id, team)
+                    VALUES (v_match_id, v_player_row.discord_id, v_team);
 
                     -- Ready Check
                     INSERT INTO public.ready_checks (match_id, user_id, accepted, created_at)
