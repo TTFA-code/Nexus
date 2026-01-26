@@ -152,8 +152,9 @@ export function QueueProvider({ children }: { children: ReactNode }) {
 
             toast.success("Joined Queue", { description: "Searching for opponents..." });
         } catch (err: any) {
+            console.error("Queue Start Error:", err);
             setIsSearching(false);
-            toast.error("Queue Failed", { description: err.message });
+            toast.error("Queue Failed", { description: err.message || "Unknown error occurred" });
         }
     };
 
@@ -300,13 +301,11 @@ export function QueueProvider({ children }: { children: ReactNode }) {
                                         onClick={() => setSelectedGameId(game.id)}
                                     >
                                         <div className="flex items-center gap-4">
-                                            {game.icon_url ? (
-                                                <img src={game.icon_url} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                                            ) : (
-                                                <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center">
-                                                    <Swords className="w-6 h-6 text-zinc-600 group-hover:text-[#ccff00]" />
-                                                </div>
-                                            )}
+                                            {/* Removed broken image support as requested. Always show icon. */}
+                                            <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center">
+                                                <Swords className="w-6 h-6 text-zinc-600 group-hover:text-[#ccff00]" />
+                                            </div>
+
                                             <div className="flex-1">
                                                 <h3 className="font-bold text-lg">{game.name}</h3>
                                                 <p className="text-xs text-zinc-500 font-mono uppercase">
