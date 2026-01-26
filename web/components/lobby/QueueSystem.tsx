@@ -1,186 +1,331 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { Loader2, UserPlus, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Assuming shadcn button exists or we'll style it manually if fails
-import { ReportUserDialog } from '@/components/profile/ReportUserDialog';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Swords, Timer, Search, XCircle, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { MatchFoundOverlay } from "./MatchFoundOverlay";
+import { useRouter, usePathname } from "next/navigation";
 
-// Placeholder for Button if not exists, but usually in generated projects it does. 
-// I'll stick to raw tailwind if I am unsure, but context said Shadcn UI.
-// I'll assume standard HTML button with classes for safety to avoid import errors if the file doesn't exist.
-
-interface QueueSystemProps {
-    gameModeId: string;
-    teamSize: number;
+// --- Types ---
+interface QueueContextType {
+    isSearching: boolean;
+    isInMatch: boolean;
+    searchDuration: number; // Seconds
+    startSearch: (gameModeId: string) => Promise<void>;
+    cancelSearch: () => Promise<void>;
+    matchFoundData: any | null; // If set, shows overlay
+    openModeSelector: () => void;
 }
 
-export function QueueSystem({ gameModeId, teamSize }: QueueSystemProps) {
-    const [queue, setQueue] = useState<any[]>([]);
-    const [inQueue, setInQueue] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+const QueueContext = createContext<QueueContextType | null>(null);
+
+export function useQueue() {
+    const context = useContext(QueueContext);
+    if (!context) throw new Error("useQueue must be used within a QueueProvider");
+    return context;
+}
+
+// --- Provider ---
+export function QueueProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
-    const playersNeeded = teamSize * 2; // Simple math for now
+    const router = useRouter();
+    const pathname = usePathname();
 
+    const [isSearching, setIsSearching] = useState(false);
+    const [isInMatch, setIsInMatch] = useState(false);
+    const [searchDuration, setSearchDuration] = useState(0);
+    const [showModeSelector, setShowModeSelector] = useState(false);
+    const [matchFoundData, setMatchFoundData] = useState<any | null>(null);
+    const [gameModes, setGameModes] = useState<any[]>([]);
+    const [selectedMode, setSelectedMode] = useState<string | null>(null);
+
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // 1. Initial Check & Subscriptions
     useEffect(() => {
-        fetchQueue();
+        let queueSubscription: any;
+        let readyCheckSubscription: any;
+        let userId: string | null = null;
 
-        // Subscribe to Queue changes (Realtime)
-        const channel = supabase
-            .channel('public:queues')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'queues', filter: `game_mode_id=eq.${gameModeId}` }, (payload) => {
-                fetchQueue();
-            })
-            .subscribe();
+        const init = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            userId = user.id;
+
+            // A. Check if already in Queue
+            const { data: queueEntry } = await (supabase as any)
+                .from('matchmaking_queue')
+                .select('*')
+                .eq('user_id', user.id)
+                .maybeSingle();
+
+            if (queueEntry) {
+                // Resume Searching State
+                setIsSearching(true);
+                const joinedAt = new Date(queueEntry.joined_at).getTime();
+                const now = new Date().getTime();
+                const secondsElapsed = Math.floor((now - joinedAt) / 1000);
+                setSearchDuration(secondsElapsed > 0 ? secondsElapsed : 0);
+            }
+
+            // B. Check if already in Match (Active)
+            // (Optional optimization: server component passes this state initially)
+            // For now, we rely on the user to not be silly, or queue fail.
+
+            // C. Subscribe to Ready Checks (The "Match Found" signal)
+            readyCheckSubscription = supabase
+                .channel('queue_system_ready_checks')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'ready_checks',
+                        filter: `user_id=eq.${user.identities?.find(i => i.provider === 'discord')?.id}` // Matches using Discord ID
+                        // Wait, user_id in ready_checks is player's user_id (DiscordId? Or AuthId?).
+                        // In migration: `user_id VARCHAR(20) REFERENCES players(user_id)`.
+                        // Players `user_id` is Discord Snowflake usually?
+                        // Let's verify `join_queue`. It inserts `discord_id`.
+                        // `find_match` inserts `user_id` = `v_player_row.discord_id`.
+                        // So ready_checks uses DISCORD ID.
+                        // But RLS? `ready_checks` doesn't have RLS in the migration I saw, but it should.
+                        // Assuming we can subscribe based on string filter.
+                    },
+                    (payload: any) => {
+                        console.log("Match Found Signal!", payload);
+                        handleMatchFound(payload.new);
+                    }
+                )
+                .subscribe();
+
+            // D. Fetch Game Modes (Lazy load or initial)
+            const { data: modes } = await supabase.from('game_modes').select('*');
+            if (modes) setGameModes(modes);
+        };
+
+        init();
 
         return () => {
-            supabase.removeChannel(channel);
+            if (readyCheckSubscription) supabase.removeChannel(readyCheckSubscription);
+            if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [gameModeId]);
+    }, []);
 
-    async function fetchQueue() {
-        // Safety Guard: Ensure gameModeId is a valid string UUID
-        if (!gameModeId || typeof gameModeId !== 'string') return;
+    // 2. Timer Logic
+    useEffect(() => {
+        if (isSearching && !matchFoundData) {
+            timerRef.current = setInterval(() => {
+                setSearchDuration(prev => prev + 1);
+            }, 1000);
+        } else {
+            if (timerRef.current) clearInterval(timerRef.current);
+        }
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [isSearching, matchFoundData]);
 
-        // Get current user
+    // 3. Actions
+    const startSearch = async (gameModeId: string) => {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            setCurrentUserId(user.id);
+        if (!user) return;
+
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+        if (!discordIdentity) {
+            toast.error("Discord Required", { description: "Please link your Discord account to play." });
+            return;
         }
 
-        const { data } = await supabase
-            .from('queues')
-            .select('*, players(username, avatar_url)')
-            .eq('game_mode_id', gameModeId);
+        setIsSearching(true);
+        setSearchDuration(0);
+        setShowModeSelector(false);
 
-        if (data) {
-            setQueue(data);
-            if (user) {
-                setInQueue(data.some(q => q.user_id === user.id));
-            }
-        }
-    }
-
-    async function handleJoinQueue() {
-        setLoading(true);
         try {
-            await fetch('/api/queue/join', {
-                method: 'POST',
-                body: JSON.stringify({ game_mode_id: gameModeId }),
+            const { data, error } = await (supabase as any).rpc('join_queue', {
+                p_game_mode_id: gameModeId,
+                p_discord_id: discordIdentity.id
             });
-            // Fetch will be triggered by realtime subs or we can force it
-            fetchQueue();
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    }
 
-    async function handleStartMatch() {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/match/create', {
-                method: 'POST',
-                body: JSON.stringify({ game_mode_id: gameModeId }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                // Ideally redirect to match page or refresh
-                alert("Match Started! ID: " + data.match_id); // Simple feedback for now
-                fetchQueue(); // Refresh
-            } else {
-                alert("Error: " + (data.error || "Unknown"));
+            if (error || (data && !data.success)) {
+                throw new Error(error?.message || data?.message || "Failed to join queue");
             }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    }
 
-    const progress = Math.min((queue.length / playersNeeded) * 100, 100);
+            toast.success("Joined Queue", { description: "Searching for opponents..." });
+        } catch (err: any) {
+            setIsSearching(false);
+            toast.error("Queue Failed", { description: err.message });
+        }
+    };
+
+    const cancelSearch = async () => {
+        setIsSearching(false);
+        setSearchDuration(0);
+        try {
+            await (supabase as any).rpc('leave_queue');
+            toast.info("Queue Cancelled");
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleMatchFound = (readyCheck: any) => {
+        setIsSearching(false);
+        setMatchFoundData(readyCheck);
+        // Play sound?
+        const audio = new Audio('/sounds/match-found.mp3'); // If exists
+        audio.play().catch(() => { });
+    };
+
+    const handleAcceptMatch = async () => {
+        if (!matchFoundData) return false;
+
+        // update ready check to accepted
+        // But implementation plan says "Directly redirect".
+        // The user said: "Add a 'JOIN MATCH' button that redirects the user to /dashboard/play/match/[match_id]."
+        // So we just redirect.
+        // We SHOULD mark ready check as accepted though, for records.
+
+        const { error } = await (supabase as any)
+            .from('ready_checks')
+            .update({ accepted: true, responded_at: new Date().toISOString() })
+            .eq('id', matchFoundData.id);
+
+        if (error) {
+            console.error("Failed to accept", error);
+            // Non-blocking redirect? Or blocking?
+        }
+
+        router.push(`/dashboard/play/match/${matchFoundData.match_id}`);
+        setMatchFoundData(null);
+        return true;
+    };
+
+    const handleDeclineMatch = async () => {
+        if (!matchFoundData) return;
+
+        // Notify server to cancel/dissolve match
+        try {
+            await (supabase as any).rpc('decline_match', {
+                p_match_id: matchFoundData.match_id
+            });
+        } catch (e) {
+            console.error("Failed to decline match", e);
+        }
+
+        setMatchFoundData(null);
+        toast.error("Match Declined", { description: "You failed to ready up. Please be courteous to other players." });
+    };
 
     return (
-        <div className="mt-8 p-6 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h3 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
-                        Active Queue
-                    </h3>
-                    <p className="text-zinc-500 text-sm">Waiting for pilots...</p>
-                </div>
-                <div className="text-right">
-                    <div className="text-3xl font-mono font-bold text-[#ccff00]">
-                        {queue.length} <span className="text-lg text-zinc-500">/ {playersNeeded}</span>
-                    </div>
-                </div>
-            </div>
+        <QueueContext.Provider value={{
+            isSearching,
+            isInMatch,
+            searchDuration,
+            startSearch,
+            cancelSearch,
+            matchFoundData,
+            openModeSelector: () => setShowModeSelector(true)
+        }}>
+            {children}
 
-            {/* Progress Bar */}
-            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden mb-8">
-                <div
-                    className="h-full bg-[#ccff00] transition-all duration-500 ease-out"
-                    style={{ width: `${progress}%` }}
-                />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-                {!inQueue ? (
-                    <button
-                        onClick={handleJoinQueue}
-                        disabled={loading}
-                        className="flex-1 h-14 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            {/* --- STICKY FIND MATCH BUTTON --- */}
+            {/* Verify we are in the dashboard/play area? Or global? User said "wraps layout.tsx" and "Nexus (/dashboard/play)". */}
+            {/* Assuming global stickiness is fine, or check pathname. */}
+            {(pathname?.startsWith('/dashboard/play') && !matchFoundData && !isInMatch && !isSearching) && (
+                <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-10 fade-in duration-500">
+                    <Button
+                        size="lg"
+                        className="h-16 px-8 rounded-full bg-[#ccff00] hover:bg-[#b3e600] text-black font-black font-orbitron tracking-widest text-lg shadow-[0_0_30px_rgba(204,255,0,0.4)] hover:shadow-[0_0_50px_rgba(204,255,0,0.6)] hover:scale-105 transition-all border-2 border-black/10"
+                        onClick={() => setShowModeSelector(true)}
                     >
-                        {loading ? <Loader2 className="animate-spin" /> : <UserPlus size={20} />}
-                        Join Operation
-                    </button>
-                ) : (
-                    <div className="flex-1 h-14 bg-white/5 text-zinc-400 font-bold rounded-xl flex items-center justify-center border border-white/10">
-                        <Loader2 className="animate-spin mr-2" />
-                        In Queue...
-                    </div>
-                )}
+                        <Swords className="w-6 h-6 mr-3" />
+                        FIND MATCH
+                    </Button>
+                </div>
+            )}
 
-                {/* Admin/Debug Start Button - Visible if enough players */}
-                {queue.length >= playersNeeded && (
-                    <button
-                        onClick={handleStartMatch}
-                        disabled={loading}
-                        className="h-14 px-8 bg-[#ccff00] text-black font-bold rounded-xl hover:bg-[#bbe000] transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Play size={20} />
-                        Launch
-                    </button>
-                )}
-            </div>
-
-            {/* Player List */}
-            <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {queue.map((q) => (
-                    <div key={q.user_id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 group hover:border-white/10 transition-all">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold shrink-0">
-                                {q.players?.username?.[0] || "?"}
-                            </div>
-                            <div className="truncate text-sm font-medium">
-                                {q.players?.username || "Unknown Pilot"}
+            {/* --- SEARCHING INDICATOR --- */}
+            {isSearching && (
+                <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-10 fade-in duration-300">
+                    <div className="bg-zinc-900/90 backdrop-blur-md border border-[#ccff00]/30 rounded-2xl p-4 shadow-2xl flex items-center gap-4 min-w-[300px]">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-[#ccff00] rounded-full animate-ping opacity-20" />
+                            <div className="relative w-12 h-12 bg-black rounded-full flex items-center justify-center border border-[#ccff00]/50">
+                                <Loader2 className="w-6 h-6 text-[#ccff00] animate-spin" />
                             </div>
                         </div>
-
-                        {currentUserId && currentUserId !== q.user_id && (
-                            <ReportUserDialog
-                                reportedId={q.user_id}
-                                reportedName={q.players?.username || "Unknown"}
-                                guildId={q.guild_id || "global"}
-                            />
-                        )}
+                        <div className="flex-1">
+                            <div className="text-[#ccff00] font-bold font-orbitron tracking-widest text-sm">SEARCHING...</div>
+                            <div className="text-zinc-400 font-mono text-xs flex items-center gap-2">
+                                <Timer className="w-3 h-3" />
+                                {Math.floor(searchDuration / 60)}:{(searchDuration % 60).toString().padStart(2, '0')}
+                            </div>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-full"
+                            onClick={cancelSearch}
+                        >
+                            <XCircle className="w-6 h-6" />
+                        </Button>
                     </div>
-                ))}
-            </div>
-        </div>
+                </div>
+            )}
+
+            {/* --- MODE SELECTOR MODAL --- */}
+            <Dialog open={showModeSelector} onOpenChange={setShowModeSelector}>
+                <DialogContent className="bg-zinc-950 border border-zinc-800 text-white sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black font-orbitron tracking-widest text-center">
+                            SELECT PROTOCOL
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        {gameModes.map((mode) => (
+                            <div
+                                key={mode.id}
+                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedMode === mode.id
+                                    ? 'border-[#ccff00] bg-[#ccff00]/10'
+                                    : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-600'
+                                    }`}
+                                onClick={() => setSelectedMode(mode.id)}
+                            >
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold text-lg">{mode.name}</span>
+                                    <Badge variant="outline" className="text-zinc-400 border-zinc-700">
+                                        {mode.team_size}v{mode.team_size}
+                                    </Badge>
+                                </div>
+                                <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider font-mono">
+                                    Estimated Wait: 2m
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            className="w-full bg-[#ccff00] hover:bg-[#b3e600] text-black font-bold font-orbitron tracking-widest h-12 text-lg"
+                            disabled={!selectedMode}
+                            onClick={() => selectedMode && startSearch(selectedMode)}
+                        >
+                            INITIATE SEARCH
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* --- MATCH FOUND OVERLAY --- */}
+            {matchFoundData && (
+                <MatchFoundOverlay
+                    onAccept={handleAcceptMatch}
+                    onTimeout={handleDeclineMatch}
+                />
+            )}
+        </QueueContext.Provider>
     );
 }

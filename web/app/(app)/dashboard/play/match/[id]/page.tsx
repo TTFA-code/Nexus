@@ -6,7 +6,7 @@ import { submitMatchResult } from "@/actions/matchActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MatchReportForm from "./MatchReportForm";
-import { Handshake } from "lucide-react";
+import { Handshake, AlertTriangle } from "lucide-react";
 
 interface MatchPageProps {
     params: Promise<{
@@ -122,6 +122,24 @@ export default async function MatchReportPage(props: MatchPageProps) {
             {isPending && (
                 <div className="text-center text-zinc-400 text-sm animate-pulse">
                     * Result is pending verification and is subject to change by admins.
+                </div>
+            )}
+
+            {match.status === 'cancelled' && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl">
+                    <div className="text-center space-y-6 max-w-md p-6 border border-red-500/30 bg-red-900/10 rounded-2xl">
+                        <AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
+                        <h2 className="text-3xl font-black text-red-500 font-orbitron tracking-widest">MATCH DISSOLVED</h2>
+                        <p className="text-zinc-400 font-mono">
+                            A player failed to ready up. The match has been cancelled.
+                        </p>
+                        <Button
+                            onClick={() => window.location.href = '/dashboard/play'}
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold tracking-widest w-full"
+                        >
+                            RETURN TO LOBBY
+                        </Button>
+                    </div>
                 </div>
             )}
 

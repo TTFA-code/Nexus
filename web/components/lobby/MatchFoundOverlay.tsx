@@ -7,9 +7,10 @@ import { toast } from 'sonner';
 
 interface MatchFoundOverlayProps {
     onAccept: () => Promise<boolean>; // Changed to Promise<boolean> to signal success/fail
+    onTimeout?: () => void;
 }
 
-export function MatchFoundOverlay({ onAccept }: MatchFoundOverlayProps) {
+export function MatchFoundOverlay({ onAccept, onTimeout }: MatchFoundOverlayProps) {
     const [progress, setProgress] = useState(100);
     const [accepted, setAccepted] = useState(false);
     const [isAccepting, setIsAccepting] = useState(false);
@@ -19,14 +20,17 @@ export function MatchFoundOverlay({ onAccept }: MatchFoundOverlayProps) {
             setProgress((prev) => {
                 if (prev <= 0) {
                     clearInterval(timer);
+                    if (!accepted && onTimeout) {
+                        onTimeout();
+                    }
                     return 0;
                 }
                 return prev - 1; // 100 ticks = 10s if 100ms interval
             });
-        }, 100);
+        }, 300); // 300ms * 100 ticks = 30 seconds
 
         return () => clearInterval(timer);
-    }, []);
+    }, [accepted, onTimeout]);
 
     const handleAccept = async () => {
         if (isAccepting) return;
