@@ -42,8 +42,8 @@ BEGIN
             -- 1. Calculate Radius
             v_anchor_wait_seconds := EXTRACT(EPOCH FROM (NOW() - v_anchor.joined_at));
             
-            -- Formula: Base 50 + (6 * seconds). Cap at 400.
-            v_current_radius := 50 + (v_anchor_wait_seconds * 6);
+            -- Formula: Base 100 + (6 * seconds). Cap at 400.
+            v_current_radius := 100 + (v_anchor_wait_seconds * 6);
             IF v_current_radius > 400 THEN
                 v_current_radius := 400;
             END IF;
