@@ -1,9 +1,14 @@
-"use client"
-
 import { useState, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Trophy, Swords, Medal, Crown, Search, Ghost } from "lucide-react"
+import { User, Trophy, Swords, Medal, Crown, Search, Ghost, Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 interface LeaderboardClientProps {
     groupedRankings: Record<string, any[]>
@@ -11,6 +16,14 @@ interface LeaderboardClientProps {
 
 export function LeaderboardClient({ groupedRankings }: LeaderboardClientProps) {
     const [searchQuery, setSearchQuery] = useState("")
+    const [selectedGame, setSelectedGame] = useState<string>("all")
+
+    const filteredGames = useMemo(() => {
+        if (selectedGame === "all") return groupedRankings;
+        return { [selectedGame]: groupedRankings[selectedGame] };
+    }, [selectedGame, groupedRankings]);
+
+    const gameOptions = Object.keys(groupedRankings);
 
     return (
         <div className="p-4 md:p-8 space-y-12 animate-in fade-in duration-500 min-h-screen bg-[#0a0a0f]">
@@ -25,16 +38,33 @@ export function LeaderboardClient({ groupedRankings }: LeaderboardClientProps) {
                     </p>
                 </div>
 
-                {/* Search Bar - Absolute Centered or Right Aligned? Let's put it in the header for cleanliness */}
-                <div className="relative z-10 w-full md:w-96">
-                    <div className="relative">
+                {/* Controls Area */}
+                <div className="relative z-10 flex flex-col md:flex-row gap-4 w-full md:w-auto">
+
+                    {/* Game Filter */}
+                    <div className="w-full md:w-64">
+                        <Select value={selectedGame} onValueChange={setSelectedGame}>
+                            <SelectTrigger className="w-full bg-black/40 border-white/10 text-white font-mono uppercase tracking-wider h-12">
+                                <SelectValue placeholder="FILTER PROTOCOL" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-950 border-zinc-800 text-white font-mono uppercase">
+                                <SelectItem value="all">ALL PROTOCOLS</SelectItem>
+                                {gameOptions.map((game) => (
+                                    <SelectItem key={game} value={game}>{game}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="relative w-full md:w-80">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
                         <input
                             type="text"
                             placeholder="SEARCH AGENT..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-full py-3 pl-12 pr-4 text-white font-mono text-sm focus:outline-none focus:border-amber-500/50 transition-all placeholder:text-zinc-600 uppercase tracking-wider"
+                            className="w-full bg-black/40 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-white font-mono text-sm focus:outline-none focus:border-amber-500/50 transition-all placeholder:text-zinc-600 uppercase tracking-wider h-12"
                         />
                     </div>
                 </div>
@@ -50,7 +80,7 @@ export function LeaderboardClient({ groupedRankings }: LeaderboardClientProps) {
 
             {/* Games Grid */}
             <div className="space-y-16">
-                {Object.entries(groupedRankings).map(([game, players]) => (
+                {Object.entries(filteredGames).map(([game, players]) => (
                     <GameLeaderboard
                         key={game}
                         game={game}
@@ -59,7 +89,7 @@ export function LeaderboardClient({ groupedRankings }: LeaderboardClientProps) {
                     />
                 ))}
 
-                {Object.keys(groupedRankings).length === 0 && (
+                {Object.keys(filteredGames).length === 0 && (
                     <div className="text-center py-20 text-zinc-500 font-mono uppercase tracking-widest border border-dashed border-zinc-800 rounded-3xl">
                         No Ranked Data Available
                     </div>
@@ -82,7 +112,7 @@ function GameLeaderboard({ game, players, searchQuery }: { game: string, players
                 <div className="ml-auto text-xs text-zinc-600 font-mono uppercase">{players.length} PLAYERS</div>
             </div>
 
-            <div className="max-h-[80vh] overflow-y-auto custom-scrollbar pr-2 scroll-pt-24 relative rounded-xl border border-white/5 bg-black/20 p-4 space-y-6">
+            <div className="max-h-[600px] overflow-y-auto custom-scrollbar pr-2 scroll-pt-24 relative rounded-xl border border-white/5 bg-black/20 p-4 space-y-6">
 
                 {/* TOP 3 PODIUM - Flexbox for Order Control */}
                 {/* Mobile: Order 1 (Gold), 2 (Silver), 3 (Bronze) */}
