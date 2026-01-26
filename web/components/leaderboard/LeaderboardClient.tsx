@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Trophy, Swords, Medal, Crown, Search, Ghost, Filter } from "lucide-react"
