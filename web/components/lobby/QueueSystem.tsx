@@ -41,6 +41,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
     const [showModeSelector, setShowModeSelector] = useState(false);
     const [matchFoundData, setMatchFoundData] = useState<any | null>(null);
     const [gameModes, setGameModes] = useState<any[]>([]);
+    const [games, setGames] = useState<any[]>([]); // New State
+    const [selectedGameId, setSelectedGameId] = useState<string | null>(null); // New State
     const [selectedMode, setSelectedMode] = useState<string | null>(null);
 
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -56,6 +58,7 @@ export function QueueProvider({ children }: { children: ReactNode }) {
             if (!user) return;
             userId = user.id;
 
+            // ... (Queue Check Logic Omitted for Brevity - It remains same) ...
             // A. Check if already in Queue
             const { data: queueEntry } = await (supabase as any)
                 .from('matchmaking_queue')
@@ -72,11 +75,9 @@ export function QueueProvider({ children }: { children: ReactNode }) {
                 setSearchDuration(secondsElapsed > 0 ? secondsElapsed : 0);
             }
 
-            // B. Check if already in Match (Active)
-            // (Optional optimization: server component passes this state initially)
-            // For now, we rely on the user to not be silly, or queue fail.
+            // B. Check if already in Match (Active) - Omitted
 
-            // C. Subscribe to Ready Checks (The "Match Found" signal)
+            // C. Subscribe to Ready Checks
             readyCheckSubscription = supabase
                 .channel('queue_system_ready_checks')
                 .on(
@@ -85,15 +86,7 @@ export function QueueProvider({ children }: { children: ReactNode }) {
                         event: 'INSERT',
                         schema: 'public',
                         table: 'ready_checks',
-                        filter: `user_id=eq.${user.identities?.find(i => i.provider === 'discord')?.id}` // Matches using Discord ID
-                        // Wait, user_id in ready_checks is player's user_id (DiscordId? Or AuthId?).
-                        // In migration: `user_id VARCHAR(20) REFERENCES players(user_id)`.
-                        // Players `user_id` is Discord Snowflake usually?
-                        // Let's verify `join_queue`. It inserts `discord_id`.
-                        // `find_match` inserts `user_id` = `v_player_row.discord_id`.
-                        // So ready_checks uses DISCORD ID.
-                        // But RLS? `ready_checks` doesn't have RLS in the migration I saw, but it should.
-                        // Assuming we can subscribe based on string filter.
+                        filter: `user_id=eq.${user.identities?.find(i => i.provider === 'discord')?.id}`
                     },
                     (payload: any) => {
                         console.log("Match Found Signal!", payload);
@@ -102,9 +95,12 @@ export function QueueProvider({ children }: { children: ReactNode }) {
                 )
                 .subscribe();
 
-            // D. Fetch Game Modes (Lazy load or initial)
+            // D. Fetch Game Modes & Games
             const { data: modes } = await supabase.from('game_modes').select('*');
             if (modes) setGameModes(modes);
+
+            const { data: gamesData } = await supabase.from('games').select('*'); // Fetch Games
+            if (gamesData) setGames(gamesData);
         };
 
         init();
@@ -278,43 +274,100 @@ export function QueueProvider({ children }: { children: ReactNode }) {
             )}
 
             {/* --- MODE SELECTOR MODAL --- */}
-            <Dialog open={showModeSelector} onOpenChange={setShowModeSelector}>
+            <Dialog open={showModeSelector} onOpenChange={(open) => {
+                setShowModeSelector(open);
+                if (!open) {
+                    // Reset selection on close? Or keep for convenience?
+                    // User said "pick your game and then...". Let's reset for clean state.
+                    // setSelectedGameId(null);
+                }
+            }}>
                 <DialogContent className="bg-zinc-950 border border-zinc-800 text-white sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black font-orbitron tracking-widest text-center">
-                            SELECT PROTOCOL
+                            {!selectedGameId ? "SELECT GAME" : "SELECT MODE"}
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        {gameModes.map((mode) => (
-                            <div
-                                key={mode.id}
-                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedMode === mode.id
-                                    ? 'border-[#ccff00] bg-[#ccff00]/10'
-                                    : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-600'
-                                    }`}
-                                onClick={() => setSelectedMode(mode.id)}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <span className="font-bold text-lg">{mode.name}</span>
-                                    <Badge variant="outline" className="text-zinc-400 border-zinc-700">
-                                        {mode.team_size}v{mode.team_size}
-                                    </Badge>
-                                </div>
-                                <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider font-mono">
-                                    Estimated Wait: 2m
-                                </div>
+
+                    <div className="py-4">
+                        {!selectedGameId ? (
+                            /* STEP 1: GAME SELECTION */
+                            <div className="grid gap-4">
+                                {games.map((game) => (
+                                    <div
+                                        key={game.id}
+                                        className="p-4 rounded-xl border-2 border-zinc-800 bg-zinc-900/50 hover:border-[#ccff00] hover:bg-[#ccff00]/10 cursor-pointer transition-all group"
+                                        onClick={() => setSelectedGameId(game.id)}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            {game.icon_url ? (
+                                                <img src={game.icon_url} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center">
+                                                    <Swords className="w-6 h-6 text-zinc-600 group-hover:text-[#ccff00]" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg">{game.name}</h3>
+                                                <p className="text-xs text-zinc-500 font-mono uppercase">
+                                                    {gameModes.filter((m) => m.game_id === game.id).length} Active Protocols
+                                                </p>
+                                            </div>
+                                            <div className="text-[#ccff00] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                ➜
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        ) : (
+                            /* STEP 2: MODE SELECTION */
+                            <div className="space-y-4">
+                                <div className="grid gap-3">
+                                    {gameModes
+                                        .filter((m) => m.game_id === selectedGameId)
+                                        .map((mode) => (
+                                            <div
+                                                key={mode.id}
+                                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedMode === mode.id
+                                                    ? 'border-[#ccff00] bg-[#ccff00]/10'
+                                                    : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-600'
+                                                    }`}
+                                                onClick={() => setSelectedMode(mode.id)}
+                                            >
+                                                <div className="flex justify-between items-center">
+                                                    <span className="font-bold text-lg">{mode.name}</span>
+                                                    <Badge variant="outline" className="text-zinc-400 border-zinc-700">
+                                                        {mode.team_size}v{mode.team_size}
+                                                    </Badge>
+                                                </div>
+                                                <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider font-mono">
+                                                    Estimated Wait: ~2m
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full text-zinc-500 hover:text-white"
+                                    onClick={() => setSelectedGameId(null)}
+                                >
+                                    ← SELECT DIFFERENT GAME
+                                </Button>
+                            </div>
+                        )}
                     </div>
+
                     <DialogFooter>
-                        <Button
-                            className="w-full bg-[#ccff00] hover:bg-[#b3e600] text-black font-bold font-orbitron tracking-widest h-12 text-lg"
-                            disabled={!selectedMode}
-                            onClick={() => selectedMode && startSearch(selectedMode)}
-                        >
-                            INITIATE SEARCH
-                        </Button>
+                        {selectedGameId && (
+                            <Button
+                                className="w-full bg-[#ccff00] hover:bg-[#b3e600] text-black font-bold font-orbitron tracking-widest h-12 text-lg"
+                                disabled={!selectedMode}
+                                onClick={() => selectedMode && startSearch(selectedMode)}
+                            >
+                                INITIATE SEARCH
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
