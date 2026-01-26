@@ -83,7 +83,7 @@ BEGIN
 
                 -- Create Match
                 INSERT INTO public.matches (game_mode_id, status, started_at)
-                VALUES (v_mode.game_mode_id, 'in_progress', NOW())
+                VALUES (v_mode.game_mode_id, 'started', NOW())
                 RETURNING id INTO v_match_id;
 
                 -- Assign Teams (S-Curve Sort)
