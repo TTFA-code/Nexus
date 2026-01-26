@@ -76,7 +76,7 @@ BEGIN
                 -- Add Anchor + Opponents to refined list
                 SELECT jsonb_agg(x) INTO v_final_team
                 FROM (
-                    SELECT row_to_json(v_anchor) as x
+                    SELECT to_jsonb(v_anchor) as x
                     UNION ALL
                     SELECT * FROM jsonb_array_elements(v_potential_opponents)
                 ) combined;
