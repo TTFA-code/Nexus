@@ -152,7 +152,17 @@ export function QueueProvider({ children }: { children: ReactNode }) {
 
             toast.success("Joined Queue", { description: "Searching for opponents..." });
         } catch (err: any) {
+        } catch (err: any) {
             console.error("Queue Start Error:", err);
+
+            // Handle "Already in queue" sync issue
+            if (err.message?.includes("Already in queue")) {
+                toast.error("Queue Sync Error", { description: "Resetting your session. Please try again." });
+                await (supabase as any).rpc('leave_queue'); // Force clear
+                setIsSearching(false);
+                return;
+            }
+
             setIsSearching(false);
             toast.error("Queue Failed", { description: err.message || "Unknown error occurred" });
         }
