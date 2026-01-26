@@ -152,7 +152,6 @@ export function QueueProvider({ children }: { children: ReactNode }) {
 
             toast.success("Joined Queue", { description: "Searching for opponents..." });
         } catch (err: any) {
-        } catch (err: any) {
             console.error("Queue Start Error:", err);
 
             // Handle "Already in queue" sync issue
