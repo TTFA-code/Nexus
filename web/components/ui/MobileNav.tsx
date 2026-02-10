@@ -10,6 +10,12 @@ import { createClient } from "@/utils/supabase/client"
 export function MobileNav() {
     const pathname = usePathname()
     const params = useParams()
+
+    // Hide mobile nav on match pages
+    if (pathname?.includes('/match/')) {
+        return null;
+    }
+
     const activeGuildId = (params?.guildId as string) || "547362530826125313";
     const supabase = createClient()
     const [isAdmin, setIsAdmin] = React.useState(false)

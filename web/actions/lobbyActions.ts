@@ -381,12 +381,30 @@ export async function initializeMatchSequence(lobbyId: string): Promise<ActionRe
         // Verify Commander Status (Comparing Discord ID)
         const { data: lobby } = await supabase
             .from('lobbies')
-            .select('creator_id')
+            .select('creator_id, game_modes(*), lobby_players(count)') // added game_modes and player count
             .eq('id', lobbyId)
             .single()
 
         if (!lobby || lobby.creator_id !== discordId) { // Fixed Comparison
             throw new Error('Unauthorized: Only the Commander can initiate launch.')
+        }
+
+        // Validate Player Count
+        // lobby.lobby_players is returned as { count: N } or array depending on query, but .select('..., lobby_players(count)') returns { count: N } usually with aggregation,
+        // Actually Supabase JS client with select('..., lobby_players(count)') returns array of objects if used on a collection, but on .single() it might be different structure.
+        // Safer way: perform explicit count query or trust that previous logic wasn't using count.
+        // Let's re-query to be safe and clear.
+
+        const { count: playerCount, error: countError } = await supabase
+            .from('lobby_players')
+            .select('*', { count: 'exact', head: true })
+            .eq('lobby_id', lobbyId);
+
+        const gameMode = Array.isArray(lobby.game_modes) ? lobby.game_modes[0] : lobby.game_modes;
+        const requiredPlayers = (gameMode?.team_size || 5) * 2;
+
+        if ((playerCount || 0) !== requiredPlayers) {
+            throw new Error(`Cannot start match: Waiting for more players (${playerCount}/${requiredPlayers}).`);
         }
 
         // 2. Update Status AND Reset Ready State for Handshake

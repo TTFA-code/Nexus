@@ -17,7 +17,7 @@ export default function DashboardLayout({
         { name: 'Profile', href: '/dashboard/profile/me', icon: FileText },
     ];
 
-    const showHeader = !pathname.includes('/admin') && !pathname.includes('/leaderboard');
+    const showHeader = !pathname.includes('/admin') && !pathname.includes('/leaderboard') && !pathname.includes('/match/');
 
     return (
         <div className="min-h-screen bg-[#0a0a0f]/50 backdrop-blur-md text-white">

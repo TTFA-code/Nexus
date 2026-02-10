@@ -13,6 +13,12 @@ export function GlitchSidebar() {
     const pathname = usePathname()
     const router = useRouter()
     const params = useParams()
+
+    // Hide sidebar on match pages
+    if (pathname?.includes('/match/')) {
+        return null;
+    }
+
     // Fallback to Main Server if no Guild ID is present (e.g. on /play)
     const activeGuildId = (params?.guildId as string) || "547362530826125313";
     const supabase = createClient()

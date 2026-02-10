@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { MatchFoundOverlay } from './MatchFoundOverlay';
+import { ChatBox } from '../chat/ChatBox';
 
 interface LobbyWorkspaceProps {
     lobbyId: string;
@@ -285,7 +286,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
     }
 
     const maxPlayers = (lobby.game_modes?.team_size || 5) * 2;
-    const allReady = players.length > 0 && players.every(p => p.is_ready);
+    const allReady = players.length === maxPlayers && players.every(p => p.is_ready);
     // FIX: Compare against discordUserId (TEXT) not authUserId (UUID)
     const currentUserPlayer = players.find(p => p.user_id === discordUserId);
     const isMeReady = currentUserPlayer?.is_ready;
@@ -620,6 +621,17 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                             </div>
                         </div>
                     </div>
+                </div>
+                {/* Chat System */}
+                <div className="fixed bottom-6 right-6 z-40 w-80 md:w-96 animate-in slide-in-from-right-10 fade-in duration-500">
+                    {discordUserId && (
+                        <ChatBox
+                            channelId={lobbyId}
+                            type="lobby"
+                            currentUserId={discordUserId}
+                            className="h-[350px] shadow-[0_0_30px_rgba(0,0,0,0.5)] border-white/10"
+                        />
+                    )}
                 </div>
             </div>
         </div>
