@@ -241,7 +241,7 @@ export function QueueProvider({ children }: { children: ReactNode }) {
             {/* --- STICKY FIND MATCH BUTTON --- */}
             {/* Verify we are in the dashboard/play area? Or global? User said "wraps layout.tsx" and "Nexus (/dashboard/play)". */}
             {/* Assuming global stickiness is fine, or check pathname. */}
-            {(pathname?.startsWith('/dashboard/play') && !matchFoundData && !isInMatch && !isSearching) && (
+            {(pathname?.startsWith('/dashboard/play') && !pathname.includes('/lobby/') && !pathname.includes('/match/') && !matchFoundData && !isInMatch && !isSearching) && (
                 <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-40 animate-in slide-in-from-bottom-10 fade-in duration-500">
                     <Button
                         size="lg"
