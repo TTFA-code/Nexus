@@ -14,6 +14,8 @@ interface ChatBoxProps {
     type: "lobby" | "match";
     currentUserId: string; // Discord ID
     className?: string;
+    embedded?: boolean; // NEW: If true, renders without fixed positioning/collapsible wrapper
+    onUnreadChange?: (hasUnread: boolean) => void; // NEW: Callback for parent unread tracking
 }
 
 interface Message {
@@ -27,7 +29,7 @@ interface Message {
     };
 }
 
-export function ChatBox({ channelId, type, currentUserId, className }: ChatBoxProps) {
+export function ChatBox({ channelId, type, currentUserId, className, embedded = false, onUnreadChange }: ChatBoxProps) {
     const supabase = createClient();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState("");
@@ -109,16 +111,27 @@ export function ChatBox({ channelId, type, currentUserId, className }: ChatBoxPr
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages, isOpen]);
+    }, [messages, isOpen, embedded]); // Add embedded
 
     // Track unread messages
     useEffect(() => {
-        if (!isOpen && messages.length > 0) {
-            // Simple logic: if closed and messages exist/update, show dot.
-            // Ideally track last read timestamp, but for now just toggle on new message if closed.
+        if (!isOpen && messages.length > 0 && !embedded) {
+            // Standard Widget Mode Logic
             setHasUnread(true);
+        } else if (embedded && messages.length > 0) {
+            // Embedded Mode Logic: Always notify parent of unread if not "seen"
+            // Parent handles the "seen" state via props or mounting
+            // For now, let's assume if it receives a new message and is NOT visible, parent tracks it.
+            // But here we rely on the parent to pass `onUnreadChange`
+            // Simple: If a new message comes in, and we are not at the bottom? No, simpler.
+            // Just fire the event on every new message?
+            // Actually, parent controls visibility. If parent says "Chat Tab Inactive", parent tracks.
+            // We just need to signal "New Message Received".
+            // Let's refine:
+            // We can just rely on the effect firing on `messages` change.
+            onUnreadChange?.(true);
         }
-    }, [messages, isOpen]);
+    }, [messages, isOpen, embedded]);
 
     useEffect(() => {
         if (isOpen) setHasUnread(false);
@@ -132,21 +145,28 @@ export function ChatBox({ channelId, type, currentUserId, className }: ChatBoxPr
         const content = newMessage.trim();
         setNewMessage(""); // Optimistic clear
 
+        const payload = {
+            [type === "lobby" ? "lobby_id" : "match_id"]: channelId,
+            user_id: currentUserId,
+            content: content,
+        };
+
+        console.log("Attempting to send message:", payload);
+
         const { error } = await (supabase as any)
             .from("messages")
-            .insert({
-                [type === "lobby" ? "lobby_id" : "match_id"]: channelId,
-                user_id: currentUserId, // This should be the player.user_id (Discord ID)
-                content: content,
-            });
+            .insert(payload);
 
         if (error) {
             console.error("Failed to send message:", error);
-            toast.error("Transmission Failed");
+            toast.error(`Transmission Failed: ${error.message || error.details || "Unknown error"}`);
         }
     };
 
-    if (!isOpen) {
+    // --- RENDER LOGIC ---
+
+    // 1. Widget Mode (Floating Button)
+    if (!embedded && !isOpen) {
         return (
             <Button
                 onClick={() => setIsOpen(true)}
@@ -166,32 +186,37 @@ export function ChatBox({ channelId, type, currentUserId, className }: ChatBoxPr
         );
     }
 
+    // 2. Chat Window (Embedded or Floating)
     return (
         <div className={cn(
             "flex flex-col bg-black/90 border border-white/10 backdrop-blur-xl overflow-hidden shadow-2xl transition-all duration-300",
-            // Mobile: Full screen or large bottom sheet. Desktop: Fixed widget.
-            "fixed bottom-0 right-0 w-full h-[50vh] md:h-[400px] md:w-96 md:bottom-20 md:right-6 md:rounded-2xl rounded-t-2xl z-50",
+            // Conditional Styling based on mode
+            embedded
+                ? "w-full h-full rounded-xl border-0 shadow-none bg-transparent" // Embedded: Fill container
+                : "fixed bottom-0 right-0 w-full h-[50vh] md:h-[400px] md:w-96 md:bottom-20 md:right-6 md:rounded-2xl rounded-t-2xl z-50", // Widget: Fixed
             className
         )}>
-            {/* Header */}
-            <div
-                className="p-3 border-b border-white/5 bg-white/5 flex items-center justify-between cursor-pointer"
-                onClick={() => setIsOpen(false)}
-            >
-                <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-zinc-400" />
-                    <span className="text-[10px] font-bold text-zinc-300 tracking-widest uppercase font-orbitron">
-                        {type === "lobby" ? "SQUAD COMMS" : "MATCH COMMS"}
-                    </span>
+            {/* Header (Only show for Widget mode) */}
+            {!embedded && (
+                <div
+                    className="p-3 border-b border-white/5 bg-white/5 flex items-center justify-between cursor-pointer"
+                    onClick={() => setIsOpen(false)}
+                >
+                    <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-zinc-400" />
+                        <span className="text-[10px] font-bold text-zinc-300 tracking-widest uppercase font-orbitron">
+                            {type === "lobby" ? "SQUAD COMMS" : "MATCH COMMS"}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)] animate-pulse" />
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-zinc-500 hover:text-white" onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}>
+                            <span className="sr-only">Close</span>
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"><path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.1929 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.1929 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)] animate-pulse" />
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-zinc-500 hover:text-white" onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}>
-                        <span className="sr-only">Close</span>
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"><path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.1929 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.1929 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
-                    </Button>
-                </div>
-            </div>
+            )}
 
             {/* Messages Area */}
             <div

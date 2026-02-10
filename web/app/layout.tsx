@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Orbitron, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
@@ -48,6 +49,7 @@ export default function RootLayout({
         >
           <main className="w-full">
             {children}
+            <Toaster />
           </main>
         </ThemeProvider>
       </body>

@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { MatchFoundOverlay } from './MatchFoundOverlay';
 import { ChatBox } from '../chat/ChatBox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface LobbyWorkspaceProps {
     lobbyId: string;
@@ -36,6 +37,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
     const [showMatchOverlay, setShowMatchOverlay] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState('Connecting to Match Server...');
     const [kickTargetId, setKickTargetId] = useState<string | null>(null); // NEW: Kick confirmation state
+    const [unreadChatCount, setUnreadChatCount] = useState(0);
 
 
     const supabase = createClient();
@@ -510,80 +512,113 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column: Roster */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-black/40 border border-white/5 rounded-xl p-6 backdrop-blur-sm">
-                        <div className="flex items-center gap-2 mb-6">
-                            <Users className={`w-5 h-5 text-${themeColor}-500`} />
-                            <h3 className="text-lg font-bold text-white">Active Roster</h3>
-                            <span className="ml-auto text-xs font-mono text-zinc-500">{players.length} / {maxPlayers} PLAYERS</span>
-                        </div>
+                    <Tabs defaultValue="roster" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 mb-4 bg-black/40 border border-white/5 h-12">
+                            <TabsTrigger value="roster" className="font-orbitron tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white text-zinc-500">
+                                ACTIVE ROSTER
+                            </TabsTrigger>
+                            <TabsTrigger value="chat" className="font-orbitron tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white text-zinc-500 relative">
+                                SQUAD COMMS
+                                {unreadChatCount > 0 && (
+                                    <span className="absolute top-2 right-4 w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_#22c55e]" />
+                                )}
+                            </TabsTrigger>
+                        </TabsList>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {players.map((p: any) => (
-                                <div
-                                    key={p.user_id}
-                                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 ${p.is_ready
-                                        ? 'bg-green-500/5 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
-                                        : 'bg-white/5 border-white/5'
-                                        }`}
-                                >
-                                    <div className={`w-10 h-10 rounded bg-zinc-900 border flex items-center justify-center text-zinc-500 relative ${p.is_ready ? 'border-green-500/50' : 'border-white/10'}`}>
-                                        {p.player?.avatar_url ? (
-                                            <img src={p.player.avatar_url} alt="" className="w-full h-full rounded object-cover" />
-                                        ) : (
-                                            <Users className={`w-5 h-5 ${p.is_ready ? 'text-green-500' : ''}`} />
-                                        )}
-                                        {p.user_id === lobby.creator_id && (
-                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full border border-black" title="Lobby Host" />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className={`text-sm font-bold truncate ${p.is_ready ? 'text-green-400' : 'text-white'}`}>
-                                            {p.player?.username || "Unknown Player"}
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <div className={`text-[10px] uppercase font-mono ${p.is_ready ? 'text-green-500/70' : 'text-zinc-500'}`}>
-                                                {p.is_ready ? 'READY FOR DEPLOYMENT' : 'PREPARING...'}
+                        <TabsContent value="roster" className="mt-0">
+                            <div className="bg-black/40 border border-white/5 rounded-xl p-6 backdrop-blur-sm min-h-[400px]">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <Users className={`w-5 h-5 text-${themeColor}-500`} />
+                                    <h3 className="text-lg font-bold text-white">Active Roster</h3>
+                                    <span className="ml-auto text-xs font-mono text-zinc-500">{players.length} / {maxPlayers} PLAYERS</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {players.map((p: any) => (
+                                        <div
+                                            key={p.user_id}
+                                            className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 ${p.is_ready
+                                                ? 'bg-green-500/5 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                                                : 'bg-white/5 border-white/5'
+                                                }`}
+                                        >
+                                            <div className={`w-10 h-10 rounded bg-zinc-900 border flex items-center justify-center text-zinc-500 relative ${p.is_ready ? 'border-green-500/50' : 'border-white/10'}`}>
+                                                {p.player?.avatar_url ? (
+                                                    <img src={p.player.avatar_url} alt="" className="w-full h-full rounded object-cover" />
+                                                ) : (
+                                                    <Users className={`w-5 h-5 ${p.is_ready ? 'text-green-500' : ''}`} />
+                                                )}
+                                                {p.user_id === lobby.creator_id && (
+                                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full border border-black" title="Lobby Host" />
+                                                )}
                                             </div>
-                                            {/* MMR Badge */}
-                                            {p.mmr !== null && p.mmr !== undefined && (
-                                                <div className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${p.mmr >= 2000 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : // Diamond
-                                                    p.mmr >= 1500 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : // Platinum
-                                                        p.mmr >= 1200 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : // Gold
-                                                            p.mmr >= 900 ? 'bg-zinc-400/20 text-zinc-300 border border-zinc-400/40' : // Silver
-                                                                'bg-orange-500/20 text-orange-400 border border-orange-500/40' // Bronze
-                                                    }`}>
-                                                    {p.mmr} MMR
+                                            <div className="flex-1 min-w-0">
+                                                <div className={`text-sm font-bold truncate ${p.is_ready ? 'text-green-400' : 'text-white'}`}>
+                                                    {p.player?.username || "Unknown Player"}
                                                 </div>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <div className={`text-[10px] uppercase font-mono ${p.is_ready ? 'text-green-500/70' : 'text-zinc-500'}`}>
+                                                        {p.is_ready ? 'READY FOR DEPLOYMENT' : 'PREPARING...'}
+                                                    </div>
+                                                    {/* MMR Badge */}
+                                                    {p.mmr !== null && p.mmr !== undefined && (
+                                                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${p.mmr >= 2000 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : // Diamond
+                                                            p.mmr >= 1500 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : // Platinum
+                                                                p.mmr >= 1200 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : // Gold
+                                                                    p.mmr >= 900 ? 'bg-zinc-400/20 text-zinc-300 border border-zinc-400/40' : // Silver
+                                                                        'bg-orange-500/20 text-orange-400 border border-orange-500/40' // Bronze
+                                                            }`}>
+                                                            {p.mmr} MMR
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {p.is_ready && <CheckCircle className="w-5 h-5 text-green-500 animate-in zoom-in spin-in-90 duration-300" />}
+
+                                            {/* Kick Button (Commander Only, Not Self) */}
+                                            {isCommander && p.user_id !== authUserId && (
+                                                <button
+                                                    onClick={() => setKickTargetId(p.user_id)}
+                                                    className="ml-2 p-1.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                                                    title="Remove Player"
+                                                >
+                                                    <UserX className="w-4 h-4" />
+                                                </button>
                                             )}
                                         </div>
-                                    </div>
-                                    {p.is_ready && <CheckCircle className="w-5 h-5 text-green-500 animate-in zoom-in spin-in-90 duration-300" />}
+                                    ))}
+                                    {/* Placeholder */}
+                                    {Array.from({ length: Math.max(0, maxPlayers - players.length) }).map((_, i) => (
+                                        <div key={`placeholder-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 border-dashed opacity-50">
+                                            <div className="w-10 h-10 rounded bg-transparent border border-white/10 flex items-center justify-center text-zinc-700">
+                                                <Users className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-sm text-zinc-600 font-mono italic">
+                                                SEARCHING FOR SIGNAL...
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </TabsContent>
 
-                                    {/* Kick Button (Commander Only, Not Self) */}
-                                    {isCommander && p.user_id !== authUserId && (
-                                        <button
-                                            onClick={() => setKickTargetId(p.user_id)}
-                                            className="ml-2 p-1.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-500 transition-all opacity-0 group-hover:opacity-100"
-                                            title="Remove Player"
-                                        >
-                                            <UserX className="w-4 h-4" />
-                                        </button>
-                                    )}
+                        <TabsContent value="chat" className="mt-0 h-[400px]">
+                            {discordUserId ? (
+                                <ChatBox
+                                    channelId={lobbyId}
+                                    type="lobby"
+                                    currentUserId={discordUserId}
+                                    className="h-full border border-white/5 rounded-xl bg-black/40"
+                                    embedded={true}
+                                    onUnreadChange={() => setUnreadChatCount(prev => prev + 1)}
+                                />
+                            ) : (
+                                <div className="h-full flex items-center justify-center border border-white/5 rounded-xl bg-black/40 text-zinc-500 font-mono text-sm">
+                                    AUTHENTICATION REQUIRED FOR COMMS
                                 </div>
-                            ))}
-                            {/* Placeholder - will verify file firsts */}
-                            {Array.from({ length: Math.max(0, maxPlayers - players.length) }).map((_, i) => (
-                                <div key={`placeholder-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 border-dashed opacity-50">
-                                    <div className="w-10 h-10 rounded bg-transparent border border-white/10 flex items-center justify-center text-zinc-700">
-                                        <Users className="w-4 h-4" />
-                                    </div>
-                                    <div className="text-sm text-zinc-600 font-mono italic">
-                                        SEARCHING FOR SIGNAL...
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                            )}
+                        </TabsContent>
+                    </Tabs>
                 </div>
 
                 {/* Right Column: Tactical Briefing */}
@@ -622,17 +657,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                         </div>
                     </div>
                 </div>
-                {/* Chat System */}
-                <div className="fixed bottom-6 right-6 z-40 w-80 md:w-96 animate-in slide-in-from-right-10 fade-in duration-500">
-                    {discordUserId && (
-                        <ChatBox
-                            channelId={lobbyId}
-                            type="lobby"
-                            currentUserId={discordUserId}
-                            className="h-[350px] shadow-[0_0_30px_rgba(0,0,0,0.5)] border-white/10"
-                        />
-                    )}
-                </div>
+                {/* Chat System (Moved to Tabs) */}
             </div>
         </div>
     );
