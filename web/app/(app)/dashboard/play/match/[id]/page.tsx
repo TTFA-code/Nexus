@@ -1,4 +1,9 @@
-// ... imports
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Handshake, AlertTriangle } from "lucide-react";
+import MatchReportForm from "./MatchReportForm";
 import { MatchNavigationGuard } from "@/components/match/MatchNavigationGuard";
 import { ChatBox } from "@/components/chat/ChatBox";
 
