@@ -179,7 +179,7 @@ export default async function MatchReportPage({ params }: { params: { id: string
 
 
             {/* Chat System */}
-            <div className="fixed bottom-6 right-6 z-40 w-80 md:w-96 animate-in slide-in-from-right-10 fade-in duration-500">
+            {/* <div className="fixed bottom-6 right-6 z-40 w-80 md:w-96 animate-in slide-in-from-right-10 fade-in duration-500">
                 {myPlayer?.user_id && (
                     <ChatBox
                         channelId={matchId}
@@ -188,7 +188,7 @@ export default async function MatchReportPage({ params }: { params: { id: string
                         className="h-[300px] shadow-[0_0_30px_rgba(0,0,0,0.5)] border-white/10"
                     />
                 )}
-            </div>
+            </div> */}
 
         </div>
     );
