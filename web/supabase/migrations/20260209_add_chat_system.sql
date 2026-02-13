@@ -16,46 +16,48 @@ CREATE TABLE IF NOT EXISTS public.messages (
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 -- Select: Allow if user is participant
+-- Helper function to check participation (Bypasses RLS on lookups)
+CREATE OR REPLACE FUNCTION public.is_chat_participant(
+    _lobby_id uuid,
+    _match_id uuid,
+    _user_uuid uuid
+) RETURNS boolean AS $$
+BEGIN
+    IF _lobby_id IS NOT NULL THEN
+        RETURN EXISTS (
+            SELECT 1 FROM lobby_players lp
+            JOIN players p ON p.user_id = lp.user_id
+            WHERE lp.lobby_id = _lobby_id
+            AND p.uuid_link = _user_uuid::text
+        );
+    ELSIF _match_id IS NOT NULL THEN
+        RETURN EXISTS (
+            SELECT 1 FROM match_players mp
+            JOIN players p ON p.user_id = mp.user_id
+            WHERE mp.match_id = _match_id
+            AND p.uuid_link = _user_uuid::text
+        );
+    END IF;
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Select: Allow if user is participant
 -- Drop existing policies to allow re-runs
 DROP POLICY IF EXISTS "messages_select" ON public.messages;
 DROP POLICY IF EXISTS "messages_insert" ON public.messages;
 
--- Select: Allow if user is participant (Lobby or Match)
 CREATE POLICY "messages_select" ON public.messages
     FOR SELECT TO authenticated
     USING (
-        (lobby_id IS NOT NULL AND EXISTS (
-            SELECT 1 FROM lobby_players lp
-            JOIN players p ON p.user_id = lp.user_id
-            WHERE lp.lobby_id = messages.lobby_id
-            AND p.uuid_link = auth.uid()::text
-        ))
-        OR
-        (match_id IS NOT NULL AND EXISTS (
-            SELECT 1 FROM match_players mp
-            JOIN players p ON p.user_id = mp.user_id
-            WHERE mp.match_id = messages.match_id
-            AND p.uuid_link = auth.uid()::text
-        ))
+        public.is_chat_participant(lobby_id, match_id, auth.uid())
     );
 
--- Insert: Allow if user is participant (Lobby or Match)
+-- Insert: Allow if user is participant
 CREATE POLICY "messages_insert" ON public.messages
     FOR INSERT TO authenticated
     WITH CHECK (
-        (lobby_id IS NOT NULL AND EXISTS (
-            SELECT 1 FROM lobby_players lp
-            JOIN players p ON p.user_id = lp.user_id
-            WHERE lp.lobby_id = messages.lobby_id
-            AND p.uuid_link = auth.uid()::text
-        ))
-        OR
-        (match_id IS NOT NULL AND EXISTS (
-            SELECT 1 FROM match_players mp
-            JOIN players p ON p.user_id = mp.user_id
-            WHERE mp.match_id = messages.match_id
-            AND p.uuid_link = auth.uid()::text
-        ))
+        public.is_chat_participant(lobby_id, match_id, auth.uid())
     );
 
 -- Enable Realtime (Idempotent)
