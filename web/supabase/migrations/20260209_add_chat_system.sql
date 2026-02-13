@@ -23,24 +23,30 @@ CREATE OR REPLACE FUNCTION public.is_chat_participant(
     _user_uuid uuid
 ) RETURNS boolean AS $$
 BEGIN
+    -- Explicitly cast uuid_link to text to match _user_uuid::text comparison safely
     IF _lobby_id IS NOT NULL THEN
         RETURN EXISTS (
             SELECT 1 FROM lobby_players lp
             JOIN players p ON p.user_id = lp.user_id
             WHERE lp.lobby_id = _lobby_id
-            AND p.uuid_link = _user_uuid::text
+            AND p.uuid_link::text = _user_uuid::text
         );
     ELSIF _match_id IS NOT NULL THEN
         RETURN EXISTS (
             SELECT 1 FROM match_players mp
             JOIN players p ON p.user_id = mp.user_id
             WHERE mp.match_id = _match_id
-            AND p.uuid_link = _user_uuid::text
+            AND p.uuid_link::text = _user_uuid::text
         );
     END IF;
     RETURN FALSE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Explicitly Grant Permissions (Fixes possible 403 due to missing usage)
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT ALL ON TABLE public.messages TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_chat_participant TO authenticated;
 
 -- Select: Allow if user is participant
 -- Drop existing policies to allow re-runs
