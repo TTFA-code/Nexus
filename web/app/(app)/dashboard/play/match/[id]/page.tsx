@@ -60,7 +60,7 @@ export default async function MatchReportPage({ params }: { params: { id: string
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-4 max-w-4xl mx-auto space-y-8 md:space-y-12">
 
             {/* Navigation Guard - Active when match is NOT finished */}
-            <MatchNavigationGuard active={!isFinished} />
+            {/* <MatchNavigationGuard active={!isFinished} /> */}
 
             {/* HEADER */}
             {!isFinished && (
