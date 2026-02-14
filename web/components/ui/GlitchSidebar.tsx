@@ -14,11 +14,6 @@ export function GlitchSidebar() {
     const router = useRouter()
     const params = useParams()
 
-    // Hide sidebar on match pages
-    if (pathname?.includes('/match/')) {
-        return null;
-    }
-
     // Fallback to Main Server if no Guild ID is present (e.g. on /play)
     const activeGuildId = (params?.guildId as string) || "547362530826125313";
     const supabase = createClient()
@@ -37,12 +32,6 @@ export function GlitchSidebar() {
 
             // Emergency Local Bypass (Matches Gatekeeper)
             if (activeGuildId === "547362530826125313") {
-                // We can either bypass or strict check. 
-                // User request: "filter... check server_members".
-                // However, for consistency with gatekeeper, we might want to allow it if strict mode isn't enforced for main server?
-                // But valid roles are synced now. So strict checking is PREFERRED.
-                // "Ensure gatekeeper.ts rejects any request... without... 'owner', 'admin', 'nexus-admin'".
-                // So we should strictly check here too.
             }
 
             // Check DB
@@ -66,6 +55,11 @@ export function GlitchSidebar() {
 
         checkAdmin();
     }, [activeGuildId, supabase]);
+
+    // Hide sidebar on match pages
+    if (pathname?.includes('/match/')) {
+        return null;
+    }
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
