@@ -20,14 +20,7 @@ export default async function MatchReportPage({ params }: { params: { id: string
     // Fetch Match Data
     const { data: match, error } = await supabase
         .from("matches")
-        .select(`
-            *,
-            match_players(
-                *,
-                player:players(*)
-            ),
-            game_mode:game_modes(*)
-        `)
+        .select('*')
         .eq("id", matchId)
         .single();
 
