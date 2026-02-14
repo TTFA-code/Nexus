@@ -32,7 +32,18 @@ export default async function MatchReportPage({ params }: { params: { id: string
         .single();
 
     if (error || !match) {
-        return <div className="p-8 text-center text-zinc-400">Match not found</div>;
+        console.error("Match Fetch Error:", error);
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-zinc-400 gap-4">
+                <AlertTriangle className="w-12 h-12 text-red-500" />
+                <h2 className="text-xl font-bold text-white">Match Not Found</h2>
+                <div className="p-4 bg-black/50 rounded border border-white/10 font-mono text-xs max-w-lg overflow-auto">
+                    <p>ID: {matchId}</p>
+                    <p>Error: {JSON.stringify(error, null, 2)}</p>
+                </div>
+                <Button onClick={() => window.location.reload()} variant="outline">Retry</Button>
+            </div>
+        );
     }
 
     // State Logic
