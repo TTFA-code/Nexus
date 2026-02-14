@@ -47,19 +47,19 @@ export default async function MatchReportPage({ params }: { params: { id: string
     try {
         console.log("Match Data:", JSON.stringify(match, null, 2)); // Debug Log
 
-        if (!match.match_players || !Array.isArray(match.match_players)) {
+        if (!matchPlayers || !Array.isArray(matchPlayers)) {
             throw new Error("Match players data is missing or invalid");
         }
 
         // Players
         // Fix: Match user.id (Auth UUID) against player.uuid_link (Auth UUID)
-        myPlayer = match.match_players.find((p: any) => p.player?.uuid_link === user.id);
-        opponent = match.match_players.find((p: any) => p.player?.uuid_link !== user.id);
+        myPlayer = matchPlayers.find((p: any) => p.player?.uuid_link === user.id);
+        opponent = matchPlayers.find((p: any) => p.player?.uuid_link !== user.id);
 
         if (!myPlayer) {
             console.warn("My Player not found in match. User ID:", user.id);
             // Verify if p.player is null?
-            const playerLinks = match.match_players.map((p: any) => p.player?.uuid_link);
+            const playerLinks = matchPlayers.map((p: any) => p.player?.uuid_link);
             console.warn("Available UUID Links:", playerLinks);
         }
 
