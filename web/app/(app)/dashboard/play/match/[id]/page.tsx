@@ -47,21 +47,51 @@ export default async function MatchReportPage({ params }: { params: { id: string
     }
 
     // State Logic
+    let myPlayer, opponent, myStats, opponentStats, won, isDraw;
     const isFinished = match.status === "finished";
     const isPending = match.status === "pending";
 
-    // Players
-    // Fix: Match user.id (Auth UUID) against player.uuid_link (Auth UUID)
-    const myPlayer = match.match_players.find((p: any) => p.player?.uuid_link === user.id);
-    const opponent = match.match_players.find((p: any) => p.player?.uuid_link !== user.id);
+    try {
+        console.log("Match Data:", JSON.stringify(match, null, 2)); // Debug Log
 
-    // Stats
-    const myStats = myPlayer?.stats as { score?: number } | undefined;
-    const opponentStats = opponent?.stats as { score?: number } | undefined;
+        if (!match.match_players || !Array.isArray(match.match_players)) {
+            throw new Error("Match players data is missing or invalid");
+        }
 
-    // Result Logic
-    const won = match.winner_team === myPlayer?.team;
-    const isDraw = match.winner_team === 0;
+        // Players
+        // Fix: Match user.id (Auth UUID) against player.uuid_link (Auth UUID)
+        myPlayer = match.match_players.find((p: any) => p.player?.uuid_link === user.id);
+        opponent = match.match_players.find((p: any) => p.player?.uuid_link !== user.id);
+
+        if (!myPlayer) {
+            console.warn("My Player not found in match. User ID:", user.id);
+            // Verify if p.player is null?
+            const playerLinks = match.match_players.map((p: any) => p.player?.uuid_link);
+            console.warn("Available UUID Links:", playerLinks);
+        }
+
+        // Stats
+        myStats = myPlayer?.stats as { score?: number } | undefined;
+        opponentStats = opponent?.stats as { score?: number } | undefined;
+
+        // Result Logic
+        won = match.winner_team === myPlayer?.team;
+        isDraw = match.winner_team === 0;
+
+    } catch (err: any) {
+        console.error("Processing Error:", err);
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-zinc-400 gap-4">
+                <AlertTriangle className="w-12 h-12 text-red-500" />
+                <h2 className="text-xl font-bold text-white">Data Processing Error</h2>
+                <div className="p-4 bg-black/50 rounded border border-white/10 font-mono text-xs max-w-lg overflow-auto">
+                    <p>Error: {err.message}</p>
+                    <p>Match ID: {matchId}</p>
+                </div>
+                <Button onClick={() => window.location.reload()} variant="outline">Retry</Button>
+            </div>
+        );
+    }
 
     // MMR Logic safely accessed
     // Calculate MMR change if history exists, otherwise null
