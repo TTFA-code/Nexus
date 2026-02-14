@@ -154,12 +154,13 @@ export default async function MatchReportPage({ params }: { params: { id: string
 
             {/* REPORTING FORM (Client Component) */}
             {!isFinished ? (
-                <MatchReportForm
-                    matchId={matchId}
-                    myStats={myStats?.score !== undefined ? { score: myStats.score } : undefined}
-                    opponentStats={opponentStats?.score !== undefined ? { score: opponentStats.score } : undefined}
-                    userId={user.id}
-                />
+                // <MatchReportForm
+                //     matchId={matchId}
+                //     myStats={myStats?.score !== undefined ? { score: myStats.score } : undefined}
+                //     opponentStats={opponentStats?.score !== undefined ? { score: opponentStats.score } : undefined}
+                //     userId={user.id}
+                // />
+                <div className="text-zinc-500">Report Form Placeholder</div>
             ) : (
                 /* RETURN BUTTON */
                 <div className="pt-10">
