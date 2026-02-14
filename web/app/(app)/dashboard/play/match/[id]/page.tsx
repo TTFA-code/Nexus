@@ -106,7 +106,7 @@ export default async function MatchReportPage({ params }: { params: { id: string
                         MATCH IN PROGRESS
                     </h1>
                     <p className="text-sm font-mono text-zinc-400 uppercase tracking-widest">
-                        ID: {matchId.split('-')[0]} // {(match.game_mode as any)?.name || 'Unknown Mode'}
+                        ID: {matchId.split('-')[0]} // {(gameMode as any)?.name || 'Unknown Mode'}
                     </p>
                 </div>
             )}
