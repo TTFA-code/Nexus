@@ -7,7 +7,8 @@ import MatchReportForm from "./MatchReportForm";
 import { MatchNavigationGuard } from "@/components/match/MatchNavigationGuard";
 import { ChatBox } from "@/components/chat/ChatBox";
 
-export default async function MatchReportPage({ params }: { params: { id: string } }) {
+export default async function MatchReportPage(props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
