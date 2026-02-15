@@ -7,6 +7,7 @@ import MatchReportForm from "./MatchReportForm";
 import { MatchNavigationGuard } from "@/components/match/MatchNavigationGuard";
 import { ChatBox } from "@/components/chat/ChatBox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RematchControl } from "@/components/match/RematchControl";
 
 export default async function MatchReportPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -272,18 +273,29 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                 </div>
             ) : (
                 /* RETURN BUTTON (When finished) */
-                <div className="pt-10">
-                    <form action={async () => {
-                        "use server";
-                        redirect("/dashboard/play");
-                    }}>
-                        <Button
-                            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-8 py-6 text-lg tracking-widest"
-                        >
-                            RETURN TO HEADQUARTERS
-                        </Button>
-                    </form>
-                </div>
+                /* REMATCH & RETURN CONTROLS */
+                opponent?.player?.uuid_link ? (
+                    <RematchControl
+                        matchId={matchId}
+                        myUserId={user.id}
+                        opponentUserId={opponent.player.uuid_link}
+                        opponentName={opponent.player.username || "Opponent"}
+                        opponentAvatar={opponent.player.avatar_url || undefined}
+                    />
+                ) : (
+                    <div className="pt-10">
+                        <form action={async () => {
+                            "use server";
+                            redirect("/dashboard/play");
+                        }}>
+                            <Button
+                                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-8 py-6 text-lg tracking-widest"
+                            >
+                                RETURN TO HEADQUARTERS
+                            </Button>
+                        </form>
+                    </div>
+                )
             )}
         </div>
     );
