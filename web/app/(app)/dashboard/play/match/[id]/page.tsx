@@ -117,17 +117,22 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
     let mmrChangeText = "";
 
     if (isFinished && user?.id) {
-        const { data: mmrHistory } = await supabase
+        const { data: mmrHistory, error: mmrError } = await supabase
             .from('mmr_history')
             .select('change')
             .eq('match_id', matchId)
             .eq('player_uuid', user.id)
             .single();
 
-        if (mmrHistory) {
+        if (mmrError) {
+            console.error("MMR History Fetch Error:", mmrError);
+        } else if (mmrHistory) {
+            console.log("MMR History Found:", mmrHistory);
             mmrChange = mmrHistory.change;
             const sign = mmrChange > 0 ? "+" : "";
             mmrChangeText = `(${sign}${mmrChange})`;
+        } else {
+            console.log("No MMR History found for user", user.id, "match", matchId);
         }
     }
 
