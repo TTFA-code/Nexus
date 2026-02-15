@@ -37,20 +37,8 @@ export function RematchControl({
 
     useEffect(() => {
         // Listen to MY User Channel for responses (Decline/Accept) which are sent TO ME
-        const channel = supabase.channel(`user:${myUserId}`)
-            .on(
-                'broadcast',
-                { event: 'rematch_request' },
-                (payload) => {
-                    console.log("Rematch Request Rx:", payload);
-                    // If *I* are the target (opponent of the requester)
-                    // This event is now sent directly to my user channel, so no targetId check needed.
-                    // We also need to ensure the request is for the current match, if we're on a match page.
-                    if (payload.payload.matchId === matchId) {
-                        setShowModal(true);
-                    }
-                }
-            )
+        const channelName = `user:${myUserId}:responses`;
+        const channel = supabase.channel(channelName)
             .on(
                 'broadcast',
                 { event: 'rematch_declined' },
@@ -76,7 +64,7 @@ export function RematchControl({
             )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log(`Subscribed to user:${myUserId}`);
+                    console.log(`Subscribed to ${channelName}`);
                 }
             });
 
@@ -103,7 +91,8 @@ export function RematchControl({
         }
 
         // 2. Send Broadcast to OPPONENT'S User Channel
-        await supabase.channel(`user:${opponentUserId}`).send({
+        const targetChannel = `user:${opponentUserId}:requests`;
+        await supabase.channel(targetChannel).send({
             type: 'broadcast',
             event: 'rematch_request',
             payload: {

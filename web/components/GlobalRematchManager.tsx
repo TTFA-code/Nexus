@@ -27,13 +27,14 @@ export function GlobalRematchManager() {
         getUser();
     }, []);
 
-    // 2. Subscribe to User Channel
+    // 2. Subscribe to User Request Channel
     useEffect(() => {
         if (!userId) return;
 
-        console.log("GlobalRematchManager: Subscribing to", `user:${userId}`);
+        const channelName = `user:${userId}:requests`;
+        console.log("GlobalRematchManager: Subscribing to", channelName);
 
-        const channel = supabase.channel(`user:${userId}`)
+        const channel = supabase.channel(channelName)
             .on(
                 'broadcast',
                 { event: 'rematch_request' },
@@ -48,31 +49,9 @@ export function GlobalRematchManager() {
                     });
                 }
             )
-            .on(
-                'broadcast',
-                { event: 'rematch_accepted' },
-                (payload) => {
-                    console.log("Global Rematch Accepted Rx:", payload);
-                    if (payload.payload.newMatchId) {
-                        toast.success("Rematch Accepted! Deploying...");
-                        router.push(`/dashboard/play/match/${payload.payload.newMatchId}`);
-                    }
-                    setRequest(null); // Close any open modal (edge case)
-                }
-            )
-            .on(
-                'broadcast',
-                { event: 'rematch_declined' },
-                (payload) => {
-                    console.log("Global Rematch Declined Rx:", payload);
-                    toast.error("Rematch request declined.");
-                    // Note: If we are the requester, we might want to update some UI state.
-                    // But for a global listener, a toast is sufficient.
-                }
-            )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log("Global Rematch Listener Active");
+                    console.log(`Global Rematch Listener Active on ${channelName}`);
                 }
             });
 
@@ -89,9 +68,11 @@ export function GlobalRematchManager() {
             const result = await acceptRematch(request.matchId);
 
             if (result.success && result.newMatchId) {
-                // Broadcast Acceptance to Opponent (Requester)
-                // Opponent should be listening on `user:${request.requesterId}`
-                await supabase.channel(`user:${request.requesterId}`).send({
+                // Determine Opponent ID (Requester) to notify them
+                // Send response to the requester's RESPONSE channel
+                const responseChannel = `user:${request.requesterId}:responses`;
+
+                await supabase.channel(responseChannel).send({
                     type: 'broadcast',
                     event: 'rematch_accepted',
                     payload: {
@@ -114,8 +95,9 @@ export function GlobalRematchManager() {
     const handleDecline = async () => {
         if (!request) return;
 
-        // Broadcast Decline to Requester
-        await supabase.channel(`user:${request.requesterId}`).send({
+        // Broadcast Decline to Requester's RESPONSE channel
+        const responseChannel = `user:${request.requesterId}:responses`;
+        await supabase.channel(responseChannel).send({
             type: 'broadcast',
             event: 'rematch_declined',
             payload: {
