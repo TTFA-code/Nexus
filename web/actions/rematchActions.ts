@@ -150,3 +150,36 @@ export async function acceptRematch(oldMatchId: string): Promise<ActionResponse 
         return { success: false, message: e.message }
     }
 }
+
+export async function checkPlayerBusy(userId: string): Promise<{ isBusy: boolean; busyMatchId?: string }> {
+    const supabase = await createClient();
+
+    // Check for any active matches this user is part of
+    // We join match_players with matches to check status
+    // Statuses that mean "busy": 'active', 'live', 'starting', 'pending'
+    // Statuses that mean "free": 'finished', 'cancelled'
+
+    const { data, error } = await supabase
+        .from('match_players')
+        .select(`
+            match_id,
+            match:matches!inner (
+                status
+            )
+        `)
+        .eq('user_id', userId)
+        .in('match.status', ['active', 'live', 'starting', 'pending'])
+        .maybeSingle();
+
+    if (error) {
+        console.error("Busy Check Error:", error);
+        return { isBusy: false }; // Fail open or closed? Fail open to allow request attempt, but maybe log it.
+        // Actually if we error, we don't know. Let's assume false to not block unless sure.
+    }
+
+    if (data) {
+        return { isBusy: true, busyMatchId: data.match_id || undefined };
+    }
+
+    return { isBusy: false };
+}

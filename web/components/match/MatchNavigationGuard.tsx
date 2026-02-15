@@ -5,42 +5,51 @@ import { useRouter } from "next/navigation";
 
 interface MatchNavigationGuardProps {
     active: boolean;
+    matchId?: string; // Add matchId prop
 }
 
-export function MatchNavigationGuard({ active }: MatchNavigationGuardProps) {
+export function MatchNavigationGuard({ active, matchId }: MatchNavigationGuardProps) {
     const router = useRouter();
 
     useEffect(() => {
         if (!active) return;
 
-        // Function to push state and prevent back navigation
+        // 1. History Trap (Back Button)
         const pushState = () => {
             window.history.pushState(null, "", window.location.href);
         };
-
-        // Push initial state to trap the user
         pushState();
 
         const handlePopState = (event: PopStateEvent) => {
-            // If they try to go back, push state again to keep them forward
             pushState();
         };
-
         window.addEventListener("popstate", handlePopState);
 
-        // Also prevent unload/refresh with a confirmation (standard browser behavior)
+        // 2. Browser Close/Refresh Warning
+        // NOTE: We CANNOT change the text of this dialog. Browsers enforce generic text for security.
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             event.preventDefault();
-            event.returnValue = ""; // Chrome requires returnValue to be set
+            event.returnValue = "Leaving this match will result in an automatic FORFEIT and LOSS.";
         };
-
         window.addEventListener("beforeunload", handleBeforeUnload);
+
+        // 3. Auto-Forfeit Signal on Close
+        const handlePageHide = () => {
+            if (active && matchId) {
+                // Send "beacon" to mark as loss
+                const data = JSON.stringify({ matchId });
+                const blob = new Blob([data], { type: 'application/json' });
+                navigator.sendBeacon('/api/match/forfeit', blob);
+            }
+        };
+        window.addEventListener("pagehide", handlePageHide);
 
         return () => {
             window.removeEventListener("popstate", handlePopState);
             window.removeEventListener("beforeunload", handleBeforeUnload);
+            window.removeEventListener("pagehide", handlePageHide);
         };
-    }, [active, router]);
+    }, [active, matchId]); // Added matchId dependency
 
     return null;
 }

@@ -123,12 +123,14 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
             .select('change')
             .eq('match_id', matchId)
             .eq('player_uuid', user.id)
-            .single();
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
         if (mmrError) {
             console.error("MMR History Fetch Error:", mmrError);
         } else if (mmrHistory) {
-            console.log("MMR History Found:", mmrHistory);
+            // console.log("MMR History Found:", mmrHistory);
             mmrChange = mmrHistory.change;
             const sign = mmrChange > 0 ? "+" : "";
             mmrChangeText = `(${sign}${mmrChange})`;
@@ -141,7 +143,7 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-4 max-w-4xl mx-auto space-y-8 md:space-y-12">
 
             {/* Navigation Guard - Active when match is NOT finished */}
-            <MatchNavigationGuard active={!isFinished} />
+            <MatchNavigationGuard active={!isFinished} matchId={matchId} />
 
             {/* HEADER */}
             {!isFinished && (
@@ -278,6 +280,8 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                     <RematchControl
                         matchId={matchId}
                         myUserId={user.id}
+                        myUserName={myPlayer?.player?.username || "Player"}
+                        myUserAvatar={myPlayer?.player?.avatar_url || undefined}
                         opponentUserId={opponent.player.uuid_link}
                         opponentName={opponent.player.username || "Opponent"}
                         opponentAvatar={opponent.player.avatar_url || undefined}

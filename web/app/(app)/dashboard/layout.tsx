@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { Swords, FileText, Trophy, Shield } from 'lucide-react';
 import { PageHeader } from "@/components/ui/PageHeader";
 
+import { GlobalRematchManager } from '@/components/GlobalRematchManager';
+
 export default function DashboardLayout({
     children,
 }: {
@@ -21,6 +23,8 @@ export default function DashboardLayout({
 
     return (
         <div className="min-h-screen bg-[#0a0a0f]/50 backdrop-blur-md text-white">
+            <GlobalRematchManager />
+
             {/* Shared Header - Only show if valid dashboard area */}
             {showHeader && (
                 <PageHeader

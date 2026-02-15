@@ -7,11 +7,13 @@ import { toast } from 'sonner';
 import { Loader2, RefreshCw, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { RematchModal } from './RematchModal';
-import { acceptRematch } from '@/actions/rematchActions';
+import { acceptRematch, checkPlayerBusy } from '@/actions/rematchActions';
 
 interface RematchControlProps {
     matchId: string;
     myUserId: string;
+    myUserName: string;
+    myUserAvatar?: string;
     opponentUserId: string;
     opponentName: string;
     opponentAvatar?: string;
@@ -20,6 +22,8 @@ interface RematchControlProps {
 export function RematchControl({
     matchId,
     myUserId,
+    myUserName,
+    myUserAvatar,
     opponentUserId,
     opponentName,
     opponentAvatar
@@ -32,14 +36,17 @@ export function RematchControl({
     const supabase = createClient();
 
     useEffect(() => {
-        const channel = supabase.channel(`match:${matchId}`)
+        // Listen to MY User Channel for responses (Decline/Accept) which are sent TO ME
+        const channel = supabase.channel(`user:${myUserId}`)
             .on(
                 'broadcast',
                 { event: 'rematch_request' },
                 (payload) => {
                     console.log("Rematch Request Rx:", payload);
-                    // If *I* am the target (opponent of the requester)
-                    if (payload.payload.targetId === myUserId) {
+                    // If *I* are the target (opponent of the requester)
+                    // This event is now sent directly to my user channel, so no targetId check needed.
+                    // We also need to ensure the request is for the current match, if we're on a match page.
+                    if (payload.payload.matchId === matchId) {
                         setShowModal(true);
                     }
                 }
@@ -49,9 +56,10 @@ export function RematchControl({
                 { event: 'rematch_declined' },
                 (payload) => {
                     console.log("Rematch Declined Rx:", payload);
-                    if (payload.payload.targetId === myUserId) {
+                    // Check if decliner is the opponent we are currently looking at
+                    if (payload.payload.declinerId === opponentUserId) {
                         toast.error(`${opponentName} declined the rematch.`);
-                        setIsRequesting(false); // Reset button
+                        setIsRequesting(false);
                     }
                 }
             )
@@ -68,25 +76,41 @@ export function RematchControl({
             )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log(`Subscribed to match:${matchId}`);
+                    console.log(`Subscribed to user:${myUserId}`);
                 }
             });
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [matchId, myUserId, opponentName, router, supabase]);
+    }, [matchId, myUserId, opponentUserId, opponentName, router, supabase]);
 
     const handleRequestRematch = async () => {
         setIsRequesting(true);
 
-        // Send Broadcast
-        await supabase.channel(`match:${matchId}`).send({
+        // 1. Check if Opponent is Busy
+        try {
+            const status = await checkPlayerBusy(opponentUserId);
+            if (status.isBusy) {
+                toast.error(`${opponentName} is currently in another match.`);
+                setIsRequesting(false);
+                return;
+            }
+        } catch (e) {
+            console.error("Busy Check Error:", e);
+            // Optionally fail open? or just warn.
+            // toast.warning("Could not verify opponent status.");
+        }
+
+        // 2. Send Broadcast to OPPONENT'S User Channel
+        await supabase.channel(`user:${opponentUserId}`).send({
             type: 'broadcast',
             event: 'rematch_request',
             payload: {
                 requesterId: myUserId,
-                targetId: opponentUserId
+                requesterName: myUserName,
+                requesterAvatar: myUserAvatar,
+                matchId: matchId
             }
         });
 
