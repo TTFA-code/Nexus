@@ -113,9 +113,23 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
     }
 
     // MMR Logic safely accessed
-    // Calculate MMR change if history exists, otherwise null
-    const mmrChange = null;
-    const mmrChangeText = "";
+    let mmrChange = null;
+    let mmrChangeText = "";
+
+    if (isFinished && user?.id) {
+        const { data: mmrHistory } = await supabase
+            .from('mmr_history')
+            .select('change')
+            .eq('match_id', matchId)
+            .eq('player_uuid', user.id)
+            .single();
+
+        if (mmrHistory) {
+            mmrChange = mmrHistory.change;
+            const sign = mmrChange > 0 ? "+" : "";
+            mmrChangeText = `(${sign}${mmrChange})`;
+        }
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-4 max-w-4xl mx-auto space-y-8 md:space-y-12">
