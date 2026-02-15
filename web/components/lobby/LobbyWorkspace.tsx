@@ -517,8 +517,8 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                             <TabsTrigger value="roster" className="font-orbitron tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white text-zinc-500">
                                 ACTIVE ROSTER
                             </TabsTrigger>
-                            <TabsTrigger value="chat" className="font-orbitron tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white text-zinc-500 relative">
-                                SQUAD COMMS
+                            <TabsTrigger value="chat" className="font-orbitron tracking-widest data-[state=active]:bg-blue-600 data-[state=active]:text-white text-zinc-500 relative transition-all duration-300">
+                                CHAT
                                 {unreadChatCount > 0 && (
                                     <span className="absolute top-2 right-4 w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_#22c55e]" />
                                 )}

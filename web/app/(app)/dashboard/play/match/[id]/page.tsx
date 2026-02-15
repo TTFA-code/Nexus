@@ -6,6 +6,7 @@ import { Handshake, AlertTriangle } from "lucide-react";
 import MatchReportForm from "./MatchReportForm";
 import { MatchNavigationGuard } from "@/components/match/MatchNavigationGuard";
 import { ChatBox } from "@/components/chat/ChatBox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function MatchReportPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -212,16 +213,46 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                 </div>
             </div>
 
-            {/* REPORTING FORM (Client Component) */}
+            {/* REPORTING & CHAT TABS */}
             {!isFinished ? (
-                <MatchReportForm
-                    matchId={matchId}
-                    myStats={myStats?.score !== undefined ? { score: myStats.score } : undefined}
-                    opponentStats={opponentStats?.score !== undefined ? { score: opponentStats.score } : undefined}
-                    userId={user.id}
-                />
+                <div className="w-full max-w-2xl mx-auto">
+                    <Tabs defaultValue="report" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border border-zinc-800">
+                            <TabsTrigger value="report" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white uppercase tracking-wider font-bold">
+                                Report Results
+                            </TabsTrigger>
+                            <TabsTrigger value="chat" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white uppercase tracking-wider font-bold relative">
+                                Chat
+                                {/* Unread indicator could go here if we tracked unread count via state */}
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="report" className="mt-4">
+                            <MatchReportForm
+                                matchId={matchId}
+                                myStats={myStats?.score !== undefined ? { score: myStats.score } : undefined}
+                                opponentStats={opponentStats?.score !== undefined ? { score: opponentStats.score } : undefined}
+                                userId={user.id}
+                            />
+                        </TabsContent>
+
+                        <TabsContent value="chat" className="mt-4">
+                            <div className="h-[500px] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl bg-black/80">
+                                {myPlayer?.user_id && (
+                                    <ChatBox
+                                        channelId={matchId}
+                                        type="match"
+                                        currentUserId={myPlayer!.user_id}
+                                        embedded={true}
+                                        className="h-full"
+                                    />
+                                )}
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                </div>
             ) : (
-                /* RETURN BUTTON */
+                /* RETURN BUTTON (When finished) */
                 <div className="pt-10">
                     <form action={async () => {
                         "use server";
@@ -235,21 +266,6 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                     </form>
                 </div>
             )}
-
-
-
-            {/* Chat System */}
-            <div className="fixed bottom-6 right-6 z-40 w-80 md:w-96 animate-in slide-in-from-right-10 fade-in duration-500">
-                {myPlayer?.user_id && (
-                    <ChatBox
-                        channelId={matchId}
-                        type="match"
-                        currentUserId={myPlayer!.user_id}
-                        className="h-[300px] shadow-[0_0_30px_rgba(0,0,0,0.5)] border-white/10"
-                    />
-                )}
-            </div>
-
         </div>
     );
 }
