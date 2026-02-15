@@ -38,7 +38,31 @@ export default async function MatchReportPage({ params }: { params: { id: string
             </div>
         );
     }
+    // 2. Fetch Match Players with Player Details
+    const { data: matchPlayers, error: playersError } = await supabase
+        .from("match_players")
+        .select(`
+            *,
+            player:players(*)
+        `)
+        .eq("match_id", matchId);
 
+    // 3. Fetch Game Mode
+    let gameMode = null;
+    if (match.game_mode_id) {
+        const { data, error } = await supabase
+            .from("game_modes")
+            .select('*')
+            .eq("id", match.game_mode_id)
+            .single();
+
+        if (error) console.error("Game Mode Fetch Error:", error);
+        gameMode = data;
+    }
+
+    if (playersError) {
+        console.error("Players Fetch Error:", playersError);
+    }
     // State Logic
     let myPlayer, opponent, myStats, opponentStats, won, isDraw;
     const isFinished = match.status === "finished";
