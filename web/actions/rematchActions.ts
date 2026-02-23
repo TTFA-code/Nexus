@@ -85,7 +85,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
         const { data: newLobby, error: createLobbyError } = await supabase
             .from('lobbies')
             .insert({
-                creator_id: acceptedPlayers[0].user_id, // First accepted player is host
+                creator_id: acceptedPlayers[0].user_id!, // First accepted player is host
                 game_mode_id: oldMatch.game_mode_id,
                 region: oldMatch.region,
                 guild_id: oldMatch.guild_id,
