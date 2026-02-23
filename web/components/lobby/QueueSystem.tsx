@@ -336,7 +336,7 @@ export function QueueProvider({ children }: { children: ReactNode }) {
                             <div className="space-y-4">
                                 <div className="grid gap-3">
                                     {gameModes
-                                        .filter((m) => m.game_id === selectedGameId)
+                                        .filter((m) => m.game_id === selectedGameId && m.team_size === 1)
                                         .map((mode) => (
                                             <div
                                                 key={mode.id}
@@ -357,6 +357,9 @@ export function QueueProvider({ children }: { children: ReactNode }) {
                                                 </div>
                                             </div>
                                         ))}
+                                </div>
+                                <div className="text-center text-zinc-500 font-mono text-[10px] uppercase tracking-wider px-2 py-2 border border-zinc-800/50 bg-black/20 rounded">
+                                    Note: 2v2 / 3v3 modes are only accessible via the Create Lobby menu.
                                 </div>
                                 <Button
                                     variant="ghost"
