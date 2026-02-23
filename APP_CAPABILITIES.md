@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-**Nexus** is a high-performance, multi-tenant competitive operations engine designed to bridge the gap between community "In-House" leagues and professional eSports orchestration. By fusing real-time web technologies with deep Discord integration, Nexus offers a seamless "Click-to-Compete" experience for players while providing organizers with military-grade command and control capabilities.
+**Nexus** is a high-performance, multi-tenant competitive operations engine designed to bridge the gap between community "In-House" leagues and professional eSports orchestration. By fusing real-time web technologies with deep Discord integration, Nexus offers a seamless "Click-to-Compete" experience for players while providing organizers with professional-grade command and control capabilities.
 
 The system is built on a **Cyberpunk/Sci-Fi** aesthetic philosophy (`High-Contrast / Low-Latency`), ensuring that every interaction feels premium, responsive, and immersive.
 
@@ -21,7 +21,7 @@ The following metrics and modules are currently fully operational and provisione
 
 ### A. The "Lobby" Ecosystem
 *The heart of the Nexus experience.*
-- **Universal Game Architecture:** Agnostic support for *League of Legends, Rocket League, Valorant, and EA FC*, with an extensible schema for adding new titles instantly.
+- **Universal Game Architecture:** Agnostic support for *eFootball and eFootball mobile, Rocket League,and EA FC*, with an extensible schema for adding new titles instantly.
 - **Dynamic State Management:** Real-time transitioning of lobbies through `Created` -> `Waiting` -> `Ready Check` -> `Live` lifecycles.
 - **"Ghost" UI/UX:** Context-aware interfaces that reveal buttons (Join, Ready, Start) only when actionable, reducing cognitive load.
 - **Private Sectors:** Password-protected lobbies for scrims or VIP matches, secured by hashed comparisons.

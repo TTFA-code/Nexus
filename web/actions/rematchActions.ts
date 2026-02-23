@@ -8,178 +8,128 @@ type ActionResponse = {
     message?: string
 }
 
-export async function requestRematch(matchId: string, opponentId: string): Promise<ActionResponse> {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+// New Rematch Logic for 2v2/Multiplayer
 
-    if (!user) return { success: false, message: 'Unauthorized' }
-
-    // Broadcast Request
-    const channel = supabase.channel(`match:${matchId}`)
-    await channel.send({
-        type: 'broadcast',
-        event: 'rematch_request',
-        payload: {
-            requesterId: user.id, // Auth ID
-            opponentId: opponentId // Target Auth ID
-        }
-    })
-
-    // Note: Since we can't easily await the broadcast receipt in a server action without a persistent socket,
-    // we assume the client is subscribed.
-    // Actually, server actions are stateless. We can't "send" to a channel like this from a server action 
-    // UNLESS we use the REST API for Realtime or just rely on the Client to send the signal?
-    // Wait, Supabase Realtime via `supabase-js` works in Node, but it needs an open connection. 
-    // Opening a connection for every action is slow.
-    // BETTER APPROACH: The CLIENT should send the signal if possible, OR we inserting a record into a table that triggers realtime?
-    // "Signals" (Broadcast) are ephemeral.
-
-    // Alternative: The Client Component `RematchControl` can send the broadcast directly? 
-    // Yes, Supabase Client can broadcast.
-    // However, if we want server-side validation, we might want to do it here.
-    // But for a simple signal "I want a rematch", client-side broadcast is often used.
-    // BUT, the prompt asked for "Server Actions".
-    // Let's look at `lobbyActions`. It uses `supabase.channel`? No, it uses DB updates which trigger Postgres Changes.
-
-    // If I want to use `match_players` or `matches` table to signal?
-    // Maybe checking `matches` table for a "rematch_requested_by" column?
-    // That's more robust.
-
-    // Let's stick to the plan: "Broadcasts rematch_request event via Supabase Realtime."
-    // If I do this from Server Action, I need to instantiate a Realtime client.
-    // The `createClient` from `@/utils/supabase/server` returns a client that *can* use Realtime?
-    // Actually, usually Realtime is client-side or persistent server process.
-    // Stateless Server Actions might close before the socket connects.
-
-    // REVISION: I will implement `requestRematch` as a "Check & Validate" (maybe db update) 
-    // BUT for the actual SIGNAL, I will let the CLIENT send it if it's just a broadcast.
-    // OR, I can use a table `rematch_requests`?
-    // The plan said "Broadcasts ... via Supabase Realtime".
-    // If I use the *Client* to broadcast, it's faster.
-
-    // Let's Try: Client sends "Request".
-    // But `acceptRematch` MUST be server action to create DB records.
-
-    // Okay, I'll write `acceptRematch` here. 
-    // `requestRematch` and `declineRematch` can be client-side broadcasts for speed, 
-    // OR server actions if we want to log it.
-    // Let's stick to the prompt's implication of "Server Side" logic where possible, 
-    // but for "Broadcast", if I can't do it reliably in Server Action, I'll allow the client to do it.
-    // ACTUALLY: Supabase generic `play` pages use `supabase.channel`.
-
-    // Let's put `acceptRematch` here. 
-    // I will also put `requestRematch` here but it might just be a no-op or valid check,
-    // returning "OK, go ahead and broadcast" to the client?
-    // No, that's extra RTT.
-
-    // DECISION: I will implement `acceptRematch` (heavy lifting) here.
-    // I will implement `requestRematch` and `declineRematch` as functions that *verify* the state 
-    // and then maybe the *CLIENT* sends the signal? 
-    // actually, let's look at the `implementation_plan.md` again.
-    // "requestRematch... Broadcasts rematch_request event".
-    // I'll try to do it via a DB trigger if possible? No, that's complex.
-    // I'll simply handle the BROADCASTing on the CLIENT side in `RematchControl.tsx`. 
-    // The `rematchActions.ts` will hold the `acceptRematch` logic which handles the database writes.
-
-    return { success: true }
-}
-
-export async function acceptRematch(oldMatchId: string): Promise<ActionResponse & { newMatchId?: string }> {
+export async function submitRematchVote(matchId: string, vote: 'accepted' | 'declined'): Promise<ActionResponse & { newLobbyId?: string, isResolved?: boolean }> {
     try {
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) throw new Error('Unauthorized')
 
-        // 1. Fetch Old Match Details
-        const { data: oldMatch, error: matchError } = await supabase
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord')
+        const discordId = discordIdentity?.id
+        if (!discordId) throw new Error('No Discord Link')
+
+        // 1. Record the vote in match_players
+        const { error: updateError } = await supabase
+            .from('match_players')
+            .update({ rematch_status: vote })
+            .eq('match_id', matchId)
+            .eq('user_id', discordId)
+
+        if (updateError) throw new Error('Failed to submit rematch vote.')
+
+        // Broadcast the individual vote so UI can update (e.g., "Player X is ready")
+        await supabase.channel(`match:${matchId}`).send({
+            type: 'broadcast',
+            event: 'rematch_vote_cast',
+            payload: {
+                userId: discordId,
+                vote: vote
+            }
+        })
+
+        // 2. Check if all players have voted
+        const { data: players, error: playersError } = await supabase
+            .from('match_players')
+            .select('user_id, team, rematch_status')
+            .eq('match_id', matchId)
+
+        if (playersError || !players) throw new Error('Failed to fetch match players.')
+
+        const pendingPlayers = players.filter(p => p.rematch_status === 'pending' || !p.rematch_status)
+
+        // If there are still pending players, we just return
+        if (pendingPlayers.length > 0) {
+            return { success: true, isResolved: false, message: 'Vote recorded.' }
+        }
+
+        // 3. All players have voted. Resolve the rematch.
+        const acceptedPlayers = players.filter(p => p.rematch_status === 'accepted')
+
+        // If less than 2 players want to rematch, the rematch fails
+        if (acceptedPlayers.length < 2) {
+            // Broadcast failure
+            await supabase.channel(`match:${matchId}`).send({
+                type: 'broadcast',
+                event: 'rematch_resolved',
+                payload: {
+                    success: false,
+                    message: 'Not enough players requested a rematch.',
+                    newLobbyId: null
+                }
+            })
+            return { success: true, isResolved: true, message: 'Rematch cancelled - not enough players.' }
+        }
+
+        // 4. Create a new LOBBY for the players who accepted
+        const { data: oldMatch } = await supabase
             .from('matches')
             .select('*')
-            .eq('id', oldMatchId)
+            .eq('id', matchId)
             .single()
 
-        if (matchError || !oldMatch) throw new Error('Match not found')
+        if (!oldMatch) throw new Error('Original match data lost.')
 
-        // 2. Fetch Players to carry over
-        const { data: oldPlayers, error: playersError } = await supabase
-            .from('match_players')
-            .select('*')
-            .eq('match_id', oldMatchId)
-
-        if (playersError || !oldPlayers || oldPlayers.length === 0) throw new Error('Original players not found')
-
-        // 3. Create NEW Match
-        const { data: newMatch, error: createError } = await supabase
-            .from('matches')
+        const { data: newLobby, error: createLobbyError } = await supabase
+            .from('lobbies')
             .insert({
+                creator_id: acceptedPlayers[0].user_id, // First accepted player is host
                 game_mode_id: oldMatch.game_mode_id,
                 region: oldMatch.region,
                 guild_id: oldMatch.guild_id,
-                status: 'active',
-                metadata: {
-                    rematch_from: oldMatchId,
-                    ...(oldMatch.metadata as any || {})
-                }
+                status: 'open',
+                is_private: false
             })
             .select('id')
             .single()
 
-        if (createError || !newMatch) throw new Error('Failed to create rematch')
+        if (createLobbyError || !newLobby) throw new Error('Failed to create new lobby for rematch players.')
 
-        // 4. Migrate Players
-        const newPlayers = oldPlayers.map(p => ({
-            match_id: newMatch.id,
+        // 5. Migrate accepted players to the new lobby
+        const newLobbyPlayers = acceptedPlayers.map(p => ({
+            lobby_id: newLobby.id,
             user_id: p.user_id,
-            team: p.team,
-            stats: {} // Reset stats
+            status: 'joined',
+            team: p.team // Maintain their old team if possible
         }))
 
         const { error: migrationError } = await supabase
-            .from('match_players')
-            .insert(newPlayers)
+            .from('lobby_players')
+            .insert(newLobbyPlayers)
 
-        if (migrationError) throw new Error('Failed to migrate players')
+        if (migrationError) throw new Error('Failed to migrate players to new lobby.')
+
+        // 6. Broadcast successful resolution
+        await supabase.channel(`match:${matchId}`).send({
+            type: 'broadcast',
+            event: 'rematch_resolved',
+            payload: {
+                success: true,
+                newLobbyId: newLobby.id,
+                acceptedUserIds: acceptedPlayers.map(p => p.user_id)
+            }
+        })
 
         return {
             success: true,
-            newMatchId: newMatch.id
+            isResolved: true,
+            newLobbyId: newLobby.id
         }
 
     } catch (e: any) {
-        console.error("Accept Rematch Error:", e)
+        console.error("Submit Rematch Vote Error:", e)
         return { success: false, message: e.message }
     }
-}
-
-export async function checkPlayerBusy(userId: string): Promise<{ isBusy: boolean; busyMatchId?: string }> {
-    const supabase = await createClient();
-
-    // Check for any active matches this user is part of
-    // We join match_players with matches to check status
-    // Statuses that mean "busy": 'active', 'live', 'starting', 'pending'
-    // Statuses that mean "free": 'finished', 'cancelled'
-
-    const { data, error } = await supabase
-        .from('match_players')
-        .select(`
-            match_id,
-            match:matches!inner (
-                status
-            )
-        `)
-        .eq('user_id', userId)
-        .in('match.status', ['active', 'live', 'starting', 'pending'])
-        .maybeSingle();
-
-    if (error) {
-        console.error("Busy Check Error:", error);
-        return { isBusy: false }; // Fail open or closed? Fail open to allow request attempt, but maybe log it.
-        // Actually if we error, we don't know. Let's assume false to not block unless sure.
-    }
-
-    if (data) {
-        return { isBusy: true, busyMatchId: data.match_id || undefined };
-    }
-
-    return { isBusy: false };
 }

@@ -58,6 +58,7 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
             // Let's assume object as it was used as `lobby.game_modes[0]` or `lobby.game_modes` in logic.
             lobby_players: {
                 user_id: string
+                team?: number
             }[]
         }
 
@@ -167,13 +168,30 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
             }
         }
 
+        // 3.6 Determine Team Assignment (Auto-balance)
+        let teamToJoin = 1;
+        if (gameMode && (gameMode.name.includes('2v2') || gameMode.name.includes('3v3') || gameMode.team_size > 1)) {
+            const team1Count = lobby.lobby_players?.filter(p => p.team === 1).length || 0;
+            const team2Count = lobby.lobby_players?.filter(p => p.team === 2).length || 0;
+
+            // Assign to the team with fewer players, default to 1
+            if (team2Count < team1Count && team2Count < gameMode.team_size) {
+                teamToJoin = 2;
+            } else if (team1Count >= gameMode.team_size && team2Count < gameMode.team_size) {
+                teamToJoin = 2;
+            } else {
+                teamToJoin = 1; // Default
+            }
+        }
+
         // 4. Execution (As User) - INSERT USING UUID
         const { error: joinError } = await supabase
             .from('lobby_players')
             .insert([{
                 lobby_id: lobbyId,
                 user_id: userId, // <--- CORRECTED: NOW USING DISCORD ID
-                status: 'joined'
+                status: 'joined',
+                team: teamToJoin
             }])
 
         if (joinError) {
@@ -435,6 +453,58 @@ export async function initializeMatchSequence(lobbyId: string): Promise<ActionRe
     }
 }
 
+export async function switchLobbyTeam(lobbyId: string, targetTeam: number): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+
+        // 1. Auth & Identity Check
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Unauthorized.');
+
+        const discordIdentity = user.identities?.find(i => i.provider === 'discord');
+        const userId = discordIdentity?.id;
+        if (!userId) throw new Error('No Discord Link');
+
+        // 2. Fetch Lobby and Players to check capacity
+        const { data: lobbyData, error: lobbyError } = await supabase
+            .from('lobbies')
+            .select('*, game_modes(*), lobby_players(*)')
+            .eq('id', lobbyId)
+            .single();
+
+        if (lobbyError || !lobbyData) throw new Error('Lobby not found.');
+
+        const gameMode = Array.isArray(lobbyData.game_modes) ? lobbyData.game_modes[0] : lobbyData.game_modes;
+        const maxPerTeam = gameMode?.team_size || 5;
+
+        // Count players on target team
+        const targetTeamCount = lobbyData.lobby_players?.filter((p: any) => p.team === targetTeam).length || 0;
+
+        if (targetTeamCount >= maxPerTeam) {
+            throw new Error(`Team ${targetTeam} is full.`);
+        }
+
+        // 3. Update player's team
+        const { error: updateError } = await supabase
+            .from('lobby_players')
+            .update({ team: targetTeam })
+            .eq('lobby_id', lobbyId)
+            .eq('user_id', userId);
+
+        if (updateError) throw new Error('Failed to switch team.');
+
+        revalidatePath('/');
+        return { success: true, message: `Switched to Team ${targetTeam}.` };
+
+    } catch (error: any) {
+        console.error('Switch Team Error:', error);
+        return {
+            success: false,
+            message: error.message || 'Failed to switch team.'
+        };
+    }
+}
+
 export async function acceptMatchHandshake(lobbyId: string): Promise<ActionResponse & { matchStarted?: boolean, matchId?: string }> {
     try {
         console.log(`[HANDSHAKE] Starting acceptance for Lobby ${lobbyId}`);
@@ -557,11 +627,11 @@ export async function acceptMatchHandshake(lobbyId: string): Promise<ActionRespo
         console.log(`[HANDSHAKE] Match Created: ${newMatch.id}`);
 
         // C. Migrate Players (Lobby -> Match)
-        // Auto-Assign Teams (Alternating for now: 1, 2) to ensure distinct teams
+        // Carry over the assigned team from the lobby (fallback to alternating if missing)
         const matchPlayersPayload = allPlayers.map((p, index) => ({
             match_id: newMatch.id,
             user_id: p.user_id,
-            team: (index % 2) + 1 // Assigns Team 1 and Team 2
+            team: p.team || ((index % 2) + 1) // Assigns stored Team or falls back to alternating
         }))
 
         const { error: migrationError } = await supabase

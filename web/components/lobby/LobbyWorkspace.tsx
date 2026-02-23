@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Users, Clock, Shield, AlertTriangle, MessageSquare, Copy, LogOut, CheckCircle, Play, Loader2, Trash2, ArrowLeft, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/client';
-import { toggleReady, joinLobby, leaveLobby, initializeMatchSequence, acceptMatchHandshake } from '@/actions/lobbyActions';
+import { toggleReady, joinLobby, leaveLobby, initializeMatchSequence, acceptMatchHandshake, switchLobbyTeam } from '@/actions/lobbyActions';
 import { deleteLobby } from '@/actions/deleteLobby';
 import { kickPlayer } from '@/actions/kickPlayer'; // NEW: Import kick action
 import { toast } from 'sonner';
@@ -38,7 +38,7 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
     const [connectionStatus, setConnectionStatus] = useState('Connecting to Match Server...');
     const [kickTargetId, setKickTargetId] = useState<string | null>(null); // NEW: Kick confirmation state
     const [unreadChatCount, setUnreadChatCount] = useState(0);
-
+    const [isSwitchingTeam, setIsSwitchingTeam] = useState(false);
 
     const supabase = createClient();
 
@@ -261,6 +261,19 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
         if (res.success) {
             toast.success(res.message);
             // Real-time subscription will auto-update the UI
+        } else {
+            toast.error(res.message);
+        }
+    };
+
+    const handleSwitchTeam = async (targetTeam: number) => {
+        if (isSwitchingTeam) return;
+        setIsSwitchingTeam(true);
+        const res = await switchLobbyTeam(lobbyId, targetTeam);
+        setIsSwitchingTeam(false);
+        if (res.success) {
+            toast.success(res.message);
+            await fetchLobby();
         } else {
             toast.error(res.message);
         }
@@ -527,78 +540,69 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
 
                         <TabsContent value="roster" className="mt-0">
                             <div className="bg-black/40 border border-white/5 rounded-xl p-6 backdrop-blur-sm min-h-[400px]">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <Users className={`w-5 h-5 text-${themeColor}-500`} />
-                                    <h3 className="text-lg font-bold text-white">Active Roster</h3>
-                                    <span className="ml-auto text-xs font-mono text-zinc-500">{players.length} / {maxPlayers} PLAYERS</span>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {players.map((p: any) => (
-                                        <div
-                                            key={p.user_id}
-                                            className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 ${p.is_ready
-                                                ? 'bg-green-500/5 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
-                                                : 'bg-white/5 border-white/5'
-                                                }`}
-                                        >
-                                            <div className={`w-10 h-10 rounded bg-zinc-900 border flex items-center justify-center text-zinc-500 relative ${p.is_ready ? 'border-green-500/50' : 'border-white/10'}`}>
-                                                {p.player?.avatar_url ? (
-                                                    <img src={p.player.avatar_url} alt="" className="w-full h-full rounded object-cover" />
-                                                ) : (
-                                                    <Users className={`w-5 h-5 ${p.is_ready ? 'text-green-500' : ''}`} />
-                                                )}
-                                                {p.user_id === lobby.creator_id && (
-                                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full border border-black" title="Lobby Host" />
-                                                )}
+                                {(lobby.game_modes?.name?.includes('2v2') || lobby.game_modes?.name?.includes('3v3') || lobby.game_modes?.team_size > 1) ? (
+                                    // TEAM SPLIT VIEW
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        {/* TEAM 1 */}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4 px-2">
+                                                <div className="w-3 h-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+                                                <h3 className="text-lg font-bold text-cyan-400 font-orbitron tracking-widest">TEAM 1</h3>
+                                                <span className="ml-auto text-xs font-mono text-cyan-500/50">
+                                                    {players.filter((p: any) => p.team === 1).length} / {lobby.game_modes?.team_size}
+                                                </span>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className={`text-sm font-bold truncate ${p.is_ready ? 'text-green-400' : 'text-white'}`}>
-                                                    {p.player?.username || "Unknown Player"}
-                                                </div>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <div className={`text-[10px] uppercase font-mono ${p.is_ready ? 'text-green-500/70' : 'text-zinc-500'}`}>
-                                                        {p.is_ready ? 'READY FOR DEPLOYMENT' : 'PREPARING...'}
-                                                    </div>
-                                                    {/* MMR Badge */}
-                                                    {p.mmr !== null && p.mmr !== undefined && (
-                                                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${p.mmr >= 2000 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : // Diamond
-                                                            p.mmr >= 1500 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : // Platinum
-                                                                p.mmr >= 1200 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : // Gold
-                                                                    p.mmr >= 900 ? 'bg-zinc-400/20 text-zinc-300 border border-zinc-400/40' : // Silver
-                                                                        'bg-orange-500/20 text-orange-400 border border-orange-500/40' // Bronze
-                                                            }`}>
-                                                            {p.mmr} MMR
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            {p.is_ready && <CheckCircle className="w-5 h-5 text-green-500 animate-in zoom-in spin-in-90 duration-300" />}
-
-                                            {/* Kick Button (Commander Only, Not Self) */}
-                                            {isCommander && p.user_id !== authUserId && (
-                                                <button
-                                                    onClick={() => setKickTargetId(p.user_id)}
-                                                    className="ml-2 p-1.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-500 transition-all opacity-0 group-hover:opacity-100"
-                                                    title="Remove Player"
-                                                >
-                                                    <UserX className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {/* Placeholder */}
-                                    {Array.from({ length: Math.max(0, maxPlayers - players.length) }).map((_, i) => (
-                                        <div key={`placeholder-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 border-dashed opacity-50">
-                                            <div className="w-10 h-10 rounded bg-transparent border border-white/10 flex items-center justify-center text-zinc-700">
-                                                <Users className="w-4 h-4" />
-                                            </div>
-                                            <div className="text-sm text-zinc-600 font-mono italic">
-                                                SEARCHING FOR SIGNAL...
+                                            <div className="space-y-3">
+                                                {players.filter((p: any) => p.team === 1).map((p: any) => (
+                                                    <PlayerRosterCard key={p.user_id} p={p} authUserId={authUserId} isCommander={isCommander} lobby={lobby} setKickTargetId={setKickTargetId} handleSwitchTeam={handleSwitchTeam} currentUserPlayer={currentUserPlayer} isSwitchingTeam={isSwitchingTeam} />
+                                                ))}
+                                                {/* Placeholders for Team 1 */}
+                                                {Array.from({ length: Math.max(0, lobby.game_modes.team_size - players.filter((p: any) => p.team === 1).length) }).map((_, i) => (
+                                                    <RosterPlaceholder key={`t1-empty-${i}`} />
+                                                ))}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+
+                                        {/* TEAM 2 */}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4 px-2">
+                                                <div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+                                                <h3 className="text-lg font-bold text-orange-400 font-orbitron tracking-widest">TEAM 2</h3>
+                                                <span className="ml-auto text-xs font-mono text-orange-500/50">
+                                                    {players.filter((p: any) => p.team === 2).length} / {lobby.game_modes?.team_size}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {players.filter((p: any) => p.team === 2).map((p: any) => (
+                                                    <PlayerRosterCard key={p.user_id} p={p} authUserId={authUserId} isCommander={isCommander} lobby={lobby} setKickTargetId={setKickTargetId} handleSwitchTeam={handleSwitchTeam} currentUserPlayer={currentUserPlayer} isSwitchingTeam={isSwitchingTeam} />
+                                                ))}
+                                                {/* Placeholders for Team 2 */}
+                                                {Array.from({ length: Math.max(0, lobby.game_modes.team_size - players.filter((p: any) => p.team === 2).length) }).map((_, i) => (
+                                                    <RosterPlaceholder key={`t2-empty-${i}`} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    // DEFAULT (FFA / 1v1) VIEW
+                                    <>
+                                        <div className="flex items-center gap-2 mb-6">
+                                            <Users className={`w-5 h-5 text-${themeColor}-500`} />
+                                            <h3 className="text-lg font-bold text-white">Active Roster</h3>
+                                            <span className="ml-auto text-xs font-mono text-zinc-500">{players.length} / {maxPlayers} PLAYERS</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {players.map((p: any) => (
+                                                <PlayerRosterCard key={p.user_id} p={p} authUserId={authUserId} isCommander={isCommander} lobby={lobby} setKickTargetId={setKickTargetId} handleSwitchTeam={handleSwitchTeam} currentUserPlayer={currentUserPlayer} isSwitchingTeam={isSwitchingTeam} />
+                                            ))}
+                                            {/* Placeholder */}
+                                            {Array.from({ length: Math.max(0, maxPlayers - players.length) }).map((_, i) => (
+                                                <RosterPlaceholder key={`placeholder-${i}`} />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </TabsContent>
 
@@ -618,11 +622,11 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                 </div>
                             )}
                         </TabsContent>
-                    </Tabs>
-                </div>
+                    </Tabs >
+                </div >
 
                 {/* Right Column: Tactical Briefing */}
-                <div className="space-y-6">
+                < div className="space-y-6" >
                     <div className="bg-black/40 border border-white/5 rounded-xl p-6 backdrop-blur-sm h-full flex flex-col">
                         <div className="flex items-center gap-2 mb-6">
                             <MessageSquare className={`w-5 h-5 text-${themeColor}-500`} />
@@ -656,8 +660,92 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
                 {/* Chat System (Moved to Tabs) */}
+            </div >
+        </div >
+    );
+}
+
+// Extracted Sub-components for Cleaner Roster Code
+
+function PlayerRosterCard({ p, authUserId, isCommander, lobby, setKickTargetId, handleSwitchTeam, currentUserPlayer, isSwitchingTeam }: any) {
+    return (
+        <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 ${p.is_ready
+            ? 'bg-green-500/5 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+            : 'bg-white/5 border-white/5'
+            } group`}
+        >
+            <div className={`w-10 h-10 rounded bg-zinc-900 border flex items-center justify-center text-zinc-500 relative ${p.is_ready ? 'border-green-500/50' : 'border-white/10'} shrink-0`}>
+                {p.player?.avatar_url ? (
+                    <img src={p.player.avatar_url} alt="" className="w-full h-full rounded object-cover" />
+                ) : (
+                    <Users className={`w-5 h-5 ${p.is_ready ? 'text-green-500' : ''}`} />
+                )}
+                {p.user_id === lobby.creator_id && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full border border-black" title="Lobby Host" />
+                )}
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className={`text-sm font-bold truncate ${p.is_ready ? 'text-green-400' : 'text-white'}`}>
+                    {p.player?.username || "Unknown Player"}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                    <div className={`text-[10px] uppercase font-mono ${p.is_ready ? 'text-green-500/70' : 'text-zinc-500'}`}>
+                        {p.is_ready ? 'READY FOR DEPLOYMENT' : 'PREPARING...'}
+                    </div>
+                    {/* MMR Badge */}
+                    {p.mmr !== null && p.mmr !== undefined && (
+                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono hidden sm:block ${p.mmr >= 2000 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : // Diamond
+                            p.mmr >= 1500 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : // Platinum
+                                p.mmr >= 1200 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : // Gold
+                                    p.mmr >= 900 ? 'bg-zinc-400/20 text-zinc-300 border border-zinc-400/40' : // Silver
+                                        'bg-orange-500/20 text-orange-400 border border-orange-500/40' // Bronze
+                            }`}>
+                            {p.mmr} MMR
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex items-center gap-1">
+                {p.is_ready && <CheckCircle className="w-5 h-5 text-green-500 animate-in zoom-in spin-in-90 duration-300" />}
+
+                {/* Team Switch Button (Only Self, Not Ready) */}
+                {currentUserPlayer && currentUserPlayer.user_id === p.user_id && !p.is_ready && lobby.game_modes?.team_size > 1 && (
+                    <button
+                        onClick={() => handleSwitchTeam(p.team === 1 ? 2 : 1)}
+                        disabled={isSwitchingTeam}
+                        className="ml-1 px-2 p-1.5 rounded bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-[10px] font-mono tracking-widest font-bold uppercase transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 flex items-center gap-1"
+                        title={`Switch to Team ${p.team === 1 ? 2 : 1}`}
+                    >
+                        {isSwitchingTeam ? <Loader2 className="w-3 h-3 animate-spin" /> : 'SWITCH'}
+                    </button>
+                )}
+
+                {/* Kick Button (Commander Only, Not Self) */}
+                {isCommander && p.user_id !== authUserId && (
+                    <button
+                        onClick={() => setKickTargetId(p.user_id)}
+                        className="ml-1 p-1.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                        title="Remove Player"
+                    >
+                        <UserX className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function RosterPlaceholder() {
+    return (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 border-dashed opacity-50">
+            <div className="w-10 h-10 rounded bg-transparent border border-white/10 flex items-center justify-center text-zinc-700 shrink-0">
+                <Users className="w-4 h-4" />
+            </div>
+            <div className="text-sm text-zinc-600 font-mono italic">
+                SEARCHING FOR SIGNAL...
             </div>
         </div>
     );

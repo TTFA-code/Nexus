@@ -7,4 +7,4 @@
 ALTER TABLE public.ready_checks
 ALTER COLUMN lobby_id DROP NOT NULL;
 
-RAISE NOTICE 'ready_checks.lobby_id is now optional.';
+

@@ -4,148 +4,110 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, RefreshCw, LogOut } from 'lucide-react';
+import { Loader2, RefreshCw, LogOut, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { RematchModal } from './RematchModal';
-import { acceptRematch, checkPlayerBusy } from '@/actions/rematchActions';
+import { submitRematchVote } from '@/actions/rematchActions';
+import Image from 'next/image';
 
 interface RematchControlProps {
     matchId: string;
     myUserId: string;
-    myUserName: string;
-    myUserAvatar?: string;
-    opponentUserId: string;
-    opponentName: string;
-    opponentAvatar?: string;
+    matchPlayers: any[]; // The full player list
 }
 
 export function RematchControl({
     matchId,
     myUserId,
-    myUserName,
-    myUserAvatar,
-    opponentUserId,
-    opponentName,
-    opponentAvatar
+    matchPlayers
 }: RematchControlProps) {
-    const [isRequesting, setIsRequesting] = useState(false);
-    const [showModal, setShowModal] = useState(false);
-    const [isAccepting, setIsAccepting] = useState(false);
+    const [isVoting, setIsVoting] = useState(false);
+    const [voteStatus, setVoteStatus] = useState<'pending' | 'accepted' | 'declined'>('pending');
+    const [playerVotes, setPlayerVotes] = useState<Record<string, string>>({});
+
+    // Initialize player votes from props
+    useEffect(() => {
+        const initialVotes: Record<string, string> = {};
+        matchPlayers.forEach(p => {
+            if (p.player?.uuid_link) {
+                initialVotes[p.player.uuid_link] = p.rematch_status || 'pending';
+                if (p.player.uuid_link === myUserId) {
+                    setVoteStatus(p.rematch_status || 'pending');
+                }
+            }
+        });
+        setPlayerVotes(initialVotes);
+    }, [matchPlayers, myUserId]);
 
     const router = useRouter();
     const supabase = createClient();
 
     useEffect(() => {
-        // Listen to MY User Channel for responses (Decline/Accept) which are sent TO ME
-        const channelName = `user:${myUserId}:responses`;
-        const channel = supabase.channel(channelName)
+        const channel = supabase.channel(`match:${matchId}`)
             .on(
                 'broadcast',
-                { event: 'rematch_declined' },
+                { event: 'rematch_vote_cast' },
                 (payload) => {
-                    console.log("Rematch Declined Rx:", payload);
-                    // Check if decliner is the opponent we are currently looking at
-                    if (payload.payload.declinerId === opponentUserId) {
-                        toast.error(`${opponentName} declined the rematch.`);
-                        setIsRequesting(false);
+                    console.log("Rematch Vote Cast Rx:", payload);
+                    const { userId, vote } = payload.payload;
+                    if (userId) {
+                        setPlayerVotes(prev => ({
+                            ...prev,
+                            [userId]: vote
+                        }));
+                        if (userId === myUserId) {
+                            setVoteStatus(vote);
+                        }
                     }
                 }
             )
             .on(
                 'broadcast',
-                { event: 'rematch_accepted' },
+                { event: 'rematch_resolved' },
                 (payload) => {
-                    console.log("Rematch Accepted Rx:", payload);
-                    if (payload.payload.newMatchId) {
-                        toast.success("Rematch Accepted! Redirecting...");
-                        router.push(`/dashboard/play/match/${payload.payload.newMatchId}`);
+                    console.log("Rematch Resolved Rx:", payload);
+                    if (payload.payload.success && payload.payload.newLobbyId && payload.payload.acceptedUserIds?.includes(myUserId)) {
+                        toast.success("Rematch formed! Joining new lobby...");
+                        router.push(`/dashboard/play/lobby/${payload.payload.newLobbyId}`);
+                    } else if (payload.payload.success === false) {
+                        toast.info("Rematch failed. " + payload.payload.message);
                     }
                 }
             )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log(`Subscribed to ${channelName}`);
+                    console.log(`Subscribed to match:${matchId} for rematch info`);
                 }
             });
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [matchId, myUserId, opponentUserId, opponentName, router, supabase]);
+    }, [matchId, router, supabase, myUserId]);
 
-    const handleRequestRematch = async () => {
-        setIsRequesting(true);
-
-        // 1. Check if Opponent is Busy
+    const handleVote = async (vote: 'accepted' | 'declined') => {
+        setIsVoting(true);
         try {
-            const status = await checkPlayerBusy(opponentUserId);
-            if (status.isBusy) {
-                toast.error(`${opponentName} is currently in another match.`);
-                setIsRequesting(false);
-                return;
-            }
-        } catch (e) {
-            console.error("Busy Check Error:", e);
-            // Optionally fail open? or just warn.
-            // toast.warning("Could not verify opponent status.");
-        }
+            const result = await submitRematchVote(matchId, vote);
 
-        // 2. Send Broadcast to OPPONENT'S User Channel
-        const targetChannel = `user:${opponentUserId}:requests`;
-        await supabase.channel(targetChannel).send({
-            type: 'broadcast',
-            event: 'rematch_request',
-            payload: {
-                requesterId: myUserId,
-                requesterName: myUserName,
-                requesterAvatar: myUserAvatar,
-                matchId: matchId
-            }
-        });
-
-        toast.info(`Rematch request sent to ${opponentName}`);
-    };
-
-    const handleAccept = async () => {
-        setIsAccepting(true);
-        try {
-            // 1. Server Action to Create New Match
-            const result = await acceptRematch(matchId);
-
-            if (result.success && result.newMatchId) {
-                // 2. Broadcast Acceptance with New ID
-                await supabase.channel(`match:${matchId}`).send({
-                    type: 'broadcast',
-                    event: 'rematch_accepted',
-                    payload: {
-                        newMatchId: result.newMatchId
-                    }
-                });
-
-                // 3. Redirect (Self)
-                router.push(`/dashboard/play/match/${result.newMatchId}`);
+            if (result.success) {
+                // If it resolves immediately for us (we were the last to vote)
+                if (result.isResolved && result.newLobbyId) {
+                    toast.success("Rematch formed! Joining new lobby...");
+                    router.push(`/dashboard/play/lobby/${result.newLobbyId}`);
+                } else if (!result.isResolved) {
+                    toast.info(`Voted. Waiting for other players...`);
+                }
+                setVoteStatus(vote);
+                setPlayerVotes(prev => ({ ...prev, [myUserId]: vote }));
             } else {
-                toast.error(result.message || "Failed to create rematch.");
-                setIsAccepting(false);
+                toast.error(result.message || "Failed to submit vote.");
             }
         } catch (e) {
-            console.error("Accept Error:", e);
+            console.error("Vote Error:", e);
             toast.error("An unexpected error occurred.");
-            setIsAccepting(false);
+        } finally {
+            setIsVoting(false);
         }
-    };
-
-    const handleDecline = async () => {
-        setShowModal(false);
-
-        // Send Notification to Requester
-        await supabase.channel(`match:${matchId}`).send({
-            type: 'broadcast',
-            event: 'rematch_declined',
-            payload: {
-                targetId: opponentUserId // Send back to the requester
-            }
-        });
     };
 
     const handleReturn = () => {
@@ -153,65 +115,70 @@ export function RematchControl({
     };
 
     return (
-        <>
-            <div className="flex gap-4 pt-10 justify-center">
-                {/* Rematch Button */}
-                <Button
-                    onClick={handleRequestRematch}
-                    disabled={isRequesting || showModal}
-                    className={`
-                        h-16 px-8 text-xl font-bold font-orbitron tracking-widest
-                        border-2 transition-all duration-300 transform hover:-translate-y-1
-                        ${isRequesting
-                            ? 'bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed'
-                            : 'bg-red-600 hover:bg-red-500 text-white border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]'
-                        }
-                    `}
-                >
-                    {isRequesting ? (
-                        <>
-                            <Loader2 className="w-6 h-6 mr-3 animate-spin" />
-                            REQUESTING...
-                        </>
-                    ) : (
-                        <>
-                            <RefreshCw className="w-6 h-6 mr-3" />
-                            REMATCH
-                        </>
-                    )}
-                </Button>
+        <div className="pt-8 w-full max-w-4xl mx-auto flex flex-col items-center">
 
-                {/* Return Button */}
-                <Button
-                    onClick={handleReturn}
-                    variant="outline"
-                    className="h-16 px-8 text-lg font-mono tracking-widest border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                >
-                    <LogOut className="w-5 h-5 mr-3" />
-                    RETURN TO HQ
-                </Button>
+            {/* Player Vote Status Bar */}
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+                {matchPlayers.map(p => {
+                    const status = playerVotes[p.player?.uuid_link] || 'pending';
+                    return (
+                        <div key={p.id} className={`flex items-center gap-2 px-4 py-2 rounded-full border bg-black/40 ${status === 'accepted' ? 'border-green-500/50 text-green-400' : status === 'declined' ? 'border-red-500/50 text-red-500' : 'border-zinc-500/30 text-zinc-400'}`}>
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 relative">
+                                <Image src={p.player?.avatar_url || '/placeholder-avatar.png'} alt="Avatar" layout="fill" className="object-cover" />
+                            </div>
+                            <span className="font-bold font-mono text-sm max-w-[100px] truncate">{p.player?.username || 'Player'}</span>
+                            {status === 'accepted' && <CheckCircle className="w-4 h-4" />}
+                            {status === 'declined' && <XCircle className="w-4 h-4" />}
+                            {status === 'pending' && <Clock className="w-4 h-4 animate-pulse opacity-50" />}
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Modal */}
-            {showModal && (
-                <RematchModal
-                    requesterName={opponentName}
-                    requesterAvatar={opponentAvatar}
-                    onAccept={handleAccept}
-                    onDecline={handleDecline}
-                    onTimeout={handleDecline}
-                />
-            )}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {voteStatus === 'pending' ? (
+                    <>
+                        <Button
+                            onClick={() => handleVote('accepted')}
+                            disabled={isVoting}
+                            className="h-16 px-8 text-xl font-bold font-orbitron tracking-widest border-2 transition-all duration-300 transform hover:-translate-y-1 bg-green-600 hover:bg-green-500 text-white border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.4)]"
+                        >
+                            {isVoting ? <Loader2 className="w-6 h-6 mr-3 animate-spin" /> : <RefreshCw className="w-6 h-6 mr-3" />}
+                            VOTE REMATCH
+                        </Button>
+                        <Button
+                            onClick={() => handleVote('declined')}
+                            disabled={isVoting}
+                            variant="destructive"
+                            className="h-16 px-8 text-xl font-bold font-orbitron tracking-widest border-2 transition-all duration-300 transform hover:-translate-y-1 bg-red-600 hover:bg-red-500 text-white border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]"
+                        >
+                            {isVoting ? <Loader2 className="w-6 h-6 mr-3 animate-spin" /> : <XCircle className="w-6 h-6 mr-3" />}
+                            DECLINE
+                        </Button>
+                    </>
+                ) : (
+                    <Button
+                        onClick={handleReturn}
+                        variant="outline"
+                        className="h-16 px-8 text-lg font-mono tracking-widest border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                    >
+                        <LogOut className="w-5 h-5 mr-3" />
+                        RETURN TO HQ
+                    </Button>
+                )}
+            </div>
 
-            {/* Loading Overlay when Accepting */}
-            {isAccepting && (
-                <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center">
-                    <div className="text-center animate-pulse">
-                        <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin mb-4" />
-                        <h2 className="text-2xl font-bold text-white tracking-widest">INITIALIZING MATCH...</h2>
-                    </div>
+            {voteStatus === 'accepted' && (
+                <div className="mt-8 text-center animate-pulse text-zinc-400 font-mono text-sm">
+                    Waiting for remaining players...
                 </div>
             )}
-        </>
+
+            {voteStatus === 'declined' && (
+                <div className="mt-8 text-center text-red-500 font-mono text-sm">
+                    You have declined the rematch.
+                </div>
+            )}
+        </div>
     );
 }

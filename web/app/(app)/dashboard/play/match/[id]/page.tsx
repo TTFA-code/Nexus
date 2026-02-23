@@ -203,35 +203,47 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
             )}
 
             {/* VERSUS DISPLAY */}
-            <div className="flex items-center justify-center gap-4 md:gap-24 w-full">
-                {/* ME */}
-                <div className="flex flex-col items-center gap-4">
-                    <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)] overflow-hidden bg-zinc-900">
-                        <Image
-                            src={myPlayer?.player?.avatar_url || "/placeholder-avatar.png"}
-                            alt="Me" fill className="object-cover"
-                        />
-                    </div>
-                    <div className="text-center">
-                        <div className="font-bold text-lg md:text-xl text-white">{myPlayer?.player?.username || "Me"}</div>
-                        {isFinished && <div className="text-3xl md:text-4xl font-mono text-emerald-400 mt-2">{myStats?.score ?? 0}</div>}
-                    </div>
+            <div className="flex items-center justify-center gap-4 md:gap-16 w-full max-w-5xl mx-auto">
+                {/* TEAM 1 */}
+                <div className="flex flex-col gap-6 flex-1 items-end pr-4">
+                    {matchPlayers?.filter(p => p.team === 1).map((p: any) => (
+                        <div key={p.id} className="flex items-center gap-4 relative">
+                            {/* Score */}
+                            {isFinished && <div className="text-3xl md:text-4xl font-mono text-cyan-400 mt-2 absolute right-full mr-6 top-1/2 -translate-y-1/2">{(p.stats as any)?.score ?? 0}</div>}
+                            <div className="text-right">
+                                <div className="font-bold text-lg md:text-xl text-white">{p.player?.username || "Unknown"}</div>
+                                {p.player?.uuid_link === user.id && <div className="text-xs text-cyan-500 font-mono tracking-widest uppercase">You</div>}
+                            </div>
+                            <div className={`relative w-16 h-16 md:w-24 md:h-24 rounded-full border-4 ${p.player?.uuid_link === user.id ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)]'} overflow-hidden bg-zinc-900`}>
+                                <Image
+                                    src={p.player?.avatar_url || "/placeholder-avatar.png"}
+                                    alt={p.player?.username || "Player"} fill className="object-cover"
+                                />
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
-                <div className="text-4xl md:text-6xl font-black text-zinc-700 italic">VS</div>
+                <div className="text-4xl md:text-6xl font-black text-zinc-700 italic px-2">VS</div>
 
-                {/* OPPONENT */}
-                <div className="flex flex-col items-center gap-4">
-                    <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)] overflow-hidden bg-zinc-900">
-                        <Image
-                            src={opponent?.player?.avatar_url || "/placeholder-avatar.png"}
-                            alt="Opponent" fill className="object-cover"
-                        />
-                    </div>
-                    <div className="text-center">
-                        <div className="font-bold text-xl text-white">{opponent?.player?.username || "Opponent"}</div>
-                        {isFinished && <div className="text-4xl font-mono text-red-400 mt-2">{opponentStats?.score ?? 0}</div>}
-                    </div>
+                {/* TEAM 2 */}
+                <div className="flex flex-col gap-6 flex-1 items-start pl-4">
+                    {matchPlayers?.filter(p => p.team === 2).map((p: any) => (
+                        <div key={p.id} className="flex items-center gap-4 relative">
+                            <div className={`relative w-16 h-16 md:w-24 md:h-24 rounded-full border-4 ${p.player?.uuid_link === user.id ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]'} overflow-hidden bg-zinc-900`}>
+                                <Image
+                                    src={p.player?.avatar_url || "/placeholder-avatar.png"}
+                                    alt={p.player?.username || "Player"} fill className="object-cover"
+                                />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-lg md:text-xl text-white">{p.player?.username || "Unknown"}</div>
+                                {p.player?.uuid_link === user.id && <div className="text-xs text-emerald-500 font-mono tracking-widest uppercase">You</div>}
+                            </div>
+                            {/* Score */}
+                            {isFinished && <div className="text-3xl md:text-4xl font-mono text-orange-400 mt-2 absolute left-full ml-6 top-1/2 -translate-y-1/2">{(p.stats as any)?.score ?? 0}</div>}
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -276,15 +288,11 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
             ) : (
                 /* RETURN BUTTON (When finished) */
                 /* REMATCH & RETURN CONTROLS */
-                opponent?.player?.uuid_link ? (
+                matchPlayers ? (
                     <RematchControl
                         matchId={matchId}
                         myUserId={user.id}
-                        myUserName={myPlayer?.player?.username || "Player"}
-                        myUserAvatar={myPlayer?.player?.avatar_url || undefined}
-                        opponentUserId={opponent.player.uuid_link}
-                        opponentName={opponent.player.username || "Opponent"}
-                        opponentAvatar={opponent.player.avatar_url || undefined}
+                        matchPlayers={matchPlayers}
                     />
                 ) : (
                     <div className="pt-10">
