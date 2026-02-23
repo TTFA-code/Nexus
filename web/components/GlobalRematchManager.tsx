@@ -64,24 +64,16 @@ export function GlobalRematchManager() {
         if (!request || !userId) return;
 
         try {
-            const { acceptRematch } = await import('@/actions/rematchActions');
-            const result = await acceptRematch(request.matchId);
+            const { submitRematchVote } = await import('@/actions/rematchActions');
+            const result = await submitRematchVote(request.matchId, 'accepted');
 
-            if (result.success && result.newMatchId) {
-                // Determine Opponent ID (Requester) to notify them
-                // Send response to the requester's RESPONSE channel
-                const responseChannel = `user:${request.requesterId}:responses`;
-
-                await supabase.channel(responseChannel).send({
-                    type: 'broadcast',
-                    event: 'rematch_accepted',
-                    payload: {
-                        newMatchId: result.newMatchId
-                    }
-                });
-
-                // Redirect Self
-                router.push(`/dashboard/play/match/${result.newMatchId}`);
+            if (result.success) {
+                if (result.isResolved && result.newLobbyId) {
+                    toast.success("Rematch formed! Joining new lobby...");
+                    router.push(`/dashboard/play/lobby/${result.newLobbyId}`);
+                } else {
+                    toast.info("Voted. Waiting for other players...");
+                }
                 setRequest(null);
             } else {
                 toast.error(result.message || "Failed to accept rematch.");
@@ -95,15 +87,10 @@ export function GlobalRematchManager() {
     const handleDecline = async () => {
         if (!request) return;
 
-        // Broadcast Decline to Requester's RESPONSE channel
-        const responseChannel = `user:${request.requesterId}:responses`;
-        await supabase.channel(responseChannel).send({
-            type: 'broadcast',
-            event: 'rematch_declined',
-            payload: {
-                declinerId: userId
-            }
-        });
+        try {
+            const { submitRematchVote } = await import('@/actions/rematchActions');
+            await submitRematchVote(request.matchId, 'declined');
+        } catch (e) { }
 
         setRequest(null);
     };
