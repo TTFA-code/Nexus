@@ -100,7 +100,8 @@ export async function POST(request: Request) {
                     lobby_id: lobby.id,
                     user_id: hostId, // Using Discord ID
                     status: 'joined',
-                    is_ready: false
+                    is_ready: false,
+                    team: 1
                 }])
 
             if (joinError) {

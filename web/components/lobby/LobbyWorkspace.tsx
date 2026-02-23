@@ -548,6 +548,17 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                             <div className="flex items-center gap-2 mb-4 px-2">
                                                 <div className="w-3 h-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
                                                 <h3 className="text-lg font-bold text-cyan-400 font-orbitron tracking-widest">TEAM 1</h3>
+
+                                                {currentUserPlayer && currentUserPlayer.team === 2 && !currentUserPlayer.is_ready && (
+                                                    <button
+                                                        onClick={() => handleSwitchTeam(1)}
+                                                        disabled={isSwitchingTeam}
+                                                        className="ml-3 px-3 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 hover:border-cyan-500/40 text-cyan-400 text-xs font-mono tracking-wide font-bold uppercase transition-all flex items-center gap-2"
+                                                    >
+                                                        {isSwitchingTeam ? <Loader2 className="w-3 h-3 animate-spin" /> : 'SWITCH TO TEAM 1'}
+                                                    </button>
+                                                )}
+
                                                 <span className="ml-auto text-xs font-mono text-cyan-500/50">
                                                     {players.filter((p: any) => p.team === 1).length} / {lobby.game_modes?.team_size}
                                                 </span>
@@ -568,6 +579,17 @@ export function LobbyWorkspace({ lobbyId, currentUserId }: LobbyWorkspaceProps) 
                                             <div className="flex items-center gap-2 mb-4 px-2">
                                                 <div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
                                                 <h3 className="text-lg font-bold text-orange-400 font-orbitron tracking-widest">TEAM 2</h3>
+
+                                                {currentUserPlayer && currentUserPlayer.team === 1 && !currentUserPlayer.is_ready && (
+                                                    <button
+                                                        onClick={() => handleSwitchTeam(2)}
+                                                        disabled={isSwitchingTeam}
+                                                        className="ml-3 px-3 py-1 rounded bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 hover:border-orange-500/40 text-orange-400 text-xs font-mono tracking-wide font-bold uppercase transition-all flex items-center gap-2"
+                                                    >
+                                                        {isSwitchingTeam ? <Loader2 className="w-3 h-3 animate-spin" /> : 'SWITCH TO TEAM 2'}
+                                                    </button>
+                                                )}
+
                                                 <span className="ml-auto text-xs font-mono text-orange-500/50">
                                                     {players.filter((p: any) => p.team === 2).length} / {lobby.game_modes?.team_size}
                                                 </span>
@@ -710,18 +732,6 @@ function PlayerRosterCard({ p, authUserId, isCommander, lobby, setKickTargetId, 
 
             <div className="flex items-center gap-1">
                 {p.is_ready && <CheckCircle className="w-5 h-5 text-green-500 animate-in zoom-in spin-in-90 duration-300" />}
-
-                {/* Team Switch Button (Only Self, Not Ready) */}
-                {currentUserPlayer && currentUserPlayer.user_id === p.user_id && !p.is_ready && lobby.game_modes?.team_size > 1 && (
-                    <button
-                        onClick={() => handleSwitchTeam(p.team === 1 ? 2 : 1)}
-                        disabled={isSwitchingTeam}
-                        className="ml-1 px-2 p-1.5 rounded bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-[10px] font-mono tracking-widest font-bold uppercase transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 flex items-center gap-1"
-                        title={`Switch to Team ${p.team === 1 ? 2 : 1}`}
-                    >
-                        {isSwitchingTeam ? <Loader2 className="w-3 h-3 animate-spin" /> : 'SWITCH'}
-                    </button>
-                )}
 
                 {/* Kick Button (Commander Only, Not Self) */}
                 {isCommander && p.user_id !== authUserId && (
