@@ -267,6 +267,7 @@ export type Database = {
           created_at: string | null
           id: string
           match_id: string | null
+          rematch_status: string | null
           stats: Json | null
           team: number
           user_id: string | null
@@ -275,6 +276,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           match_id?: string | null
+          rematch_status?: string | null
           stats?: Json | null
           team: number
           user_id?: string | null
@@ -283,6 +285,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           match_id?: string | null
+          rematch_status?: string | null
           stats?: Json | null
           team?: number
           user_id?: string | null
