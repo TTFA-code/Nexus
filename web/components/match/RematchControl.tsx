@@ -28,9 +28,9 @@ export function RematchControl({
     useEffect(() => {
         const initialVotes: Record<string, string> = {};
         matchPlayers.forEach(p => {
-            if (p.player?.uuid_link) {
-                initialVotes[p.player.uuid_link] = p.rematch_status || 'pending';
-                if (p.player.uuid_link === myUserId) {
+            if (p.user_id) {
+                initialVotes[p.user_id] = p.rematch_status || 'pending';
+                if (p.player?.uuid_link === myUserId) {
                     setVoteStatus(p.rematch_status || 'pending');
                 }
             }
@@ -54,7 +54,8 @@ export function RematchControl({
                             ...prev,
                             [userId]: vote
                         }));
-                        if (userId === myUserId) {
+                        const myDiscordId = matchPlayers.find(p => p.player?.uuid_link === myUserId)?.user_id;
+                        if (userId === myDiscordId) {
                             setVoteStatus(vote);
                         }
                     }
@@ -98,7 +99,10 @@ export function RematchControl({
                     toast.info(`Voted. Waiting for other players...`);
                 }
                 setVoteStatus(vote);
-                setPlayerVotes(prev => ({ ...prev, [myUserId]: vote }));
+                const myDiscordId = matchPlayers.find(p => p.player?.uuid_link === myUserId)?.user_id;
+                if (myDiscordId) {
+                    setPlayerVotes(prev => ({ ...prev, [myDiscordId]: vote }));
+                }
             } else {
                 toast.error(result.message || "Failed to submit vote.");
             }
@@ -120,7 +124,7 @@ export function RematchControl({
             {/* Player Vote Status Bar */}
             <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                 {matchPlayers.map(p => {
-                    const status = playerVotes[p.player?.uuid_link] || 'pending';
+                    const status = playerVotes[p.user_id] || 'pending';
                     return (
                         <div key={p.id} className={`flex items-center gap-2 px-4 py-2 rounded-full border bg-black/40 ${status === 'accepted' ? 'border-green-500/50 text-green-400' : status === 'declined' ? 'border-red-500/50 text-red-500' : 'border-zinc-500/30 text-zinc-400'}`}>
                             <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 relative">

@@ -30,7 +30,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
 
         if (updateError) throw new Error('Failed to submit rematch vote.')
 
-        // Broadcast the individual vote so UI can update (e.g., "Player X is ready")
+        // 2. Broadcast the individual vote so UI can update
         await supabase.channel(`match:${matchId}`).send({
             type: 'broadcast',
             event: 'rematch_vote_cast',
@@ -40,93 +40,136 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
             }
         })
 
-        // 2. Check if all players have voted
+        // 3. Fetch all players
         const { data: players, error: playersError } = await supabase
             .from('match_players')
-            .select('user_id, team, rematch_status')
+            .select(`
+                user_id, 
+                team, 
+                rematch_status, 
+                player:players!match_players_user_id_fkey(username, avatar_url, uuid_link)
+            `)
             .eq('match_id', matchId)
 
         if (playersError || !players) throw new Error('Failed to fetch match players.')
 
-        const pendingPlayers = players.filter(p => p.rematch_status === 'pending' || !p.rematch_status)
+        if (vote === 'accepted') {
+            const currentUser = players.find(p => p.user_id === discordId);
+            const pendingPlayers = players.filter(p => p.rematch_status === 'pending' || !p.rematch_status);
 
-        // If there are still pending players, we just return
-        if (pendingPlayers.length > 0) {
-            return { success: true, isResolved: false, message: 'Vote recorded.' }
-        }
-
-        // 3. All players have voted. Resolve the rematch.
-        const acceptedPlayers = players.filter(p => p.rematch_status === 'accepted')
-
-        // If less than 2 players want to rematch, the rematch fails
-        if (acceptedPlayers.length < 2) {
-            // Broadcast failure
-            await supabase.channel(`match:${matchId}`).send({
-                type: 'broadcast',
-                event: 'rematch_resolved',
-                payload: {
-                    success: false,
-                    message: 'Not enough players requested a rematch.',
-                    newLobbyId: null
+            // Broadcast to pending players to show the global popup
+            for (const p of pendingPlayers) {
+                const pUuid = (p.player as any)?.uuid_link;
+                if (pUuid) {
+                    await supabase.channel(`user:${pUuid}:requests`).send({
+                        type: 'broadcast',
+                        event: 'rematch_request',
+                        payload: {
+                            requesterId: discordId,
+                            requesterName: (currentUser?.player as any)?.username || 'Opponent',
+                            requesterAvatar: (currentUser?.player as any)?.avatar_url,
+                            matchId: matchId
+                        }
+                    });
                 }
-            })
-            return { success: true, isResolved: true, message: 'Rematch cancelled - not enough players.' }
-        }
-
-        // 4. Create a new LOBBY for the players who accepted
-        const { data: oldMatch } = await supabase
-            .from('matches')
-            .select('*')
-            .eq('id', matchId)
-            .single()
-
-        if (!oldMatch) throw new Error('Original match data lost.')
-
-        const { data: newLobby, error: createLobbyError } = await supabase
-            .from('lobbies')
-            .insert({
-                creator_id: acceptedPlayers[0].user_id!, // First accepted player is host
-                game_mode_id: oldMatch.game_mode_id,
-                region: oldMatch.region,
-                guild_id: oldMatch.guild_id,
-                status: 'open',
-                is_private: false
-            })
-            .select('id')
-            .single()
-
-        if (createLobbyError || !newLobby) throw new Error('Failed to create new lobby for rematch players.')
-
-        // 5. Migrate accepted players to the new lobby
-        const newLobbyPlayers = acceptedPlayers.map(p => ({
-            lobby_id: newLobby.id,
-            user_id: p.user_id,
-            status: 'joined',
-            team: p.team // Maintain their old team if possible
-        }))
-
-        const { error: migrationError } = await supabase
-            .from('lobby_players')
-            .insert(newLobbyPlayers)
-
-        if (migrationError) throw new Error('Failed to migrate players to new lobby.')
-
-        // 6. Broadcast successful resolution
-        await supabase.channel(`match:${matchId}`).send({
-            type: 'broadcast',
-            event: 'rematch_resolved',
-            payload: {
-                success: true,
-                newLobbyId: newLobby.id,
-                acceptedUserIds: acceptedPlayers.map(p => p.user_id)
             }
-        })
 
-        return {
-            success: true,
-            isResolved: true,
-            newLobbyId: newLobby.id
+            // Check if there is already a formed lobby for this match
+            const { data: existingLobby } = await supabase
+                .from('lobbies')
+                .select('id')
+                .eq('notes', `rematch:${matchId}`)
+                .maybeSingle();
+
+            if (existingLobby) {
+                // Lobby already formed! Join it.
+                await supabase
+                    .from('lobby_players')
+                    .insert({
+                        lobby_id: existingLobby.id,
+                        user_id: discordId,
+                        status: 'joined',
+                        is_ready: false,
+                        team: currentUser?.team || 1
+                    });
+
+                return { success: true, isResolved: true, newLobbyId: existingLobby.id };
+            } else {
+                // Check if we reached 2 acceptances
+                const acceptedPlayers = players.filter(p => p.rematch_status === 'accepted');
+                if (acceptedPlayers.length >= 2) {
+                    // Form the lobby!
+                    const { data: oldMatch } = await supabase
+                        .from('matches')
+                        .select('*')
+                        .eq('id', matchId)
+                        .single();
+
+                    if (!oldMatch) throw new Error('Original match data lost.')
+
+                    const { data: newLobby, error: createLobbyError } = await supabase
+                        .from('lobbies')
+                        .insert({
+                            creator_id: acceptedPlayers[0].user_id!, // First accepted player is host
+                            game_mode_id: oldMatch.game_mode_id,
+                            region: oldMatch.region,
+                            guild_id: oldMatch.guild_id,
+                            status: 'open',
+                            is_private: false,
+                            notes: `rematch:${matchId}`
+                        })
+                        .select('id')
+                        .single();
+
+                    if (createLobbyError || !newLobby) throw new Error('Failed to create new lobby for rematch players.');
+
+                    // Creator is auto-joined by trigger. Manually join other accepted players.
+                    const otherAcceptedPlayers = acceptedPlayers.filter(p => p.user_id !== acceptedPlayers[0].user_id);
+                    if (otherAcceptedPlayers.length > 0) {
+                        const newLobbyPlayers = otherAcceptedPlayers.map(p => ({
+                            lobby_id: newLobby.id,
+                            user_id: p.user_id,
+                            status: 'joined',
+                            is_ready: false,
+                            team: p.team || 1
+                        }));
+                        await supabase.from('lobby_players').insert(newLobbyPlayers);
+                    }
+
+                    // Tell everyone currently on the match page that the lobby is formed
+                    await supabase.channel(`match:${matchId}`).send({
+                        type: 'broadcast',
+                        event: 'rematch_resolved',
+                        payload: {
+                            success: true,
+                            newLobbyId: newLobby.id,
+                            acceptedUserIds: acceptedPlayers.map(p => p.user_id)
+                        }
+                    });
+
+                    return { success: true, isResolved: true, newLobbyId: newLobby.id };
+                }
+            }
+        } else {
+            // Vote is declined
+            const pendingPlayers = players.filter(p => p.rematch_status === 'pending' || !p.rematch_status);
+            const acceptedPlayers = players.filter(p => p.rematch_status === 'accepted');
+
+            // If everyone has voted and not enough for a lobby
+            if (pendingPlayers.length === 0 && acceptedPlayers.length < 2) {
+                await supabase.channel(`match:${matchId}`).send({
+                    type: 'broadcast',
+                    event: 'rematch_resolved',
+                    payload: {
+                        success: false,
+                        message: 'Not enough players requested a rematch.',
+                        newLobbyId: null
+                    }
+                });
+            }
         }
+
+        return { success: true, isResolved: false, message: 'Vote recorded.' };
 
     } catch (e: any) {
         console.error("Submit Rematch Vote Error:", e)
