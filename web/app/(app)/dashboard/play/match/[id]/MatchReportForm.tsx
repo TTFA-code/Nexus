@@ -33,27 +33,15 @@ export default function MatchReportForm({ matchId, myStats, opponentStats, userI
                 console.error("Submission Error:", result.error);
                 toast.error("Failed to submit: " + result.error);
             } else {
-                // Parse MMR Changes
-                // The result now contains 'result' object which has the JSON from RPC
-                // We need to check how matchActions returns it. 
-                // Assuming result.data contains the RPC return.
-
-                const mmrChanges = (result as any).data?.mmr_changes;
-                const myChange = mmrChanges?.[userId]; // We need userId here. 
-                // Since this component might not have userId readily available in props, 
-                // we'll rely on the server action return message or just show generic success for now
-                // UNLESS we pass userId/Team to form.
-
-                // Better: Just show success and let the profile update show it. 
-                // OR: Parse if we can. 
-
-                if (myChange) {
-                    toast.success(`Result reported. Combat Rating: ${myChange > 0 ? '+' : ''}${myChange}`);
+                if (result.status === 'waiting_for_opponent') {
+                    toast.info(`Scores recorded. Waiting for opponent's confirmation.`);
+                } else if (result.status === 'disputed') {
+                    toast.error(`Scores conflicted! Match requires admin resolution.`);
+                } else if (result.status === 'finished' || result.status === 'admin_resolved') {
+                    const winnerWording = result.winner_team === 0 ? "Draw" : `Team ${result.winner_team} Victory`;
+                    toast.success(`Result confirmed: ${winnerWording}!`);
                 } else {
-                    // Show Winner Team from result
-                    const winnerTeam = (result as any).winner_team;
-                    const winnerText = winnerTeam === 0 ? "Draw" : `Team ${winnerTeam} Victory`;
-                    toast.success(`Result confirmed: ${winnerText}`);
+                    toast.success(`Result reported successfully.`);
                 }
             }
         } catch (err: any) {

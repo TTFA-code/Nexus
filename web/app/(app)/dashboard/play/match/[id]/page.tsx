@@ -203,7 +203,7 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
             )}
 
             {/* VERSUS DISPLAY */}
-            <div className="flex items-center justify-center gap-4 md:gap-16 w-full max-w-5xl mx-auto">
+            <div className={`flex items-center justify-center gap-4 md:gap-16 w-full mx-auto ${gameMode?.team_size === 1 ? 'max-w-2xl' : 'max-w-5xl'}`}>
                 {/* TEAM 1 */}
                 <div className="flex flex-col gap-6 flex-1 items-end pr-4">
                     {matchPlayers?.filter(p => p.team === 1).map((p: any) => (

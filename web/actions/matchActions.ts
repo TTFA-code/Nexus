@@ -73,7 +73,7 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
 
     revalidatePath(`/dashboard/play/match/${matchId}`);
     revalidatePath('/dashboard/play');
-    return { success: true };
+    return { success: true, ...((data as any) || {}) };
 }
 
 export async function createLobby(formData: {
