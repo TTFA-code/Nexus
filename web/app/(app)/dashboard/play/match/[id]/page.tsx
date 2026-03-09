@@ -37,7 +37,9 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                     <p>ID: {matchId}</p>
                     <p>Error: {JSON.stringify(error, null, 2)}</p>
                 </div>
-                <Button onClick={() => window.location.reload()} variant="outline">Retry</Button>
+                <Button asChild variant="outline">
+                    <a href="/dashboard/play">Retry</a>
+                </Button>
             </div>
         );
     }
@@ -108,7 +110,9 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                     <p>Error: {err.message}</p>
                     <p>Match ID: {matchId}</p>
                 </div>
-                <Button onClick={() => window.location.reload()} variant="outline">Retry</Button>
+                <Button asChild variant="outline">
+                    <a href="/dashboard/play">Retry</a>
+                </Button>
             </div>
         );
     }
@@ -193,10 +197,10 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                             A player failed to ready up. The match has been cancelled.
                         </p>
                         <Button
-                            onClick={() => window.location.href = '/dashboard/play'}
+                            asChild
                             className="bg-red-600 hover:bg-red-500 text-white font-bold tracking-widest w-full"
                         >
-                            RETURN TO LOBBY
+                            <a href="/dashboard/play">RETURN TO LOBBY</a>
                         </Button>
                     </div>
                 </div>

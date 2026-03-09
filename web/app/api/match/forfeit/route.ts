@@ -29,10 +29,10 @@ export async function POST(req: NextRequest) {
         // Reuse submit_match_report to record a loss (0-1 score)
         // This will trigger the standard MMR loss logic
         const { data, error } = await supabase.rpc('submit_match_report', {
-            p_match_id: matchId,
-            p_reporter_id: discordId,
-            p_my_score: 0,
-            p_opponent_score: 1
+            match_id_input: matchId,
+            reporter_discord_id_input: discordId,
+            my_score_input: 0,
+            opponent_score_input: 1
         });
 
         if (error) {
