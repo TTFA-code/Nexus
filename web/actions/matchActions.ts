@@ -38,10 +38,10 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
 
     // 3. Call RPC (Transaction)
     const { data, error } = await supabase.rpc('submit_match_report', {
-        p_match_id: matchId,
-        p_reporter_id: discordId, // Use Discord ID
-        p_my_score: myScore,
-        p_opponent_score: opponentScore
+        match_id_input: matchId,
+        reporter_discord_id_input: discordId, // Use Discord ID
+        my_score_input: myScore,
+        opponent_score_input: opponentScore
     });
 
     console.log(`[MATCH_SUBMIT] RPC Called. Match: ${matchId}, Reporter: ${discordId}, MyScore: ${myScore}, OppScore: ${opponentScore}`);

@@ -170,7 +170,7 @@ export async function joinLobby(lobbyId: string, password?: string): Promise<Act
 
         // 3.6 Determine Team Assignment (Auto-balance)
         let teamToJoin = 1;
-        if (gameMode && (gameMode.name.includes('2v2') || gameMode.name.includes('3v3') || gameMode.team_size > 1)) {
+        if (gameMode) {
             const team1Count = lobby.lobby_players?.filter(p => p.team === 1).length || 0;
             const team2Count = lobby.lobby_players?.filter(p => p.team === 2).length || 0;
 
