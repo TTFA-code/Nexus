@@ -119,7 +119,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
                             game_mode_id: oldMatch.game_mode_id,
                             region: oldMatch.region,
                             guild_id: oldMatch.guild_id,
-                            status: 'open',
+                            status: 'WAITING',
                             is_private: false,
                             notes: `rematch:${matchId}`
                         })
