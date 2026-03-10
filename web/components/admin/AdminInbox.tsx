@@ -18,7 +18,7 @@ interface AdminInboxProps {
 export const AdminInbox: React.FC<AdminInboxProps> = ({ guildId }) => {
 
     // Derived from RPC Return Type
-    type AdminMatchReview = Database['public']['Functions']['get_matches_for_review']['Returns'][number];
+    type AdminMatchReview = any;
 
     const [reports, setReports] = useState<AdminMatchReview[]>([]);
     const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ export const AdminInbox: React.FC<AdminInboxProps> = ({ guildId }) => {
         try {
             // Updated Query using Secure RPC
             const { data, error } = await supabase
-                .rpc('get_matches_for_review', { target_guild_id: guildId });
+                .rpc('get_matches_for_review' as any, { target_guild_id: guildId });
 
             if (error) {
                 console.error('Fetch Error:', error.message);

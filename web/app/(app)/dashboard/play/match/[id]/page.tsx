@@ -135,7 +135,7 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
             console.error("MMR History Fetch Error:", mmrError);
         } else if (mmrHistory) {
             // console.log("MMR History Found:", mmrHistory);
-            mmrChange = mmrHistory.change;
+            mmrChange = mmrHistory.change || 0;
             const sign = mmrChange > 0 ? "+" : "";
             mmrChangeText = `(${sign}${mmrChange})`;
         } else {

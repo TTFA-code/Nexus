@@ -171,7 +171,7 @@ export async function verifyNexusAdmin(guildId: string): Promise<{ isAuthorized:
 
         console.log("[Gatekeeper] Role found in DB:", member.role);
         const allowedRoles = ['nexus-admin'];
-        if (allowedRoles.includes(member.role)) {
+        if (member.role && allowedRoles.includes(member.role)) {
             console.log(`[Gatekeeper] Access Granted: User ${user.id} is ${member.role}`);
             return { isAuthorized: true };
         }
