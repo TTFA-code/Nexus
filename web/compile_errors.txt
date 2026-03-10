@@ -1,8 +1,0 @@
-app/(app)/dashboard/play/match/[id]/page.tsx(139,26): error TS18047: 'mmrChange' is possibly 'null'.
-components/admin/AdminInbox.tsx(21,61): error TS2339: Property 'get_matches_for_review' does not exist on type '{ admin_resolve_match: { Args: { admin_id_input: string; force_t1_score: number; force_t2_score: number; match_id_input: string; }; Returns: Json; }; approve_all_server_matches: { Args: { ...; }; Returns: Json; }; ... 12 more ...; update_mmr: { ...; }; }'.
-components/admin/AdminInbox.tsx(36,22): error TS2345: Argument of type '"get_matches_for_review"' is not assignable to parameter of type '"admin_resolve_match" | "approve_all_server_matches" | "approve_match" | "cancel_match" | "check_active_session" | "decline_match" | "find_match" | "get_guild_member_matches" | ... 6 more ... | "update_mmr"'.
-scripts/test.ts(15,95): error TS18047: 'lobbies' is possibly 'null'.
-scripts/test.ts(17,38): error TS18047: 'lobbies' is possibly 'null'.
-scripts/test.ts(21,90): error TS2551: Property 'catch' does not exist on type 'PostgrestFilterBuilder<any, any, any, any, "exec_sql", null, "RPC">'. Did you mean 'match'?
-utils/discord/gatekeeper.ts(174,35): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
-  Type 'null' is not assignable to type 'string'.

@@ -21,8 +21,13 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
         const discordId = discordIdentity?.id
         if (!discordId) throw new Error('No Discord Link')
 
-        // 1. Record the vote in match_players
-        const { error: updateError } = await supabase
+        // Fetch Admin Client to bypass RLS for match_players update
+        const { getAdminClient } = await import('@/utils/supabase/admin');
+        const adminSupabase = getAdminClient();
+        if (!adminSupabase) throw new Error('System configuration error: Admin client not available');
+
+        // 1. Record the vote in match_players using Admin client
+        const { error: updateError } = await adminSupabase
             .from('match_players')
             .update({ rematch_status: vote })
             .eq('match_id', matchId)
@@ -31,7 +36,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
         if (updateError) throw new Error('Failed to submit rematch vote.')
 
         // 2. Broadcast the individual vote so UI can update
-        await supabase.channel(`match:${matchId}`).send({
+        await adminSupabase.channel(`match:${matchId}`).send({
             type: 'broadcast',
             event: 'rematch_vote_cast',
             payload: {
@@ -40,8 +45,8 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
             }
         })
 
-        // 3. Fetch all players
-        const { data: players, error: playersError } = await supabase
+        // 3. Fetch all players using Admin client
+        const { data: players, error: playersError } = await adminSupabase
             .from('match_players')
             .select(`
                 user_id, 
@@ -61,7 +66,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
             for (const p of pendingPlayers) {
                 const pUuid = (p.player as any)?.uuid_link;
                 if (pUuid) {
-                    await supabase.channel(`user:${pUuid}:requests`).send({
+                    await adminSupabase.channel(`user:${pUuid}:requests`).send({
                         type: 'broadcast',
                         event: 'rematch_request',
                         payload: {
@@ -75,15 +80,15 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
             }
 
             // Check if there is already a formed lobby for this match
-            const { data: existingLobby } = await supabase
+            const { data: existingLobby } = await adminSupabase
                 .from('lobbies')
                 .select('id')
                 .eq('notes', `rematch:${matchId}`)
                 .maybeSingle();
 
             if (existingLobby) {
-                // Lobby already formed! Join it.
-                await supabase
+                // Lobby already formed! Join it using Admin client
+                await adminSupabase
                     .from('lobby_players')
                     .insert({
                         lobby_id: existingLobby.id,
@@ -99,7 +104,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
                 const acceptedPlayers = players.filter(p => p.rematch_status === 'accepted');
                 if (acceptedPlayers.length >= 2) {
                     // Form the lobby!
-                    const { data: oldMatch } = await supabase
+                    const { data: oldMatch } = await adminSupabase
                         .from('matches')
                         .select('*')
                         .eq('id', matchId)
@@ -107,7 +112,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
 
                     if (!oldMatch) throw new Error('Original match data lost.')
 
-                    const { data: newLobby, error: createLobbyError } = await supabase
+                    const { data: newLobby, error: createLobbyError } = await adminSupabase
                         .from('lobbies')
                         .insert({
                             creator_id: acceptedPlayers[0].user_id!, // First accepted player is host
@@ -121,7 +126,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
                         .select('id')
                         .single();
 
-                    if (createLobbyError || !newLobby) throw new Error('Failed to create new lobby for rematch players.');
+                    if (createLobbyError || !newLobby) throw new Error(`Failed to create new lobby for rematch players: ${createLobbyError.message}`);
 
                     // Creator is auto-joined by trigger. Manually join other accepted players.
                     const otherAcceptedPlayers = acceptedPlayers.filter(p => p.user_id !== acceptedPlayers[0].user_id);
@@ -133,11 +138,11 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
                             is_ready: false,
                             team: p.team || 1
                         }));
-                        await supabase.from('lobby_players').insert(newLobbyPlayers);
+                        await adminSupabase.from('lobby_players').insert(newLobbyPlayers);
                     }
 
                     // Tell everyone currently on the match page that the lobby is formed
-                    await supabase.channel(`match:${matchId}`).send({
+                    await adminSupabase.channel(`match:${matchId}`).send({
                         type: 'broadcast',
                         event: 'rematch_resolved',
                         payload: {
@@ -157,7 +162,7 @@ export async function submitRematchVote(matchId: string, vote: 'accepted' | 'dec
 
             // If everyone has voted and not enough for a lobby
             if (pendingPlayers.length === 0 && acceptedPlayers.length < 2) {
-                await supabase.channel(`match:${matchId}`).send({
+                await adminSupabase.channel(`match:${matchId}`).send({
                     type: 'broadcast',
                     event: 'rematch_resolved',
                     payload: {
