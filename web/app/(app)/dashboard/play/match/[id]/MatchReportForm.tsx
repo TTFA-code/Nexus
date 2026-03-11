@@ -87,7 +87,7 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
             )}
 
             {/* WAITING FOR OPPONENT OVERLAY */}
-            {localMatchStatus === 'ongoing' && localHasSubmitted ? (
+            {localHasSubmitted && localMatchStatus !== 'disputed' && localMatchStatus !== 'finished' ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-6 relative z-10">
                     <div className="relative">
                         <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full animate-pulse h-16 w-16" />

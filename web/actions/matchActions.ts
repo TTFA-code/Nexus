@@ -56,6 +56,15 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
         return { error: (data as any).error };
     }
 
+    let parsedData = data;
+    if (typeof data === 'string') {
+        try {
+            parsedData = JSON.parse(data);
+        } catch (e) {
+            console.error("Failed to parse RPC response:", data);
+        }
+    }
+
     // 4. Status Check & Cleanup
     const { data: match } = await supabase
         .from('matches')
@@ -73,7 +82,7 @@ export async function submitMatchResult(matchId: string, myScore: number, oppone
 
     revalidatePath(`/dashboard/play/match/${matchId}`);
     revalidatePath('/dashboard/play');
-    return { success: true, ...((data as any) || {}) };
+    return { success: true, ...((parsedData as any) || {}) };
 }
 
 export async function createLobby(formData: {
