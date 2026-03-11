@@ -68,9 +68,14 @@ export function GlobalRematchManager() {
             const result = await submitRematchVote(request.matchId, 'accepted');
 
             if (result.success) {
-                if (result.isResolved && result.newLobbyId) {
-                    toast.success("Rematch formed! Joining new lobby...");
-                    router.push(`/dashboard/play/lobby/${result.newLobbyId}`);
+                if (result.isResolved) {
+                    if (result.destination === 'match' && result.newMatchId) {
+                        toast.success("Full Rematch accepted! Routing to match...");
+                        router.push(`/dashboard/play/match/${result.newMatchId}`);
+                    } else if (result.destination === 'lobby' && result.newLobbyId) {
+                        toast.success("Partial Rematch formed. Joining lobby...");
+                        router.push(`/dashboard/play/lobby/${result.newLobbyId}`);
+                    }
                 } else {
                     toast.info("Voted. Waiting for other players...");
                 }

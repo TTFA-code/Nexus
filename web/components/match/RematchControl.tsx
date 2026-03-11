@@ -65,10 +65,16 @@ export function RematchControl({
                 'broadcast',
                 { event: 'rematch_resolved' },
                 (payload) => {
-                    console.log("Rematch Resolved Rx:", payload);
-                    if (payload.payload.success && payload.payload.newLobbyId && payload.payload.acceptedUserIds?.includes(myUserId)) {
-                        toast.success("Rematch formed! Joining new lobby...");
-                        router.push(`/dashboard/play/lobby/${payload.payload.newLobbyId}`);
+                    const myDiscordId = matchPlayers.find(p => p.player?.uuid_link === myUserId)?.user_id;
+
+                    if (payload.payload.success && payload.payload.acceptedUserIds?.includes(myDiscordId)) {
+                        if (payload.payload.destination === 'match' && payload.payload.newMatchId) {
+                            toast.success("Full Rematch accepted! Routing to active match...");
+                            router.push(`/dashboard/play/match/${payload.payload.newMatchId}`);
+                        } else if (payload.payload.destination === 'lobby' && payload.payload.newLobbyId) {
+                            toast.success("Partial Rematch formed. Joining lobby...");
+                            router.push(`/dashboard/play/lobby/${payload.payload.newLobbyId}`);
+                        }
                     } else if (payload.payload.success === false) {
                         toast.info("Rematch failed. " + payload.payload.message);
                     }
@@ -83,7 +89,7 @@ export function RematchControl({
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [matchId, router, supabase, myUserId]);
+    }, [matchId, router, supabase, myUserId, matchPlayers]);
 
     const handleVote = async (vote: 'accepted' | 'declined') => {
         setIsVoting(true);
@@ -92,10 +98,15 @@ export function RematchControl({
 
             if (result.success) {
                 // If it resolves immediately for us (we were the last to vote)
-                if (result.isResolved && result.newLobbyId) {
-                    toast.success("Rematch formed! Joining new lobby...");
-                    router.push(`/dashboard/play/lobby/${result.newLobbyId}`);
-                } else if (!result.isResolved) {
+                if (result.isResolved) {
+                    if (result.destination === 'match' && result.newMatchId) {
+                        toast.success("Full Rematch accepted! Routing to active match...");
+                        router.push(`/dashboard/play/match/${result.newMatchId}`);
+                    } else if (result.destination === 'lobby' && result.newLobbyId) {
+                        toast.success("Partial Rematch formed. Joining lobby...");
+                        router.push(`/dashboard/play/lobby/${result.newLobbyId}`);
+                    }
+                } else {
                     toast.info(`Voted. Waiting for other players...`);
                 }
                 setVoteStatus(vote);
