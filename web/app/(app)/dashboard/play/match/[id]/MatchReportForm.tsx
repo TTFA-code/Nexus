@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { submitMatchResult } from "@/actions/matchActions";
+import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, AlertTriangle, Clock } from "lucide-react";
@@ -24,11 +25,72 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
     const router = useRouter();
     const [localMatchStatus, setLocalMatchStatus] = useState(matchStatus);
     const [localHasSubmitted, setLocalHasSubmitted] = useState(myStats?.score !== undefined);
+    const [localMyStats, setLocalMyStats] = useState(myStats);
 
     useEffect(() => {
         setLocalMatchStatus(matchStatus);
         setLocalHasSubmitted(myStats?.score !== undefined);
+        setLocalMyStats(myStats);
     }, [matchStatus, myStats?.score]);
+
+    // Function to manually fetch the latest stats for this user
+    const fetchCurrentStats = async () => {
+        const supabase = createClient();
+        const { data, error } = await supabase
+            .from('match_players')
+            .select('stats')
+            .eq('match_id', matchId)
+            .eq('user_id', userId)
+            .single();
+
+        if (!error && data?.stats) {
+            const score = (data.stats as any).score;
+            if (score !== undefined) {
+                setLocalMyStats({ score });
+                setLocalHasSubmitted(true);
+            }
+        }
+    };
+
+    // REAL-TIME SUBSCRIPTION
+    useEffect(() => {
+        const supabase = createClient();
+
+        // Listen to Matches table for status updates (disputed, finished)
+        const matchSub = supabase
+            .channel(`match-status-${matchId}`)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
+                (payload) => {
+                    const newStatus = payload.new.status;
+                    if (newStatus && newStatus !== localMatchStatus) {
+                        setLocalMatchStatus(newStatus);
+                        router.refresh(); // Refresh page data
+                    }
+                }
+            )
+            .subscribe();
+
+        // Listen to match_reports table if someone else submits
+        const reportSub = supabase
+            .channel(`match-reports-${matchId}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'match_reports', filter: `match_id=eq.${matchId}` },
+                (payload) => {
+                    // Refresh data to pull down new stats
+                    fetchCurrentStats();
+                    router.refresh();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(matchSub);
+            supabase.removeChannel(reportSub);
+        };
+    }, [matchId, router, localMatchStatus]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,6 +109,7 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
                 if (result.status === 'waiting_for_opponent') {
                     setLocalMatchStatus('ongoing');
                     setLocalHasSubmitted(true);
+                    setLocalMyStats({ score: parseInt(myScore) });
                     toast.info(`Scores recorded. Waiting for opponent's confirmation.`);
                 } else if (result.status === 'disputed') {
                     setLocalMatchStatus('disputed');
@@ -87,7 +150,7 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
             )}
 
             {/* WAITING FOR OPPONENT OVERLAY */}
-            {localHasSubmitted && localMatchStatus !== 'disputed' && localMatchStatus !== 'finished' ? (
+            {localHasSubmitted && localMatchStatus !== 'disputed' && localMatchStatus !== 'finished' && localMatchStatus !== 'admin_resolved' ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-6 relative z-10">
                     <div className="relative">
                         <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full animate-pulse h-16 w-16" />
@@ -97,6 +160,15 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
                         <h4 className="text-xl font-black text-white tracking-widest uppercase">Result Locked In</h4>
                         <p className="text-zinc-400 font-mono text-sm max-w-[250px] mx-auto leading-relaxed">
                             Waiting for the opponent to report their side of the match.
+                        </p>
+                    </div>
+                </div>
+            ) : localMatchStatus === 'finished' || localMatchStatus === 'admin_resolved' ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-6 relative z-10">
+                    <div className="text-center space-y-2">
+                        <h4 className="text-xl font-black text-emerald-400 tracking-widest uppercase">Match Complete</h4>
+                        <p className="text-zinc-400 font-mono text-sm max-w-[250px] mx-auto leading-relaxed">
+                            Scores have been verified and recorded.
                         </p>
                     </div>
                 </div>
