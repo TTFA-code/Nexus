@@ -4,17 +4,18 @@ import { useState } from "react";
 import { submitMatchResult } from "@/actions/matchActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 interface MatchReportFormProps {
     matchId: string;
+    matchStatus: string | null;
     myStats?: { score: number };
     opponentStats?: { score: number };
     userId: string;
 }
 
-export default function MatchReportForm({ matchId, myStats, opponentStats, userId }: MatchReportFormProps) {
+export default function MatchReportForm({ matchId, matchStatus, myStats, opponentStats, userId }: MatchReportFormProps) {
     const [myScore, setMyScore] = useState("");
     const [opponentScore, setOpponentScore] = useState("");
     const [loading, setLoading] = useState(false);
@@ -53,55 +54,85 @@ export default function MatchReportForm({ matchId, myStats, opponentStats, userI
     };
 
     return (
-        <div className="w-full max-w-2xl bg-zinc-900/50 border border-zinc-800 p-8 rounded-xl backdrop-blur-sm">
-            <h3 className="text-center text-zinc-400 font-mono uppercase tracking-widest mb-8">Report Results</h3>
+        <div className="w-full max-w-2xl bg-zinc-900/50 border border-zinc-800 p-8 rounded-xl backdrop-blur-sm relative overflow-hidden">
+            <h3 className="text-center text-zinc-400 font-mono uppercase tracking-widest mb-6">Report Results</h3>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-emerald-500 uppercase tracking-wider block text-center">My Score</label>
-                        <Input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={myScore}
-                            onChange={(e) => {
-                                const val = e.target.value.replace(/[^0-9]/g, '');
-                                setMyScore(val);
-                            }}
-                            className="text-center text-4xl font-mono h-20 bg-black/50 border-zinc-800 focus:border-emerald-500 focus:ring-emerald-500/20"
-                            placeholder="-"
-                        />
+            {/* CONFLICT BANNER */}
+            {matchStatus === 'disputed' && (
+                <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500 text-red-500 flex flex-col items-center justify-center text-center gap-3 animate-in fade-in slide-in-from-top-4">
+                    <div className="flex items-center gap-2 font-black tracking-widest text-lg">
+                        <AlertTriangle className="w-5 h-5" />
+                        SCORE CONFLICT DETECTED
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-red-500 uppercase tracking-wider block text-center">Opponent Score</label>
-                        <Input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={opponentScore}
-                            onChange={(e) => {
-                                const val = e.target.value.replace(/[^0-9]/g, '');
-                                setOpponentScore(val);
-                            }}
-                            className="text-center text-4xl font-mono h-20 bg-black/50 border-zinc-800 focus:border-red-500 focus:ring-red-500/20"
-                            placeholder="-"
-                        />
+                    <p className="text-sm font-mono opacity-90">
+                        You and your opponent entered different scores. <br />
+                        Please communicate with them and re-submit the correct result below.
+                    </p>
+                </div>
+            )}
+
+            {/* WAITING FOR OPPONENT OVERLAY */}
+            {matchStatus === 'ongoing' && myStats?.score !== undefined ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-6 relative z-10">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full animate-pulse h-16 w-16" />
+                        <Clock className="w-16 h-16 text-emerald-400 relative z-10 animate-[spin_3s_linear_infinite]" />
+                    </div>
+                    <div className="text-center space-y-2">
+                        <h4 className="text-xl font-black text-white tracking-widest uppercase">Result Locked In</h4>
+                        <p className="text-zinc-400 font-mono text-sm max-w-[250px] mx-auto leading-relaxed">
+                            Waiting for the opponent to report their side of the match.
+                        </p>
                     </div>
                 </div>
+            ) : (
+                <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-emerald-500 uppercase tracking-wider block text-center">My Score</label>
+                            <Input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={myScore}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    setMyScore(val);
+                                }}
+                                className="text-center text-4xl font-mono h-20 bg-black/50 border-zinc-800 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                placeholder="-"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-red-500 uppercase tracking-wider block text-center">Opponent Score</label>
+                            <Input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={opponentScore}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    setOpponentScore(val);
+                                }}
+                                className="text-center text-4xl font-mono h-20 bg-black/50 border-zinc-800 focus:border-red-500 focus:ring-red-500/20"
+                                placeholder="-"
+                            />
+                        </div>
+                    </div>
 
-                <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black tracking-widest py-8 text-lg uppercase transition-all shadow-[0_0_20px_rgba(5,150,105,0.4)] hover:shadow-[0_0_30px_rgba(5,150,105,0.6)]"
-                >
-                    {loading ? <Loader2 className="animate-spin w-6 h-6" /> : "CONFIRM RESULTS"}
-                </Button>
+                    <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black tracking-widest py-8 text-lg uppercase transition-all shadow-[0_0_20px_rgba(5,150,105,0.4)] hover:shadow-[0_0_30px_rgba(5,150,105,0.6)]"
+                    >
+                        {loading ? <Loader2 className="animate-spin w-6 h-6" /> : "CONFIRM RESULTS"}
+                    </Button>
 
-                <p className="text-center text-xs text-zinc-500 italic">
-                    *Both players must report. Disputes will be handled by admin.
-                </p>
-            </form>
+                    <p className="text-center text-xs text-zinc-500 italic">
+                        *Both players must report. Disputes will be handled by admin.
+                    </p>
+                </form>
+            )}
 
             <div className="mt-8 pt-8 border-t border-zinc-800 text-center">
                 <Button

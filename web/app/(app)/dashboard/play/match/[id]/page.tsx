@@ -268,6 +268,7 @@ export default async function MatchReportPage(props: { params: Promise<{ id: str
                         <TabsContent value="report" className="mt-4">
                             <MatchReportForm
                                 matchId={matchId}
+                                matchStatus={match.status}
                                 myStats={myStats?.score !== undefined ? { score: myStats.score } : undefined}
                                 opponentStats={opponentStats?.score !== undefined ? { score: opponentStats.score } : undefined}
                                 userId={user.id}
