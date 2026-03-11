@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { submitMatchResult } from "@/actions/matchActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,15 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
     const [opponentScore, setOpponentScore] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const router = useRouter();
+    const [localMatchStatus, setLocalMatchStatus] = useState(matchStatus);
+    const [localHasSubmitted, setLocalHasSubmitted] = useState(myStats?.score !== undefined);
+
+    useEffect(() => {
+        setLocalMatchStatus(matchStatus);
+        setLocalHasSubmitted(myStats?.score !== undefined);
+    }, [matchStatus, myStats?.score]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!myScore || !opponentScore) {
@@ -35,15 +45,20 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
                 toast.error("Failed to submit: " + result.error);
             } else {
                 if (result.status === 'waiting_for_opponent') {
+                    setLocalMatchStatus('ongoing');
+                    setLocalHasSubmitted(true);
                     toast.info(`Scores recorded. Waiting for opponent's confirmation.`);
                 } else if (result.status === 'disputed') {
+                    setLocalMatchStatus('disputed');
                     toast.error(`Scores conflicted! Match requires admin resolution.`);
                 } else if (result.status === 'finished' || result.status === 'admin_resolved') {
+                    setLocalMatchStatus('finished');
                     const winnerWording = result.winner_team === 0 ? "Draw" : `Team ${result.winner_team} Victory`;
                     toast.success(`Result confirmed: ${winnerWording}!`);
                 } else {
                     toast.success(`Result reported successfully.`);
                 }
+                router.refresh();
             }
         } catch (err: any) {
             console.error("Network/System Error:", err);
@@ -58,7 +73,7 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
             <h3 className="text-center text-zinc-400 font-mono uppercase tracking-widest mb-6">Report Results</h3>
 
             {/* CONFLICT BANNER */}
-            {matchStatus === 'disputed' && (
+            {localMatchStatus === 'disputed' && (
                 <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500 text-red-500 flex flex-col items-center justify-center text-center gap-3 animate-in fade-in slide-in-from-top-4">
                     <div className="flex items-center gap-2 font-black tracking-widest text-lg">
                         <AlertTriangle className="w-5 h-5" />
@@ -72,7 +87,7 @@ export default function MatchReportForm({ matchId, matchStatus, myStats, opponen
             )}
 
             {/* WAITING FOR OPPONENT OVERLAY */}
-            {matchStatus === 'ongoing' && myStats?.score !== undefined ? (
+            {localMatchStatus === 'ongoing' && localHasSubmitted ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-6 relative z-10">
                     <div className="relative">
                         <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full animate-pulse h-16 w-16" />
